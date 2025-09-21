@@ -64,35 +64,41 @@ typedef struct sax_attr_t {
 /// @brief Initialize the thread-local parser (only 1 parser per thread can run
 ///   at a time). Initializing an in-progress parser will close resources and
 ///   initialize with the provided configuration.
-/// @param path the path to use
-/// @return Parser instance; never NULL
+/// @param config (non-NULL) configuration to use
+/// @return Parser instance; or NULL due to configuration error
 sax_parser_t *sax_parser(const sax_config_t *restrict config);
 
 /// @brief Advance document iteration to the next event
-/// @param sax parser instance
+/// @param  parser instance
 /// @return next event
 sax_event_t sax_next(sax_parser_t *restrict parser);
 
 /// @brief Retrieve an error message for a @see SAX_EVENT_ERROR
-/// @param sax parser instance
+/// @param parser instance
 /// @return non-NULL the error string message or "" if not in error state
 const char *sax_error(const sax_parser_t *restrict parser);
 
 /// @brief Retrieve the tag for events @see SAX_EVENT_START_ELEMENT or
 ///   @see SAX_EVENT_END_ELEMENT
-/// @param sax parser instance
+/// @param parser instance
 /// @return  non-NULL tag name or "" if incorrect event
 const char *sax_tag(const sax_parser_t *restrict parser);
 
 /// @brief Retrieve the content for the @see SAX_EVENT_CONTENT event
-/// @param sax parser instance
+/// @param parser instance
 /// @return non-NULL content or "" if incorrect event
 const char *sax_content(const sax_parser_t *restrict parser);
 
 /// @brief Retrieve the XML attributes for the @see SAX_EVENT_START_ELEMENT
 ///   event
-/// @param sax parser instance
+/// @param parser instance
 /// @return NULLable attribute linked list
 const sax_attr_t *sax_attrs(const sax_parser_t *restrict parser);
+
+/// @brief Retrieve the XML attribute value associated with the provided name
+/// @param parser instance
+/// @param name to lookup
+/// @return paired value or NULL if not found
+const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict name);
 
 #endif

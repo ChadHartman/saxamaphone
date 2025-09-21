@@ -72,15 +72,30 @@ static void test_sax_str_substr() {
   ASSERT_STRN_EQ("ちは世界", substr, substr_size);
 }
 
-static size_t test_object_mapping_prog_lang(
+static size_t test_object_mapping_lang(
     sax_parser_t *restrict parser,
     prog_lang_t *restrict *restrict langs) {
 
-  (void)langs;
+  size_t count = 0;
 
   ASSERT_EQ(SAX_EVENT_START_ELEMENT, sax_next(parser));
-  ASSERT_STR_EQ("programming-languages", sax_tag(parser));
-  return 0;
+  ASSERT_STR_EQ("language", sax_tag(parser));
+
+  *langs = realloc(*langs, sizeof(prog_lang_t) * ++count);
+  prog_lang_t *restrict lang = &(*langs)[count - 1];
+
+  const char *name = sax_attr(parser, "name");
+  ASSERT_NON_NULL(name);
+  const char *first_appeared = sax_attr(parser, "first-appeared");
+  ASSERT_NON_NULL(first_appeared);
+  lang->name = malloc(strlen(name) + 1);
+  strcpy(lang->name, name);
+  lang->first_appeared = (int16_t)atoi(first_appeared);
+
+  ASSERT_EQ(SAX_EVENT_START_ELEMENT, sax_next(parser));
+  ASSERT_STR_EQ("language", sax_tag(parser));
+
+  return count;
 }
 
 static void test_object_mapping() {
@@ -94,7 +109,7 @@ static void test_object_mapping() {
 
   ASSERT_EQ(SAX_EVENT_START_ELEMENT, sax_next(parser));
   ASSERT_STR_EQ("programming-languages", sax_tag(parser));
-  size_t lang_count = test_object_mapping_prog_lang(parser, &langs);
+  size_t lang_count = test_object_mapping_lang(parser, &langs);
 
   ASSERT_EQ(4, lang_count);
 }

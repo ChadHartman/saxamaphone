@@ -1065,6 +1065,23 @@ void sax_str_substr(
   *substr_size = i;
 }
 
+const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict name) {
+
+  if (parser == NULL || name == NULL) {
+    return NULL;
+  }
+
+  for (const sax_attr_t *restrict attr = parser->attrs;
+       attr != NULL;
+       attr = attr->next) {
+    if (strcmp(name, attr->name) == 0) {
+      return attr->value;
+    }
+  }
+
+  return NULL;
+}
+
 // sax_str_t sax_str_unescaped(const sax_str_t src) {
 
 //   static SAXAMAPHONE_THREAD_LOCAL char buf[16];
