@@ -660,6 +660,10 @@ static sax_event_t sax_parser_state_expecting_attr_name(sax_parser_t *restrict p
     sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     return SAX_EVENT_START_ELEMENT;
 
+  case '/':
+    sax_parser_state(parser, SAX_STATE_CLOSING_START_TAG);
+    break;
+
   case SAXAMAPHONE_SPACE:
     // noop
     break;
@@ -670,6 +674,12 @@ static sax_event_t sax_parser_state_expecting_attr_name(sax_parser_t *restrict p
       return sax_parser_error_unexpected_glyph(parser, glyph);
     }
 
+    parser->current_attr = sax_alloc(&parser->arena, sizeof(sax_attr_t));
+    *parser->current_attr = (sax_attr_t){
+        .name = sax_parser_token_append(parser, NULL, glyph),
+        .value = NULL,
+    };
+    sax_parser_state(parser, SAX_STATE_IN_ATTR_NAME);
     break;
   }
 }
