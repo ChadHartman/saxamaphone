@@ -51,10 +51,10 @@ typedef struct sax_config_t {
 typedef struct sax_attr_t {
 
   /// @brief non-NULL Attribute
-  const char *name;
+  char *name;
 
   /// @brief non-NULL Attribute value; may by empty string "" when a value is not provided
-  const char *value;
+  char *value;
 
   /// @brief NULLable pointer to next attribute pair
   struct sax_attr_t *next;

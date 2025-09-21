@@ -68,16 +68,16 @@ typedef struct sax_alloc_t {
 
 typedef struct sax_file_iter_t {
   FILE *fp;
-  sax_size_t offset;
-  sax_size_t bytes_read;
+  uint_fast32_t offset;
+  uint_fast32_t bytes_read;
   uint8_t *file_buffer;
   size_t file_buffer_size;
 } sax_file_iter_t;
 
 typedef struct sax_str_iter_t {
   const char *value;
-  sax_size_t offset;
-  sax_size_t len;
+  uint_fast32_t offset;
+  uint_fast32_t len;
 } sax_str_iter_t;
 
 typedef struct sax_iter_t {
@@ -94,7 +94,7 @@ typedef struct sax_iter_t {
 } sax_iter_t;
 
 #define PRISAXSIZE PRIuFAST16
-typedef uint_fast32_t sax_size_t;
+typedef uint_fast32_t uint_fast32_t;
 
 struct sax_parser_t {
 
@@ -105,9 +105,9 @@ struct sax_parser_t {
   sax_state_t state;
   sax_state_t prev_state;
   /// @brief Used for error (SAX_EVENT_ERROR), tag (SAX_EVENT_START_TAG), or content (SAX_EVENT_CONTENT)
-  const char *msg;
-  sax_size_t line;
-  sax_size_t column;
+  char *msg;
+  uint_fast32_t line;
+  uint_fast32_t column;
   sax_attr_t *attrs;
   sax_attr_t *current_attr;
 };
@@ -121,8 +121,8 @@ struct sax_parser_t {
 /// @return resulting substring
 char *sax_str_substr(
     char *src,
-    sax_size_t start,
-    sax_size_t len);
+    uint_fast32_t start,
+    uint_fast32_t len);
 
 // === constants === //
 
@@ -159,7 +159,7 @@ static SAXAMAPHONE_THREAD_LOCAL uint8_t SAXAMAPHONE_NODE_BUFFER[SAXAMAPHONE_NODE
 /// @brief Given the provided byte determine the UTF-8 code point size
 /// @param byte byte value
 /// @return size 1-4 if value; 0 if invalid
-static sax_size_t sax_code_pt_size(byte_t byte) {
+static uint_fast32_t sax_code_pt_size(byte_t byte) {
 
   if (byte < 0x7F) {
     return 1;
@@ -181,7 +181,7 @@ static sax_size_t sax_code_pt_size(byte_t byte) {
   return 0;
 }
 
-static sax_size_t sax_long_to_code_pt(long value, char *out) {
+static uint_fast32_t sax_long_to_code_pt(long value, char *out) {
 
   if (value < 0 || value > 0x10FFFF || (value >= 0xD800 && value <= 0xDFFF)) {
     return 0;
@@ -246,7 +246,7 @@ static sax_alloc_t sax_alloc_partition(sax_alloc_t *restrict alloc) {
 /// @return true if all spaces
 static bool sax_str_is_space(const char *str) {
 
-  for (sax_size_t i = 0;
+  for (uint_fast32_t i = 0;
        str[i] != 0;
        i += sax_code_pt_size(str[i])) {
 
@@ -305,7 +305,7 @@ static char *sax_str_ltrim(char *src) {
 
   const size_t src_size = strlen(src);
 
-  for (sax_size_t i = 0; i < src_size; i += sax_code_pt_size(src[i])) {
+  for (uint_fast32_t i = 0; i < src_size; i += sax_code_pt_size(src[i])) {
     if (!isspace(src[i])) {
       src += i;
       break;
@@ -324,10 +324,10 @@ static char *sax_str_rtrim(char *src) {
     return src;
   }
 
-  sax_size_t last_non_space = 0;
+  uint_fast32_t last_non_space = 0;
   const size_t src_size = strlen(src);
 
-  for (sax_size_t i = 0;
+  for (uint_fast32_t i = 0;
        i < src_size;
        i += sax_code_pt_size(src[i])) {
 
@@ -349,9 +349,9 @@ static char *sax_str_trim(char *str) {
 
 // static sax_str_t sax_str_rfind(const sax_str_t str, char c) {
 
-//   sax_size_t offset = SAX_SIZE_MAX;
+//   uint_fast32_t offset = SAX_SIZE_MAX;
 
-//   for (sax_size_t i = 0; i < str.size; i += sax_code_pt_size(str.value[i])) {
+//   for (uint_fast32_t i = 0; i < str.size; i += sax_code_pt_size(str.value[i])) {
 //     if (str.value[i] == c) {
 //       offset = i;
 //     }
@@ -458,9 +458,9 @@ static const char *sax_iter_next_glyph(sax_iter_t *restrict iter) {
   }
 
   iter->glyph[0] = (char)byte;
-  const sax_size_t pt_size = sax_code_pt_size(byte);
+  const uint_fast32_t pt_size = sax_code_pt_size(byte);
 
-  sax_size_t i = 1;
+  uint_fast32_t i = 1;
   for (; i < pt_size && byte != 0; ++i) {
     byte = sax_iter_next_byte(iter);
     iter->glyph[i] = (char)byte;
@@ -478,6 +478,11 @@ static void sax_parser_reset(sax_parser_t *restrict parser) {
   parser->arena.offset = 0;
 }
 
+static void sax_parser_state(sax_parser_t *restrict parser, sax_state_t state) {
+  parser->prev_state = parser->state;
+  parser->state = state;
+}
+
 /// @brief Append a glyph to the current token (tag, content, attr name, attr value)
 /// @param parser instance
 /// @param token token to appen
@@ -489,7 +494,7 @@ static char *sax_token_append(sax_parser_t *restrict parser, char *token, const 
   const size_t glyph_size = strlen(glyph);
 
   if (!token) {
-    token = parser->arena.bytes + parser->arena.offset;
+    token = (char *)(parser->arena.bytes + parser->arena.offset);
   }
 
   const size_t token_size = strlen(token);
@@ -505,11 +510,6 @@ static char *sax_token_append(sax_parser_t *restrict parser, char *token, const 
   return token;
 }
 
-static void sax_parser_state(sax_parser_t *restrict parser, sax_state_t state) {
-  parser->prev_state = parser->state;
-  parser->state = state;
-}
-
 /// @brief Set the parser to the error state
 /// @param parser instance
 /// @param format message format
@@ -520,8 +520,8 @@ static void sax_parser_error(sax_parser_t *restrict parser, const char *restrict
   va_start(args, format);
 
   sax_parser_state(parser, SAX_STATE_ERROR);
-  vsnprintf((char *)parser->arena.bytes, parser->arena.bytes_size, format, args);
-  parser->msg = parser->arena.bytes;
+  parser->msg = (char *)parser->arena.bytes;
+  vsnprintf(parser->msg, parser->arena.bytes_size, format, args);
 
   va_end(args);
 }
@@ -606,7 +606,7 @@ static sax_event_t sax_parser_state_in_escaped_char(sax_parser_t *restrict parse
     break;
 
   default:
-    sax_parser_arena_append(parser, glyph);
+    parser->msg = sax_token_append(parser, parser->msg, glyph);
     break;
   }
 
@@ -645,7 +645,7 @@ static sax_event_t sax_parser_state_in_start_tag(sax_parser_t *restrict parser, 
       return sax_parser_error_unexpected_glyph(parser, glyph);
     }
 
-    sax_parser_arena_append(parser, glyph);
+    parser->msg = sax_token_append(parser, parser->msg, glyph);
     break;
   }
 
@@ -693,6 +693,8 @@ static sax_event_t sax_parser_state_expecting_attr_name(sax_parser_t *restrict p
     sax_parser_state(parser, SAX_STATE_IN_ATTR_NAME);
     break;
   }
+
+  return 0;
 }
 
 static sax_event_t sax_parser_state_in_content(sax_parser_t *restrict parser, const char *glyph) {
@@ -700,7 +702,7 @@ static sax_event_t sax_parser_state_in_content(sax_parser_t *restrict parser, co
   switch (glyph[0]) {
 
   case '&':
-    sax_parser_arena_append(parser, glyph);
+    parser->msg = sax_token_append(parser, parser->msg, glyph);
     sax_parser_state(parser, SAX_STATE_IN_ESC_CHAR);
     break;
 
@@ -713,8 +715,7 @@ static sax_event_t sax_parser_state_in_content(sax_parser_t *restrict parser, co
     }
 
     if (sax_str_is_space(parser->msg)) {
-      parser->msg = NULL;
-      sax_alloc_reset(&parser->arena);
+      sax_parser_reset(parser);
     } else {
       return SAX_EVENT_CONTENT;
     }
@@ -722,7 +723,7 @@ static sax_event_t sax_parser_state_in_content(sax_parser_t *restrict parser, co
   } break;
 
   default:
-    sax_parser_arena_append(parser, glyph);
+    parser->msg = sax_token_append(parser, parser->msg, glyph);
     break;
   }
 
@@ -750,7 +751,7 @@ static sax_event_t sax_parser_state_in_end_tag(sax_parser_t *restrict parser, co
       return SAX_EVENT_ERROR;
     }
 
-    sax_parser_arena_append(parser, glyph);
+    parser->msg = sax_token_append(parser, parser->msg, glyph);
     break;
   }
 
@@ -807,7 +808,7 @@ static sax_event_t sax_parser_state_in_comment(sax_parser_t *restrict parser, co
   switch (glyph[0]) {
 
   case '>': {
-    if (sax_str_endswith(parser->msg, sax_str("-->"))) {
+    if (sax_str_endswith(parser->msg, "-->")) {
       parser->msg = NULL;
       sax_parser_reset(parser);
       sax_parser_state(parser, SAX_STATE_IN_CONTENT);
@@ -815,7 +816,7 @@ static sax_event_t sax_parser_state_in_comment(sax_parser_t *restrict parser, co
   } break;
 
   default:
-    sax_parser_arena_append(parser, glyph);
+    parser->msg = sax_token_append(parser, parser->msg, glyph);
     break;
   }
 
@@ -1033,12 +1034,12 @@ const sax_attr_t *sax_attrs(const sax_parser_t *restrict parser) {
 
 char *sax_str_substr(
     char *str,
-    sax_size_t start,
-    sax_size_t len) {
+    uint_fast32_t start,
+    uint_fast32_t len) {
 
   size_t size = strlen(str);
-  sax_size_t byte_offset = 0;
-  sax_size_t char_offset = 0;
+  uint_fast32_t byte_offset = 0;
+  uint_fast32_t char_offset = 0;
 
   for (;
        byte_offset < size && char_offset < start;
@@ -1053,7 +1054,7 @@ char *sax_str_substr(
        byte_offset += sax_code_pt_size(str[byte_offset]), ++char_offset) {
   }
 
-  str[byte_offset] = '/0';
+  str[byte_offset] = '\0';
 
   return str;
 }
