@@ -85,6 +85,8 @@ static size_t test_object_mapping_prog_lang(
 
 static void test_object_mapping() {
 
+  print_header("Object Mapping Tests");
+
   prog_lang_t *langs = NULL;
   sax_parser_t *parser = sax_parser(&(sax_config_t){
       .path = "../test/files/programming-languages.xml",
@@ -128,17 +130,17 @@ int main(int argc, char **args) {
 
   if (argc == 2) {
 
-    if (strcmp("-h", args[1])) {
+    if (strcmp("-h", args[1]) == 0) {
       printf("Usage: %s [-h, substr, objmap]\n", args[0]);
       return EXIT_SUCCESS;
     }
 
-    if (strcmp("substr", args[1])) {
+    if (strcmp("substr", args[1]) == 0) {
       test_sax_str_substr();
       return EXIT_SUCCESS;
     }
 
-    if (strcmp("objmap", args[1])) {
+    if (strcmp("objmap", args[1]) == 0) {
       test_object_mapping();
       return EXIT_SUCCESS;
     }
