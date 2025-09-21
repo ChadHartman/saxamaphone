@@ -112,6 +112,8 @@ struct sax_parser_t {
   sax_attr_t attrs[SAXAMAPHONE_ATTR_MAX];
 };
 
+
+
 // === undocumented api declarations === //
 
 /// @brief Create a substring
