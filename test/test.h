@@ -25,6 +25,9 @@
            passed ? COLOR_GREEN "PASSED" : COLOR_RED "FAILED"); \
     printf(COLOR_CYAN "  ASSERT_NULL(" #computed ")\n");        \
     printf(COLOR_YELLOW "    %p\n\n" COLOR_RESET, result);      \
+    if (!passed) {                                              \
+      exit(EXIT_FAILURE);                                       \
+    }                                                           \
   }
 
 #define ASSERT_NON_NULL(computed)                               \
@@ -37,6 +40,9 @@
            passed ? COLOR_GREEN "PASSED" : COLOR_RED "FAILED"); \
     printf(COLOR_CYAN "  ASSERT_NON_NULL(" #computed ")\n");    \
     printf(COLOR_YELLOW "    %p\n\n" COLOR_RESET, result);      \
+    if (!passed) {                                              \
+      exit(EXIT_FAILURE);                                       \
+    }                                                           \
   }
 
 #define ASSERT_EQ(expected, computed)                                             \
