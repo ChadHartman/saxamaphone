@@ -524,7 +524,7 @@ static void sax_parser_error(sax_parser_t *restrict parser, const char *restrict
 
   sax_parser_state(parser, SAX_STATE_ERROR);
   parser->error = (sax_str_t){
-      .size = vsnprintf((char *)parser->alloc.arena, parser->alloc.arena_size, format, args),
+      .size = vsnprintf((char *)parser->alloc.arena, parser->alloc.offset, format, args),
       .value = (char *)parser->alloc.arena,
   };
 
@@ -745,7 +745,7 @@ static sax_event_t sax_parser_state_in_attr_name(sax_parser_t *restrict parser, 
     if (sax_str_empty(attr->name)) {
       attr->name = (sax_str_t){
           .size = 0,
-          .value = (char *)parser->alloc.arena + (parser->alloc.arena_size - glyph.size),
+          .value = (char *)parser->alloc.arena + (parser->alloc.offset - glyph.size),
       };
     }
     attr->name.size += glyph.size;
@@ -776,7 +776,7 @@ static sax_event_t sax_parser_state_in_attr_value(sax_parser_t *restrict parser,
     sax_attr_t *restrict attr = &parser->attrs[parser->attr_offset];
     if (sax_str_empty(attr->value)) {
       // initializing
-      attr->value.value = (char *)parser->alloc.arena + parser->alloc.arena_size;
+      attr->value.value = (char *)parser->alloc.arena + parser->alloc.offset;
     } else {
       sax_parser_state(parser, SAX_STATE_IN_ATTR_NAME);
     }
@@ -797,12 +797,12 @@ static sax_event_t sax_parser_state_in_comment(sax_parser_t *restrict parser, co
 
   case '>': {
     const sax_str_t subj = {
-        .size = parser->alloc.arena_size,
+        .size = parser->alloc.offset,
         .value = (char *)parser->alloc.arena,
     };
 
     if (sax_str_endswith(subj, sax_str("-->"))) {
-      parser->alloc.arena_size = 0;
+      parser->alloc.offset = 0;
       sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     }
   } break;
@@ -819,8 +819,8 @@ static sax_event_t sax_parser_state_in_proc_inst(sax_parser_t *restrict parser, 
 
   switch (glyph.value[0]) {
   case '>':
-    if (parser->alloc.arena[parser->alloc.arena_size - 2] == '?') {
-      parser->alloc.arena_size = 0;
+    if (parser->alloc.arena[parser->alloc.offset - 2] == '?') {
+      parser->alloc.offset = 0;
       sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     } else {
       return sax_parser_error_unexpected_glyph(parser, glyph);
@@ -935,7 +935,7 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
   parser->tag.size = 0;
   parser->content.size = 0;
   parser->attr_offset = 0;
-  parser->alloc.arena_size = 0;
+  parser->alloc.offset = 0;
   memset(parser->attrs, 0, sizeof(parser->attrs));
 
   for (sax_str_t glyph = sax_iter_next_glyph(&parser->iter);
