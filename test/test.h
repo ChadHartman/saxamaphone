@@ -1,6 +1,7 @@
 #ifndef TEST_H
 #define TEST_H
 
+#include <inttypes.h> // PRId64
 #include <saxamaphone.h>
 #include <stdbool.h>
 #include <stdio.h>
