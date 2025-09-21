@@ -119,7 +119,7 @@ static bool map_prog_lang(
   out->first_appeared = sax_attr_d32(parser, "first-appeared");
 
   for (sax_event_t ev = sax_next(parser);
-       ev != SAX_EVENT_END_ELEMENT && ev != SAX_EVENT_ERROR;
+       ev != SAX_EVENT_END_DOCUMENT && ev != SAX_EVENT_ERROR;
        ev = sax_next(parser)) {
 
     if (ev == SAX_EVENT_END_ELEMENT && sax_tag_is(parser, "language")) {
