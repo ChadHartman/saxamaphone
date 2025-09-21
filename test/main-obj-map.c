@@ -219,6 +219,15 @@ int main() {
   ASSERT_STR_EQ("Game Development", langs[2].app_doms[2]);
 
   ASSERT_STR_EQ("JavaScript", langs[3].name);
+  ASSERT_EQ(1995, langs[3].first_appeared);
+  ASSERT_STR_EQ("Event-Driven", langs[3].paradigms[0]);
+  ASSERT_STR_EQ("Object-Oriented", langs[3].paradigms[1]);
+  ASSERT_STR_EQ("Functional", langs[3].paradigms[2]);
+  ASSERT_STR_EQ("Dynamic", langs[3].typing[0]);
+  ASSERT_STR_EQ("Weak", langs[3].typing[1]);
+  ASSERT_STR_EQ("Interpreted (JIT compilation)", langs[3].exe_model[0]);
+  ASSERT_STR_EQ("Web Development (Frontend &amp; Backend)", langs[3].app_doms[0]);
+  ASSERT_STR_EQ("Mobile Development", langs[3].app_doms[1]);
 
   arena_free(arena);
   return EXIT_SUCCESS;
