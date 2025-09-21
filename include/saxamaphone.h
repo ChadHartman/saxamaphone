@@ -1,11 +1,12 @@
 #ifndef SAXAMAPHONE
 #define SAXAMAPHONE
 
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 /// @brief Possible Saxamaphone event types
-typedef enum
-{
+typedef enum {
   SAX_EVENT_START_ELEMENT = 1,
   SAX_EVENT_CONTENT,
   SAX_EVENT_END_ELEMENT,
@@ -20,8 +21,7 @@ typedef uint_fast32_t sax_size_t;
 typedef struct sax_parser_t sax_parser_t;
 
 /// @brief Saxamaphone parser configuration
-typedef struct sax_config_t
-{
+typedef struct sax_config_t {
 
   /// @brief The file path to stream XML from
   const char *path;
@@ -51,8 +51,7 @@ typedef struct sax_config_t
 } sax_config_t;
 
 /// @brief Saxamaphone string view type
-typedef struct sax_str_t
-{
+typedef struct sax_str_t {
 
   /// @brief Value; always non-NULL and not NULL-terminated
   const char *value;
@@ -63,8 +62,7 @@ typedef struct sax_str_t
 } sax_str_t;
 
 /// @brief Saxamaphone XML Attribute
-typedef struct sax_attr_t
-{
+typedef struct sax_attr_t {
 
   /// @brief Attribute Name; will only be empty when last element of a list
   sax_str_t name;
@@ -75,8 +73,7 @@ typedef struct sax_attr_t
 } sax_attr_t;
 
 /// @brief Saxamaphone XML Attribute array slice
-typedef struct sax_attrs_t
-{
+typedef struct sax_attrs_t {
 
   /// @brief Attributes array
   const sax_attr_t *attrs;
