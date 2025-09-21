@@ -70,12 +70,13 @@ static string_node_t *map_string_node(
     sax_parser_t *restrict parser,
     const char *restrict tag) {
 
-  string_node_t *restrict node = arena_alloc(arena, sizeof(string_node_t));
-  if (SAX_EVENT_CONTENT != sax_next(parser)) {
+  const sax_event_t ev = sax_next(parser);
+  if (SAX_EVENT_CONTENT != ev) {
     LOG("ERROR: missing content for \"%s\"\n", tag);
     return NULL;
   }
 
+  string_node_t *restrict node = arena_alloc(arena, sizeof(string_node_t));
   node->value = arena_strdup(arena, sax_content(parser));
   LOG("Mapped \"%s\" value \"%s\"\n", tag, node->value);
 
@@ -117,14 +118,18 @@ static string_node_t *map_string_nodes(
       }
 
       tail = node;
+
     } else if (ev == SAX_EVENT_END_ELEMENT && sax_tag_is(parser, collection_tag)) {
       return root;
+
     } else {
-      FAIL("Unexpected tag \"%s\"", sax_tag(parser));
+      LOG("Unexpected tag \"%s\"", sax_tag(parser));
+      return NULL;
     }
   }
 
-  FAIL("Unreachable section");
+  LOG("Unreachable section");
+  return NULL;
 }
 
 static prog_lang_t *map_prog_lang(
@@ -166,8 +171,7 @@ static prog_lang_t *map_prog_lang(
     }
 
     if (sax_tag_is(parser, "application-domains")) {
-      lang->app_doms = map_string_node(arena, parser, "domain");
-      map_string_nodes(arena, parser, "application-domains", "domain");
+      lang->app_doms = map_string_nodes(arena, parser, "application-domains", "domain");
       if (!lang->app_doms) {
         return NULL;
       }
