@@ -15,13 +15,13 @@ srcs = [
 
 # === Tests === #
 
-all_tests = executable('saxamaphone-tests',
+tests_misc = executable('saxamaphone-tests',
     sources: srcs 
         + 'test/main.c',
     include_directories: includes,
     c_args: c_args)
 
-all_tests = executable('saxamaphone-tests-obj-map',
+tests_obj_map = executable('saxamaphone-tests-obj-map',
     sources: srcs 
         + 'test/arena.c' 
         + 'test/main-obj-map.c',
@@ -35,5 +35,6 @@ tests_no_thread_local = executable('saxamaphone-tests-no-thread-local',
         '-DSAXAMAPHONE_FILE_BUFFER_SIZE=0' + 
         '-DSAXAMAPHONE_NODE_BUFFER_SIZE=0')
 
-test('all-tests', all_tests)
+test('tests-misc', tests_misc)
+test('tests-obj-map', tests_obj_map)
 test('tests-ntl', tests_no_thread_local)
