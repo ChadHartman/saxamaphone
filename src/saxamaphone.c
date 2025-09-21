@@ -8,8 +8,9 @@
 
 #include <saxamaphone.h>
 
-// TODO: Make NULL term strings
 // TODO: Allign alloc
+// TODO: Ampersand escapes
+// TODO: CDATA
 
 #define SAXAMAPHONE_DEBUG
 
@@ -129,7 +130,7 @@ void sax_str_substr(
 
 // === constants === //
 
-#define SAX_SIZE_MAX UINT_FAST32_MAX
+// #define SAX_SIZE_MAX UINT_FAST32_MAX
 
 #define SAXAMAPHONE_EXCLUDE_TAG "!\"#$%&'()*+,/;<=>?@[\\]^`{|}~"
 #define SAXAMAPHONE_EXCLUDE_TAG_PREFIX (SAXAMAPHONE_EXCLUDE_TAG ".-0123456789")

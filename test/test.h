@@ -14,6 +14,16 @@
 #define COLOR_CYAN "\x1b[36m"
 #define COLOR_RESET "\x1b[0m"
 
+#define FAIL()                                   \
+  {                                              \
+    printf("%s:%d: %s" COLOR_RESET "\n",         \
+           (strrchr(__FILE__, '/') + 1),         \
+           __LINE__,                             \
+           COLOR_RED "FAILED");                  \
+    printf(COLOR_CYAN "  FAIL()\n" COLOR_RESET); \
+    exit(EXIT_FAILURE);                          \
+  }
+
 #define ASSERT_NULL(computed)                                   \
   {                                                             \
     const void *result = computed;                              \

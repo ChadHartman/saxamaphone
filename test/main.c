@@ -1,11 +1,30 @@
 #include <assert.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>  // printf
 #include <stdlib.h> // EXIT_SUCCESS
 #include <string.h> // strrchr
 
 #include "test.h"
 #include <saxamaphone.h>
+
+typedef struct string_slice_t {
+  char **names;
+  size_t count;
+} string_slice_t;
+
+/// @brief Programming Language
+typedef struct prog_lang_t {
+
+  char *name;
+  int16_t first_appeared;
+
+  string_slice_t paradigms;
+  string_slice_t typing;
+  string_slice_t exe_model;
+  string_slice_t app_doms;
+
+} prog_lang_t;
 
 static void print_header(const char *header) {
 
@@ -53,6 +72,31 @@ static void test_sax_str_substr() {
   ASSERT_STRN_EQ("ちは世界", substr, substr_size);
 }
 
+static size_t test_object_mapping_prog_lang(
+    sax_parser_t *restrict parser,
+    prog_lang_t *restrict *restrict langs) {
+
+  (void)langs;
+
+  ASSERT_EQ(SAX_EVENT_START_ELEMENT, sax_next(parser));
+  ASSERT_STR_EQ("programming-languages", sax_tag(parser));
+  return 0;
+}
+
+static void test_object_mapping() {
+
+  prog_lang_t *langs = NULL;
+  sax_parser_t *parser = sax_parser(&(sax_config_t){
+      .path = "../test/files/programming-languages.xml",
+  });
+
+  ASSERT_EQ(SAX_EVENT_START_ELEMENT, sax_next(parser));
+  ASSERT_STR_EQ("programming-languages", sax_tag(parser));
+  size_t lang_count = test_object_mapping_prog_lang(parser, &langs);
+
+  ASSERT_EQ(4, lang_count);
+}
+
 // static void test_sax_unescaped() {
 
 //   print_header("sax_str_unescaped");
@@ -80,10 +124,32 @@ static void test_sax_str_substr() {
 //   ASSERT_STR_EQ("🚀", sax_str_unescaped(sax_str("&#128640;")));
 // }
 
-int main() {
+int main(int argc, char **args) {
+
+  if (argc == 2) {
+
+    if (strcmp("-h", args[1])) {
+      printf("Usage: %s [-h, substr, objmap]\n", args[0]);
+      return EXIT_SUCCESS;
+    }
+
+    if (strcmp("substr", args[1])) {
+      test_sax_str_substr();
+      return EXIT_SUCCESS;
+    }
+
+    if (strcmp("objmap", args[1])) {
+      test_object_mapping();
+      return EXIT_SUCCESS;
+    }
+
+    printf("Unknown test \"%s\"\n", args[1]);
+    return EXIT_FAILURE;
+  }
 
   test_sax_str_substr();
   // test_sax_unescaped();
+  test_object_mapping();
 
   print_header("end-to-end");
   sax_event_t ev = 0;

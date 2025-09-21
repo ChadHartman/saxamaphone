@@ -6,4 +6,5 @@
     <?some_pi some_attr="some_value"?>
     <SecondElement param2="something"> Pre-Text <Inline>Inlined text</Inline> Post-text. </SecondElement>
     <!-- Some comment <foo/> -->
+    <![CDATA[<sender>John Smith</sender>]]>
 </DocumentElement>
