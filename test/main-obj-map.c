@@ -13,23 +13,16 @@
   printf(COLOR_CYAN "%s:%d " COLOR_RESET, (strrchr(__FILE__, '/') + 1), __LINE__); \
   printf(__VA_ARGS__)
 
-typedef struct string_node_t {
-  char *value;
-  struct string_node_t *next;
-} string_node_t;
-
 /// @brief Programming Language
 typedef struct prog_lang_t {
 
   char *name;
   int16_t first_appeared;
 
-  string_node_t *paradigms;
-  string_node_t *typing;
-  string_node_t *exe_model;
-  string_node_t *app_doms;
-
-  struct prog_lang_t *next;
+  char *paradigms[8];
+  char *typing[8];
+  char *exe_model[8];
+  char *app_doms[8];
 
 } prog_lang_t;
 
@@ -65,7 +58,7 @@ static int32_t sax_attr_d32(sax_parser_t *restrict parser, const char *restrict 
   return (int32_t)atol(value);
 }
 
-static string_node_t *map_string_node(
+static char *map_string_node(
     arena_t *restrict arena,
     sax_parser_t *restrict parser,
     const char *restrict tag) {
@@ -76,109 +69,89 @@ static string_node_t *map_string_node(
     return NULL;
   }
 
-  string_node_t *restrict node = arena_alloc(arena, sizeof(string_node_t));
-  node->value = arena_strdup(arena, sax_content(parser));
-  LOG("Mapped \"%s\" value \"%s\"\n", tag, node->value);
+  char *restrict value = arena_strdup(arena, sax_content(parser));
+  LOG("Mapped \"%s\" value \"%s\"\n", tag, value);
 
   if (sax_next_is(parser, SAX_EVENT_END_ELEMENT, tag)) {
-    return node;
+    return value;
   }
 
   LOG("ERROR: unexpected tag \"%s\"\n", sax_tag(parser));
   return NULL;
 }
 
-static string_node_t *map_string_nodes(
+static bool map_string_nodes(
     arena_t *restrict arena,
     sax_parser_t *restrict parser,
+    char **nodes,
     const char *restrict collection_tag,
     const char *restrict tag) {
 
-  string_node_t *restrict root = NULL;
-  string_node_t *restrict tail = NULL;
+  size_t node_offset = 0;
 
   for (sax_event_t ev = sax_next(parser);
        ev != SAX_EVENT_END_DOCUMENT && ev != SAX_EVENT_ERROR;
        ev = sax_next(parser)) {
 
     if (ev == SAX_EVENT_START_ELEMENT && sax_tag_is(parser, tag)) {
-
-      string_node_t *restrict node = map_string_node(arena, parser, tag);
-
-      if (!node) {
-        return NULL;
-      }
-
-      if (!root) {
-        root = node;
-      }
-
-      if (tail) {
-        tail->next = node;
-      }
-
-      tail = node;
+      nodes[node_offset++] = map_string_node(arena, parser, tag);
 
     } else if (ev == SAX_EVENT_END_ELEMENT && sax_tag_is(parser, collection_tag)) {
-      return root;
+      return true;
 
     } else {
       LOG("Unexpected tag \"%s\"", sax_tag(parser));
-      return NULL;
+      return false;
     }
   }
 
   LOG("Unreachable section");
-  return NULL;
+  return false;
 }
 
-static prog_lang_t *map_prog_lang(
+static bool map_prog_lang(
     arena_t *restrict arena,
-    sax_parser_t *restrict parser) {
+    sax_parser_t *restrict parser,
+    prog_lang_t *restrict out) {
 
   // In <language>
-  prog_lang_t *restrict lang = arena_alloc(arena, sizeof(prog_lang_t));
-  lang->name = arena_strdup(arena, sax_attr(parser, "name"));
-  lang->first_appeared = sax_attr_d32(parser, "first-appeared");
+  out->name = arena_strdup(arena, sax_attr(parser, "name"));
+  out->first_appeared = sax_attr_d32(parser, "first-appeared");
 
   for (sax_event_t ev = sax_next(parser);
        ev != SAX_EVENT_END_ELEMENT && ev != SAX_EVENT_ERROR;
        ev = sax_next(parser)) {
 
     if (ev == SAX_EVENT_END_ELEMENT && sax_tag_is(parser, "language")) {
-      return lang;
+      return true;
     }
 
     if (sax_tag_is(parser, "paradigms")) {
-      lang->paradigms = map_string_nodes(arena, parser, "paradigms", "paradigm");
-      if (!lang->paradigms) {
-        return NULL;
-      }
+      if (!map_string_nodes(arena, parser, out->paradigms, "paradigms", "paradigm"))
+        return false;
     }
 
     if (sax_tag_is(parser, "typing-dicipline")) {
-      lang->typing = map_string_nodes(arena, parser, "typing-dicipline", "typing");
-      if (!lang->typing) {
-        return NULL;
+      if (!map_string_nodes(arena, parser, out->typing, "typing-dicipline", "typing")) {
+        return false;
       }
     }
 
     if (sax_tag_is(parser, "execution-model")) {
-      lang->exe_model = map_string_nodes(arena, parser, "execution-model", "model");
-      if (!lang->exe_model) {
-        return NULL;
+      if (!map_string_nodes(arena, parser, out->exe_model, "execution-model", "model")) {
+        return false;
       }
     }
 
     if (sax_tag_is(parser, "application-domains")) {
-      lang->app_doms = map_string_nodes(arena, parser, "application-domains", "domain");
-      if (!lang->app_doms) {
-        return NULL;
+      if (!map_string_nodes(arena, parser, out->app_doms, "application-domains", "domain")) {
+        return false;
       }
     }
   }
 
-  return lang;
+  LOG("Unreachable section\n");
+  return false;
 }
 
 int main() {
@@ -191,27 +164,17 @@ int main() {
   ASSERT_EQ(SAX_EVENT_START_ELEMENT, sax_next(parser));
   ASSERT_STR_EQ("programming-languages", sax_tag(parser));
 
-  prog_lang_t *restrict langs = NULL;
-  prog_lang_t *restrict tail = NULL;
+  prog_lang_t langs[8] = {0};
+  size_t lang_offset = 0;
 
   for (sax_event_t ev = sax_next(parser);
        ev != SAX_EVENT_END_DOCUMENT && ev != SAX_EVENT_ERROR;
        ev = sax_next(parser)) {
 
     if (ev == SAX_EVENT_START_ELEMENT && sax_tag_is(parser, "language")) {
-
-      prog_lang_t *restrict lang = map_prog_lang(arena, parser);
-      ASSERT_NON_NULL(lang);
-
-      if (!langs) {
-        langs = lang;
+      if (!map_prog_lang(arena, parser, &langs[lang_offset++])) {
+        FAIL("Failed to map language");
       }
-
-      if (tail) {
-        tail->next = lang;
-      }
-
-      tail = lang;
 
     } else if (ev == SAX_EVENT_END_ELEMENT && sax_tag_is(parser, "programming-languages")) {
       break;
@@ -220,22 +183,10 @@ int main() {
     }
   }
 
-  string_node_t *node = NULL;
-
-  ASSERT_NON_NULL(langs);
-  ASSERT_STR_EQ("Python", langs->name);
-
-  langs = langs->next;
-  ASSERT_NON_NULL(langs);
-  ASSERT_STR_EQ("Java", langs->name);
-
-  langs = langs->next;
-  ASSERT_NON_NULL(langs);
-  ASSERT_STR_EQ("C", langs->name);
-
-  langs = langs->next;
-  ASSERT_NON_NULL(langs);
-  ASSERT_STR_EQ("JavaScript", langs->name);
+  ASSERT_STR_EQ("Python", langs[0].name);
+  ASSERT_STR_EQ("Java", langs[1].name);
+  ASSERT_STR_EQ("C", langs[2].name);
+  ASSERT_STR_EQ("JavaScript", langs[3].name);
 
   arena_free(arena);
   return EXIT_SUCCESS;

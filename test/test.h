@@ -28,20 +28,16 @@
     printf("+\n");                                                    \
   }
 
-#define FAIL(...)                                  \
-  {                                                \
-    printf("%s:%d: %s" COLOR_RESET "\n",           \
-           (strrchr(__FILE__, '/') + 1),           \
-           __LINE__,                               \
-           COLOR_RED "FAILED");                    \
-    if (strlen(#__VA_ARGS__) == 0) {               \
-      printf(COLOR_CYAN "  FAIL()\n" COLOR_RESET); \
-    } else {                                       \
-      printf(COLOR_CYAN "  FAIL(");                \
-      printf(__VA_ARGS__);                         \
-      printf(")\n" COLOR_RESET);                   \
-    }                                              \
-    exit(EXIT_FAILURE);                            \
+#define FAIL(...)                        \
+  {                                      \
+    printf("%s:%d: %s" COLOR_RESET "\n", \
+           (strrchr(__FILE__, '/') + 1), \
+           __LINE__,                     \
+           COLOR_RED "FAILED");          \
+    printf(COLOR_CYAN "  FAIL(");        \
+    printf(__VA_ARGS__);                 \
+    printf(")\n" COLOR_RESET);           \
+    exit(EXIT_FAILURE);                  \
   }
 
 #define ASSERT_NULL(computed)                                   \
