@@ -220,6 +220,8 @@ int main() {
     }
   }
 
+  string_node_t *node = NULL;
+
   ASSERT_NON_NULL(langs);
   ASSERT_STR_EQ("Python", langs->name);
 
