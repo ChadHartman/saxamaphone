@@ -837,12 +837,14 @@ static sax_event_t sax_parser_state_in_proc_inst(sax_parser_t *restrict parser, 
 
 sax_parser_t *sax_parser(const sax_config_t *restrict config) {
 
+  SAXAMAPHONE_LOG("[SAXAMAPHONE] Configuration:\n"
+                  "SAXAMAPHONE_FILE_BUFFER_SIZE=%d\n"
+                  "SAXAMAPHONE_NODE_BUFFER_SIZE=%d\n",
+                  SAXAMAPHONE_FILE_BUFFER_SIZE,
+                  SAXAMAPHONE_NODE_BUFFER_SIZE);
+
   if (!config) {
-
-#ifdef SAXAMAPHONE_DEBUG
-    printf("[SAXAMAPHONE] No configuration provided\n");
-#endif
-
+    SAXAMAPHONE_LOG("[SAXAMAPHONE] ERROR: No configuration provided\n");
     return NULL;
   }
 

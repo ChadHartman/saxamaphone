@@ -23,7 +23,9 @@ all_tests = executable('saxamaphone-tests',
 tests_no_thread_local = executable('saxamaphone-tests-no-thread-local',
     sources: srcs + 'test/main-no-thread-local.c',
     include_directories: includes,
-    c_args: c_args)
+    c_args: c_args + 
+        '-DSAXAMAPHONE_FILE_BUFFER_SIZE=0' + 
+        '-DSAXAMAPHONE_NODE_BUFFER_SIZE=0')
 
 test('all-tests', all_tests)
 test('tests-ntl', tests_no_thread_local)
