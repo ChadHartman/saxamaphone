@@ -662,31 +662,34 @@ static sax_event_t sax_parser_state_in_start_tag(sax_parser_t *restrict parser, 
   return 0;
 }
 
-static sax_event_t sax_parser_state_in_content(sax_parser_t *restrict parser, const sax_str_t glyph) {
+static sax_event_t sax_parser_state_in_content(sax_parser_t *restrict parser, const char *glyph) {
 
-  switch (glyph.value[0]) {
+  switch (glyph[0]) {
 
   case '&':
+    sax_parser_msg_append(parser, glyph);
     sax_parser_state(parser, SAX_STATE_IN_ESC_CHAR);
     break;
 
   case '<': {
     sax_parser_state(parser, SAX_STATE_IN_TAG);
-    sax_str_t content = sax_parser_node(parser);
-    --content.size; // For the '<'
-    content = parser->untrimmed_content ? content : sax_str_trim(content);
+    parser->msg = parser->msg ? parser->msg : "";
 
-    if (sax_str_is_space(parser->content)) {
-      parser->alloc.offset = 1;
-      parser->alloc.arena[0] = '<';
+    if (parser->untrimmed_content) {
+      parser->msg = sax_str_trim(parser->msg);
+    }
+
+    if (sax_str_is_space(parser->msg)) {
+      parser->msg = NULL;
+      sax_alloc_reset(&parser->alloc);
     } else {
-      parser->content = content;
       return SAX_EVENT_CONTENT;
     }
+
   } break;
 
   default:
-    // noop
+    sax_parser_msg_append(parser, glyph);
     break;
   }
 
