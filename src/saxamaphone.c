@@ -679,6 +679,17 @@ static sax_event_t sax_parser_state_expecting_attr_name(sax_parser_t *restrict p
         .name = sax_parser_token_append(parser, NULL, glyph),
         .value = NULL,
     };
+
+    // Add to end of linked list
+    if (parser->attrs) {
+      sax_attr_t *attr = parser->attrs;
+      for (; attr->next != NULL; attr = attr->next) {
+      }
+      attr->next = parser->current_attr;
+    } else {
+      parser->attrs = parser->current_attr;
+    }
+
     sax_parser_state(parser, SAX_STATE_IN_ATTR_NAME);
     break;
   }
@@ -751,11 +762,11 @@ static sax_event_t sax_parser_state_in_attr_name(sax_parser_t *restrict parser, 
   switch (glyph[0]) {
 
   case '>':
-
     sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     return SAX_EVENT_START_ELEMENT;
 
   case SAXAMAPHONE_SPACE:
+    parser->current_attr = NULL;
     sax_parser_state(parser, SAX_STATE_EXPECTING_ATTR_NAME);
     break;
 
@@ -763,16 +774,12 @@ static sax_event_t sax_parser_state_in_attr_name(sax_parser_t *restrict parser, 
     sax_parser_state(parser, SAX_STATE_ASSIGNING_ATTR_VALUE);
     break;
 
-  default: {
-    sax_attr_t *restrict attr = &parser->attrs[parser->attr_offset];
-    if (sax_str_empty(attr->name)) {
-      attr->name = (sax_str_t){
-          .size = 0,
-          .value = (char *)parser->alloc.bytes + (parser->alloc.offset - glyph.size),
-      };
+  default:
+    if (strchr(SAXAMAPHONE_EXCLUDE_TAG, glyph[0])) {
+      return sax_parser_error_unexpected_glyph(parser, glyph);
     }
-    attr->name.size += glyph.size;
-  } break;
+    parser->current_attr->name = sax_parser_token_append(parser, parser->current_attr->name, glyph);
+    break;
   }
 
   return 0;
