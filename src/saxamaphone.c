@@ -152,8 +152,11 @@ static SAXAMAPHONE_THREAD_LOCAL uint8_t SAXAMAPHONE_NODE_BUFFER[SAXAMAPHONE_NODE
 // === private methods === //
 
 #ifdef SAXAMAPHONE_DEBUG
-#define SAXAMAPHONE_LOG(...)                                              \
-  printf("[SAXAMAPHONE] %s:%d ", (strrchr(__FILE__, '/') + 1), __LINE__); \
+#define SAXAMAPHONE_LOG(...)                      \
+  printf("\x1b[36m"                               \
+         "[SAXAMAPHONE] %s:%d "                   \
+         "\x1b[0m",                               \
+         (strrchr(__FILE__, '/') + 1), __LINE__); \
   printf(__VA_ARGS__)
 #else
 #define SAXAMAPHONE_LOG(...) ((void)0)
@@ -711,20 +714,21 @@ static sax_event_t sax_parser_state_in_content(sax_parser_t *restrict parser, co
     //   sax_parser_state(parser, SAX_STATE_IN_ESC_CHAR);
     //   break;
 
-  case '<': {
+  case '<':
     sax_parser_state(parser, SAX_STATE_IN_TAG);
-    parser->data = parser->data ? parser->data : "";
+    if (parser->data) {
 
-    if (!parser->untrimmed_content) {
-      parser->data = sax_str_trim(parser->data);
-    }
+      if (!parser->untrimmed_content) {
+        parser->data = sax_str_trim(parser->data);
+      }
 
-    if (sax_str_is_space(parser->data)) {
-      sax_parser_reset(parser);
-    } else {
+      if (sax_str_is_space(parser->data)) {
+        sax_parser_reset(parser);
+        return 0;
+      }
+
       return SAX_EVENT_CONTENT;
     }
-  }
     return 0;
 
   default:
@@ -835,7 +839,7 @@ static sax_event_t sax_parser_state_in_proc_inst(sax_parser_t *restrict parser, 
 
 sax_parser_t *sax_parser(const sax_config_t *restrict config) {
 
-  SAXAMAPHONE_LOG("[SAXAMAPHONE] Configuration:\n"
+  SAXAMAPHONE_LOG("Configuration:\n"
                   "    SAXAMAPHONE_FILE_BUFFER_SIZE=%d\n"
                   "    SAXAMAPHONE_NODE_BUFFER_SIZE=%d\n",
                   SAXAMAPHONE_FILE_BUFFER_SIZE,
