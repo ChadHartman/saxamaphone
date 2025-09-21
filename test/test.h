@@ -2,7 +2,6 @@
 #define TEST_H
 
 #include <inttypes.h> // PRId64
-#include <saxamaphone.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h> // strrchr
@@ -63,35 +62,46 @@
     }                                                                             \
   }
 
-#define ASSERT_STR_EQ(expected, computed)                                 \
+#define ASSERT_STR_EQ(expected, computed)                                  \
+  {                                                                        \
+    const char *lhs = expected;                                            \
+    const char *rhs = computed;                                            \
+    const bool passed = strcmp(lhs, rhs) == 0;                             \
+    printf("%s:%d: %s" COLOR_RESET "\n",                                   \
+           (strrchr(__FILE__, '/') + 1),                                   \
+           __LINE__,                                                       \
+           passed ? COLOR_GREEN "PASSED" : COLOR_RED "FAILED");            \
+    printf(COLOR_CYAN "  ASSERT_STR_EQ(" #expected ", " #computed ")\n");  \
+    printf(COLOR_YELLOW "    \"%s\" == \"%s\"\n\n" COLOR_RESET, lhs, rhs); \
+    if (!passed) {                                                         \
+      exit(EXIT_FAILURE);                                                  \
+    }                                                                      \
+  }
+
+#define ASSERT_STRN_EQ(expected, computed, len)                           \
   {                                                                       \
-    const sax_str_t lhs = sax_str(expected);                              \
-    const sax_str_t rhs = computed;                                       \
-    const bool passed = sax_str_equals(lhs, rhs);                         \
+    const char *lhs = expected;                                           \
+    const char *rhs = computed;                                           \
+    const bool passed = strncmp(lhs, rhs, len) == 0;                      \
     printf("%s:%d: %s" COLOR_RESET "\n",                                  \
            (strrchr(__FILE__, '/') + 1),                                  \
            __LINE__,                                                      \
            passed ? COLOR_GREEN "PASSED" : COLOR_RED "FAILED");           \
     printf(COLOR_CYAN "  ASSERT_STR_EQ(" #expected ", " #computed ")\n"); \
     printf(COLOR_YELLOW "    \"%.*s\" == \"%.*s\"\n\n" COLOR_RESET,       \
-           lhs.size,                                                      \
-           lhs.value,                                                     \
-           rhs.size,                                                      \
-           rhs.value);                                                    \
+           (int)len, lhs, (int)len, rhs);                                 \
     if (!passed) {                                                        \
       exit(EXIT_FAILURE);                                                 \
     }                                                                     \
   }
 
-sax_str_t sax_str_substr(
-    const sax_str_t src,
-    sax_size_t start,
-    sax_size_t len);
+void sax_str_substr(
+    const char *src,
+    uint_fast32_t start,
+    uint_fast32_t len,
+    const char **substr,
+    size_t *substr_len);
 
-sax_str_t sax_str(const char *restrict value);
-
-bool sax_str_equals(const sax_str_t lhs, const sax_str_t rhs);
-
-sax_str_t sax_str_unescaped(const sax_str_t src);
+// sax_str_t sax_str_unescaped(const sax_str_t src);
 
 #endif

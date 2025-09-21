@@ -9,6 +9,7 @@
 #include <saxamaphone.h>
 
 // TODO: Make NULL term strings
+// TODO: Allign alloc
 
 #define SAXAMAPHONE_DEBUG
 
@@ -20,11 +21,7 @@
 #define SAXAMAPHONE_NODE_BUFFER_SIZE 2048
 #endif
 
-#ifndef SAXAMAPHONE_ATTR_MAX
-#define SAXAMAPHONE_ATTR_MAX 32
-#endif
-
-#define SAXAMAPHONE_STRINGIFY(val) #val
+// #define SAXAMAPHONE_STRINGIFY(val) #val
 // #define SAXAMAPHONE_DEBUG
 
 #if defined(__clang__) || defined(__GNUC__)
@@ -45,9 +42,12 @@ typedef enum {
   SAX_STATE_INIT,
   SAX_STATE_IN_TAG,
   SAX_STATE_IN_START_TAG,
+  SAX_STATE_CLOSING_START_TAG,
+  SAX_STATE_ASSIGNING_ATTR_VALUE,
   SAX_STATE_IN_ESC_CHAR,
   SAX_STATE_IN_CONTENT,
   SAX_STATE_IN_END_TAG,
+  SAX_STATE_START_TAG_SPACE,
   SAX_STATE_IN_ATTR_NAME,
   SAX_STATE_IN_ATTR_VALUE,
   SAX_STATE_IN_COMMENT,
@@ -55,48 +55,36 @@ typedef enum {
   SAX_STATE_ERROR,
 } sax_state_t;
 
-static const char *SAXAMAPHONE_STATES[] = {
-    SAXAMAPHONE_STRINGIFY(SAX_STATE_INIT),
-    SAXAMAPHONE_STRINGIFY(SAX_STATE_IN_TAG),
-    SAXAMAPHONE_STRINGIFY(SAX_STATE_IN_START_TAG),
-    SAXAMAPHONE_STRINGIFY(SAX_STATE_IN_CONTENT),
-    SAXAMAPHONE_STRINGIFY(SAX_STATE_IN_END_TAG),
-    SAXAMAPHONE_STRINGIFY(SAX_STATE_IN_ATTR_NAME),
-    SAXAMAPHONE_STRINGIFY(SAX_STATE_IN_ATTR_VALUE),
-    SAXAMAPHONE_STRINGIFY(SAX_STATE_IN_COMMENT),
-    SAXAMAPHONE_STRINGIFY(SAX_STATE_IN_PROC_INST),
-    SAXAMAPHONE_STRINGIFY(SAX_STATE_ERROR),
-};
-
 typedef enum {
   SAX_ITER_FILE,
   SAX_ITER_STR,
 } sax_iter_type_t;
 
 typedef struct sax_alloc_t {
-  uint8_t *arena;
+  uint8_t *bytes;
   size_t offset;
-  size_t arena_size;
+  size_t bytes_size;
 } sax_alloc_t;
 
 typedef struct sax_file_iter_t {
   FILE *fp;
-  sax_size_t offset;
-  sax_size_t bytes_read;
+  uint_fast32_t offset;
+  uint_fast32_t bytes_read;
   uint8_t *file_buffer;
   size_t file_buffer_size;
 } sax_file_iter_t;
 
 typedef struct sax_str_iter_t {
   const char *value;
-  sax_size_t offset;
-  sax_size_t len;
+  uint_fast32_t offset;
+  uint_fast32_t len;
 } sax_str_iter_t;
 
 typedef struct sax_iter_t {
 
   sax_iter_type_t type;
-  char glyph[4];
+  /// @brief Largest code pt == 4; +1 null term
+  char glyph[5];
 
   union {
     sax_file_iter_t file;
@@ -105,51 +93,46 @@ typedef struct sax_iter_t {
 
 } sax_iter_t;
 
+#define PRISAXSIZE PRIuFAST16
+typedef uint_fast32_t uint_fast32_t;
+
 struct sax_parser_t {
 
   bool untrimmed_content;
 
-  sax_alloc_t alloc;
+  sax_alloc_t arena;
   sax_iter_t iter;
   sax_state_t state;
   sax_state_t prev_state;
-  sax_str_t error;
-  sax_str_t tag;
-  sax_str_t content;
-  sax_size_t attr_offset;
-  sax_size_t line;
-  sax_size_t column;
-  sax_attr_t attrs[SAXAMAPHONE_ATTR_MAX];
+  /// @brief Used for error (SAX_EVENT_ERROR), tag (SAX_EVENT_START_TAG), or content (SAX_EVENT_CONTENT)
+  char *data;
+  uint_fast32_t line;
+  uint_fast32_t column;
+  sax_attr_t *attrs;
+  sax_attr_t *current_attr;
 };
 
 // === undocumented api declarations === //
 
-/// @brief Create a substring
-/// @param src value to substring
-/// @param start inclusive start character offset
-/// @param len number of bytes to leave
-/// @return resulting substring
-sax_str_t sax_str_substr(
-    const sax_str_t src,
-    sax_size_t start,
-    sax_size_t len);
-
-/// @brief Wrap a NULL-terminated string into a sax_str_t
-/// @param value the value to wrap
-/// @return sax_str_t instance
-sax_str_t sax_str(const char *restrict value);
-
-/// @brief Test whether the provided strings are equal
-/// @param lhs left-hand-arg
-/// @param rhs right-hand-arg
-/// @return true if they are equal and their values match
-bool sax_str_equals(const sax_str_t lhs, const sax_str_t rhs);
+/// @brief Compute the substring of the provided string
+/// @param src string to substring
+/// @param start desired character start index
+/// @param len desired resulting string length
+/// @param substr [out] resulting substring
+/// @param substr_bytes [out] resulting subtring size in bytes
+void sax_str_substr(
+    const char *src,
+    uint_fast32_t start,
+    uint_fast32_t len,
+    const char **substr,
+    size_t *substr_size);
 
 // === constants === //
 
 #define SAX_SIZE_MAX UINT_FAST32_MAX
 
-#define SAXAMAPHONE_EXCLUDE_TAG_PREFIX "!\"#$%&'()*+,/;<=>?@[\\]^`{|}~ .-0123456789"
+#define SAXAMAPHONE_EXCLUDE_TAG "!\"#$%&'()*+,/;<=>?@[\\]^`{|}~"
+#define SAXAMAPHONE_EXCLUDE_TAG_PREFIX (SAXAMAPHONE_EXCLUDE_TAG ".-0123456789")
 
 #define SAXAMAPHONE_SPACE \
   ' ' : case '\f':        \
@@ -157,11 +140,6 @@ bool sax_str_equals(const sax_str_t lhs, const sax_str_t rhs);
   case '\r':              \
   case '\t':              \
   case '\v'
-
-static const sax_str_t SAXAMAPHONE_EMPTY_STRING = {
-    .size = 0,
-    .value = "",
-};
 
 #if SAXAMAPHONE_FILE_BUFFER_SIZE > 0
 static SAXAMAPHONE_THREAD_LOCAL uint8_t SAXAMAPHONE_FILE_BUFFER[SAXAMAPHONE_FILE_BUFFER_SIZE];
@@ -174,8 +152,11 @@ static SAXAMAPHONE_THREAD_LOCAL uint8_t SAXAMAPHONE_NODE_BUFFER[SAXAMAPHONE_NODE
 // === private methods === //
 
 #ifdef SAXAMAPHONE_DEBUG
-#define SAXAMAPHONE_LOG(...)                                              \
-  printf("[SAXAMAPHONE] %s:%d ", (strrchr(__FILE__, '/') + 1), __LINE__); \
+#define SAXAMAPHONE_LOG(...)                      \
+  printf("\x1b[36m"                               \
+         "[SAXAMAPHONE] %s:%d "                   \
+         "\x1b[0m",                               \
+         (strrchr(__FILE__, '/') + 1), __LINE__); \
   printf(__VA_ARGS__)
 #else
 #define SAXAMAPHONE_LOG(...) ((void)0)
@@ -184,7 +165,7 @@ static SAXAMAPHONE_THREAD_LOCAL uint8_t SAXAMAPHONE_NODE_BUFFER[SAXAMAPHONE_NODE
 /// @brief Given the provided byte determine the UTF-8 code point size
 /// @param byte byte value
 /// @return size 1-4 if value; 0 if invalid
-static sax_size_t sax_code_pt_size(byte_t byte) {
+static uint_fast32_t sax_code_pt_size(byte_t byte) {
 
   if (byte < 0x7F) {
     return 1;
@@ -206,36 +187,36 @@ static sax_size_t sax_code_pt_size(byte_t byte) {
   return 0;
 }
 
-static sax_size_t sax_long_to_code_pt(long value, char *out) {
+// static uint_fast32_t sax_long_to_code_pt(long value, char *out) {
 
-  if (value < 0 || value > 0x10FFFF || (value >= 0xD800 && value <= 0xDFFF)) {
-    return 0;
-  }
+//   if (value < 0 || value > 0x10FFFF || (value >= 0xD800 && value <= 0xDFFF)) {
+//     return 0;
+//   }
 
-  if (value <= 0x7F) {
-    out[0] = (char)value;
-    return 1;
-  }
+//   if (value <= 0x7F) {
+//     out[0] = (char)value;
+//     return 1;
+//   }
 
-  if (value <= 0x7FF) {
-    out[0] = (char)(0xC0 | ((value >> 6) & 0x1F));
-    out[1] = (char)(0x80 | (value & 0x3F));
-    return 2;
-  }
+//   if (value <= 0x7FF) {
+//     out[0] = (char)(0xC0 | ((value >> 6) & 0x1F));
+//     out[1] = (char)(0x80 | (value & 0x3F));
+//     return 2;
+//   }
 
-  if (value <= 0xFFFF) {
-    out[0] = (char)(0xE0 | ((value >> 12) & 0x0F));
-    out[1] = (char)(0x80 | ((value >> 6) & 0x3F));
-    out[2] = (char)(0x80 | (value & 0x3F));
-    return 3;
-  }
+//   if (value <= 0xFFFF) {
+//     out[0] = (char)(0xE0 | ((value >> 12) & 0x0F));
+//     out[1] = (char)(0x80 | ((value >> 6) & 0x3F));
+//     out[2] = (char)(0x80 | (value & 0x3F));
+//     return 3;
+//   }
 
-  out[0] = (char)(0xF0 | ((value >> 18) & 0x07));
-  out[1] = (char)(0x80 | ((value >> 12) & 0x3F));
-  out[2] = (char)(0x80 | ((value >> 6) & 0x3F));
-  out[3] = (char)(0x80 | (value & 0x3F));
-  return 4;
-}
+//   out[0] = (char)(0xF0 | ((value >> 18) & 0x07));
+//   out[1] = (char)(0x80 | ((value >> 12) & 0x3F));
+//   out[2] = (char)(0x80 | ((value >> 6) & 0x3F));
+//   out[3] = (char)(0x80 | (value & 0x3F));
+//   return 4;
+// }
 
 // --- private sax_alloc_t methods --- //
 
@@ -245,11 +226,11 @@ static sax_size_t sax_long_to_code_pt(long value, char *out) {
 /// @return the pointer or NULL if insufficient memory
 static void *sax_alloc(sax_alloc_t *restrict alloc, size_t size) {
 
-  if (alloc->offset + size > alloc->arena_size) {
+  if (alloc->offset + size > alloc->bytes_size) {
     return NULL;
   }
 
-  void *res = alloc->arena + alloc->offset;
+  void *res = alloc->bytes + alloc->offset;
   alloc->offset += size;
   return res;
 }
@@ -259,8 +240,8 @@ static void *sax_alloc(sax_alloc_t *restrict alloc, size_t size) {
 /// @return arena allocator managing remaining bytes
 static sax_alloc_t sax_alloc_partition(sax_alloc_t *restrict alloc) {
   return (sax_alloc_t){
-      .arena = alloc->arena + alloc->offset,
-      .arena_size = alloc->arena_size - alloc->offset,
+      .bytes = alloc->bytes + alloc->offset,
+      .bytes_size = alloc->bytes_size - alloc->offset,
   };
 }
 
@@ -269,13 +250,13 @@ static sax_alloc_t sax_alloc_partition(sax_alloc_t *restrict alloc) {
 /// @brief Test whether the provided string is all spaces
 /// @param str string to test
 /// @return true if all spaces
-static bool sax_str_is_space(const sax_str_t str) {
+static bool sax_str_is_space(const char *str) {
 
-  for (sax_size_t i = 0;
-       i < str.size;
-       i += sax_code_pt_size(str.value[i])) {
+  for (uint_fast32_t i = 0;
+       str[i] != 0;
+       i += sax_code_pt_size(str[i])) {
 
-    if (!isspace(str.value[i])) {
+    if (!isspace(str[i])) {
       return false;
     }
   }
@@ -287,95 +268,96 @@ static bool sax_str_is_space(const sax_str_t str) {
 /// @param subject the string to test
 /// @param suffix the suffix to match
 /// @return true if subject endswith the suffix
-static bool sax_str_endswith(const sax_str_t subject, const sax_str_t suffix) {
+static bool sax_str_endswith(const char *subject, const char *suffix) {
 
-  if (suffix.size == 0) {
+  const size_t subj_size = strlen(subject);
+  const size_t suffix_size = strlen(suffix);
+
+  if (suffix_size == 0) {
     return true;
   }
 
-  if (suffix.size > subject.size) {
+  if (suffix_size > subj_size) {
     return false;
   }
 
-  const size_t offset = subject.size - suffix.size;
-  return strcmp(subject.value + offset, suffix.value) == 0;
+  const size_t offset = subj_size - suffix_size;
+  return strcmp(subject + offset, suffix) == 0;
 }
 
 /// @brief Test whether the provided string is empty
 /// @param str to test
 /// @return true if the size is zero
-static bool sax_str_empty(sax_str_t str) {
-  return str.size == 0;
+static bool sax_str_empty(const char *str) {
+  return strlen(str) == 0;
 }
 
-static bool sax_str_startswith(const sax_str_t src, const sax_str_t prefix) {
+// static bool sax_str_startswith(const char *src, const char *prefix) {
 
-  if (prefix.size > src.size) {
-    return false;
-  }
+//   const size_t prefix_size = strlen(prefix);
+//   const size_t src_size = strlen(src);
 
-  return strncmp(src.value, prefix.value, prefix.size) == 0;
-}
+//   if (prefix_size > src_size) {
+//     return false;
+//   }
+
+//   return strncmp(src, prefix, prefix_size) == 0;
+// }
 
 /// @brief Remove spaces (' ', '\t', '\n', etc) to the left of the first non-space character
 /// @param src string to ltrim
 /// @return left-trimmed string
-static sax_str_t sax_str_ltrim(const sax_str_t src) {
+static char *sax_str_ltrim(char *src) {
 
-  sax_str_t copy = SAXAMAPHONE_EMPTY_STRING;
+  const size_t src_size = strlen(src);
 
-  for (sax_size_t i = 0; i < src.size; i += sax_code_pt_size(src.value[i])) {
-    if (!isspace(src.value[i])) {
-      copy = (sax_str_t){
-          .size = src.size - i,
-          .value = src.value + i,
-      };
+  for (uint_fast32_t i = 0; i < src_size; i += sax_code_pt_size(src[i])) {
+    if (!isspace(src[i])) {
+      src += i;
       break;
     }
   }
 
-  return copy;
+  return src;
 }
 
 /// @brief Remove spaces (' ', '\t', '\n', etc) to the right of the first non-space character
 /// @param src string to rtrim
 /// @return right-trimmed string
-static sax_str_t sax_str_rtrim(const sax_str_t src) {
+static char *sax_str_rtrim(char *src) {
 
   if (sax_str_empty(src)) {
     return src;
   }
 
-  sax_size_t last_non_space = 0;
+  uint_fast32_t last_non_space = 0;
+  const size_t src_size = strlen(src);
 
-  for (sax_size_t i = 0;
-       i < src.size;
-       i += sax_code_pt_size(src.value[i])) {
+  for (uint_fast32_t i = 0;
+       i < src_size;
+       i += sax_code_pt_size(src[i])) {
 
-    if (!isspace(src.value[i])) {
+    if (!isspace(src[i])) {
       last_non_space = i;
     }
   }
 
-  return (sax_str_t){
-      // +1 to include the last non_space char
-      .size = last_non_space + 1,
-      .value = src.value,
-  };
+  src[last_non_space + 1] = '\0';
+  return src;
 }
 
 /// @brief Perform both an ltrim & rtrim
 /// @param str to trim
 /// @return trimmed string
-static sax_str_t sax_str_trim(sax_str_t str) {
+static char *sax_str_trim(char *str) {
   return sax_str_ltrim(sax_str_rtrim(str));
 }
 
 // static sax_str_t sax_str_rfind(const sax_str_t str, char c) {
 
-//   sax_size_t offset = SAX_SIZE_MAX;
+//   uint_fast32_t offset = SAX_SIZE_MAX;
 
-//   for (sax_size_t i = 0; i < str.size; i += sax_code_pt_size(str.value[i])) {
+//   for (uint_fast32_t i = 0; i < str.size; i += sax_code_pt_size(str.value[i])) {
 //     if (str.value[i] == c) {
 //       offset = i;
 //     }
@@ -472,44 +454,68 @@ static byte_t sax_iter_next_byte(sax_iter_t *restrict iter) {
 /// @brief Retrieve the next glyph to process (0-4 sized string); when UTF-8 is
 ///   malformed or reached the end of file; an empty string is returned
 /// @param iter instance
-/// @return glyph string sized 0-4 bytes
-static sax_str_t sax_iter_next_glyph(sax_iter_t *restrict iter) {
+/// @return non-NULL glyph string sized 0-4 bytes
+static const char *sax_iter_next_glyph(sax_iter_t *restrict iter) {
 
   byte_t byte = sax_iter_next_byte(iter);
   if (byte == 0) {
     sax_iter_close(iter);
-    return SAXAMAPHONE_EMPTY_STRING;
+    return "";
   }
 
   iter->glyph[0] = (char)byte;
-  const sax_size_t pt_size = sax_code_pt_size(byte);
+  const uint_fast32_t pt_size = sax_code_pt_size(byte);
 
-  for (sax_size_t i = 1; i < pt_size && byte != 0; ++i) {
+  uint_fast32_t i = 1;
+  for (; i < pt_size && byte != 0; ++i) {
     byte = sax_iter_next_byte(iter);
     iter->glyph[i] = (char)byte;
   }
-
-  return (sax_str_t){
-      .size = pt_size,
-      .value = iter->glyph,
-  };
+  iter->glyph[i] = '\0';
+  return iter->glyph;
 }
 
 // --- private parser methods --- //
+
+static void sax_parser_reset(sax_parser_t *restrict parser) {
+  parser->data = NULL;
+  parser->attrs = NULL;
+  parser->current_attr = NULL;
+  parser->arena.offset = 0;
+  parser->arena.bytes[0] = '\0';
+}
 
 static void sax_parser_state(sax_parser_t *restrict parser, sax_state_t state) {
   parser->prev_state = parser->state;
   parser->state = state;
 }
 
-/// @brief Get a string representation of the contents of the node buffer
+/// @brief Append a glyph to the current token (tag, content, attr name, attr value)
 /// @param parser instance
-/// @return string representation of the node buffer
-static sax_str_t sax_parser_node(sax_parser_t *restrict parser) {
-  return (sax_str_t){
-      .size = parser->alloc.offset,
-      .value = (char *)parser->alloc.arena,
-  };
+/// @param token [OUT] to append to
+/// @param glyph glyph to append
+/// @return resulting token
+static sax_event_t sax_parser_append(sax_parser_t *restrict parser, char **token, const char *glyph) {
+
+  const uint8_t *end = parser->arena.bytes + parser->arena.bytes_size;
+  const size_t glyph_size = strlen(glyph) + 1;
+
+  if (!*token) {
+    *token = (char *)(parser->arena.bytes + parser->arena.offset);
+    *token[0] = '\0';
+  }
+
+  const size_t token_len = strlen(*token);
+
+  if ((uint8_t *)(*token + token_len + glyph_size) > end) {
+    parser->data = "Out of memory";
+    sax_parser_state(parser, SAX_STATE_ERROR);
+    return SAX_EVENT_ERROR;
+  }
+
+  strcpy(*token + token_len, glyph);
+  parser->arena.offset += glyph_size;
+  return 0;
 }
 
 /// @brief Set the parser to the error state
@@ -522,10 +528,8 @@ static void sax_parser_error(sax_parser_t *restrict parser, const char *restrict
   va_start(args, format);
 
   sax_parser_state(parser, SAX_STATE_ERROR);
-  parser->error = (sax_str_t){
-      .size = vsnprintf((char *)parser->alloc.arena, parser->alloc.offset, format, args),
-      .value = (char *)parser->alloc.arena,
-  };
+  parser->data = (char *)parser->arena.bytes;
+  vsnprintf(parser->data, parser->arena.bytes_size, format, args);
 
   va_end(args);
 }
@@ -534,12 +538,11 @@ static void sax_parser_error(sax_parser_t *restrict parser, const char *restrict
 /// @param parser instance
 /// @param glyph the unexpected glyph
 /// @return SAX_EVENT_ERROR
-static sax_event_t sax_parser_error_unexpected_glyph(sax_parser_t *restrict parser, const sax_str_t glyph) {
+static sax_event_t sax_parser_error_unexpected_glyph(sax_parser_t *restrict parser, const char *glyph) {
 
   sax_parser_error(parser,
-                   "Unexpected character \"%.*s\" located on line %" PRIuFAST16 " column %" PRIuFAST16,
-                   glyph.size,
-                   glyph.value,
+                   "Unexpected character \"%s\" located on line %" PRIuFAST16 " column %" PRIuFAST16,
+                   glyph,
                    parser->line,
                    parser->column);
 
@@ -550,9 +553,9 @@ static sax_event_t sax_parser_error_unexpected_glyph(sax_parser_t *restrict pars
 /// @param parser instance
 /// @param glyph glyph to process
 /// @return event if raised
-sax_event_t sax_parser_state_init(sax_parser_t *restrict parser, const sax_str_t glyph) {
+sax_event_t sax_parser_state_init(sax_parser_t *restrict parser, const char *glyph) {
 
-  switch (glyph.value[0]) {
+  switch (glyph[0]) {
   case '<':
     sax_parser_state(parser, SAX_STATE_IN_TAG);
     break;
@@ -568,14 +571,9 @@ sax_event_t sax_parser_state_init(sax_parser_t *restrict parser, const sax_str_t
 /// @param parser instance
 /// @param glyph glyph to process
 /// @return event if raised
-static sax_event_t sax_parser_state_in_tag(sax_parser_t *restrict parser, const sax_str_t glyph) {
+static sax_event_t sax_parser_state_in_tag(sax_parser_t *restrict parser, const char *glyph) {
 
-  // We could be coming from sax_parser_in_content which eats the '<' char
-  parser->alloc.arena[0] = '<';
-  memcpy(parser->alloc.arena + 1, glyph.value, glyph.size);
-  parser->alloc.offset = 1 + glyph.size;
-
-  switch (glyph.value[0]) {
+  switch (glyph[0]) {
 
   case '?':
     sax_parser_state(parser, SAX_STATE_IN_PROC_INST);
@@ -591,15 +589,12 @@ static sax_event_t sax_parser_state_in_tag(sax_parser_t *restrict parser, const 
     break;
 
   default:
-    if (strchr(SAXAMAPHONE_EXCLUDE_TAG_PREFIX, glyph.value[0])) {
+    if (strchr(SAXAMAPHONE_EXCLUDE_TAG_PREFIX, glyph[0])) {
       return sax_parser_error_unexpected_glyph(parser, glyph);
     }
 
-    parser->tag = (sax_str_t){
-        .size = glyph.size,
-        // +1 to skip the '<'
-        .value = (char *)parser->alloc.arena + 1,
-    };
+    parser->data = sax_alloc(&parser->arena, strlen(glyph) + 1);
+    strcpy(parser->data, glyph);
     sax_parser_state(parser, SAX_STATE_IN_START_TAG);
     break;
   }
@@ -607,223 +602,231 @@ static sax_event_t sax_parser_state_in_tag(sax_parser_t *restrict parser, const 
   return 0;
 }
 
-static sax_event_t sax_parser_state_in_escaped_char(sax_parser_t *restrict parser, const sax_str_t glyph) {
+static sax_event_t sax_parser_state_in_escaped_char(sax_parser_t *restrict parser, const char *glyph) {
 
-  switch (glyph.value[0]) {
+  switch (glyph[0]) {
   case ';':
+    // TODO
     // sax_str_t node = sax_parser_node(parser);
     // sax_str_t esc = sax_str_rfind(node, '&');
     // sax_str_t unesc = sax_str_unescaped(esc);
     sax_parser_state(parser, parser->prev_state);
-    break;
+    return 0;
 
   default:
-    // noop
-    break;
+    return sax_parser_append(parser, &parser->data, glyph);
   }
-
-  return 0;
 }
 
-static sax_event_t sax_parser_state_in_start_tag(sax_parser_t *restrict parser, const sax_str_t glyph) {
+static sax_event_t sax_parser_state_in_start_tag(sax_parser_t *restrict parser, const char *glyph) {
 
-  // TODO: validate valid chars
-
-  switch (glyph.value[0]) {
-
-  case '"':
-  case '\'':
-  case '!':
-  case '?':
-    return sax_parser_error_unexpected_glyph(parser, glyph);
+  switch (glyph[0]) {
 
   case '/':
-    if (parser->tag.size == 0) {
-      return sax_parser_error_unexpected_glyph(parser, glyph);
-    }
-    break;
+    SAXAMAPHONE_LOG("Parsed tag \"%s\"\n", parser->data);
+    sax_parser_state(parser, SAX_STATE_CLOSING_START_TAG);
+    return 0;
 
   case '>':
-    if (parser->tag.size == 0) {
-      return sax_parser_error_unexpected_glyph(parser, glyph);
-    }
+    SAXAMAPHONE_LOG("Parsed tag \"%s\"\n", parser->data);
     sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     return SAX_EVENT_START_ELEMENT;
 
   case SAXAMAPHONE_SPACE:
-    sax_parser_state(parser, SAX_STATE_IN_ATTR_NAME);
-    break;
+    if (parser->data == NULL || strlen(parser->data) == 0) {
+      return sax_parser_error_unexpected_glyph(parser, glyph);
+    }
+    SAXAMAPHONE_LOG("Parsed tag \"%s\"\n", parser->data);
+    sax_parser_state(parser, SAX_STATE_START_TAG_SPACE);
+    return 0;
 
   default:
-    if (sax_str_empty(parser->tag)) {
-      parser->tag.value = (char *)parser->alloc.arena + parser->alloc.offset;
-    }
-    parser->tag.size += glyph.size;
-    break;
-  }
 
-  return 0;
+    if (strchr(SAXAMAPHONE_EXCLUDE_TAG, glyph[0])) {
+      return sax_parser_error_unexpected_glyph(parser, glyph);
+    }
+
+    return sax_parser_append(parser, &parser->data, glyph);
+  }
 }
 
-static sax_event_t sax_parser_state_in_content(sax_parser_t *restrict parser, const sax_str_t glyph) {
+static sax_event_t sax_parser_state_start_tag_space(sax_parser_t *restrict parser, const char *glyph) {
 
-  switch (glyph.value[0]) {
+  switch (glyph[0]) {
 
-  case '&':
-    sax_parser_state(parser, SAX_STATE_IN_ESC_CHAR);
-    break;
+  case '>':
+    sax_parser_state(parser, SAX_STATE_IN_CONTENT);
+    return SAX_EVENT_START_ELEMENT;
 
-  case '<': {
-    sax_parser_state(parser, SAX_STATE_IN_TAG);
-    sax_str_t content = sax_parser_node(parser);
-    --content.size; // For the '<'
-    content = parser->untrimmed_content ? content : sax_str_trim(content);
+  case '/':
+    sax_parser_state(parser, SAX_STATE_CLOSING_START_TAG);
+    return 0;
 
-    if (sax_str_is_space(parser->content)) {
-      parser->alloc.offset = 1;
-      parser->alloc.arena[0] = '<';
+  case SAXAMAPHONE_SPACE:
+    // noop
+    return 0;
+
+  default:
+
+    if (strchr(SAXAMAPHONE_EXCLUDE_TAG_PREFIX, glyph[0])) {
+      // Invalid start of attr name
+      return sax_parser_error_unexpected_glyph(parser, glyph);
+    }
+
+    parser->current_attr = sax_alloc(&parser->arena, sizeof(sax_attr_t));
+    memset(parser->current_attr, 0, sizeof(sax_attr_t));
+
+    // Add to end of linked list
+    if (parser->attrs) {
+      sax_attr_t *attr = parser->attrs;
+      for (; attr->next != NULL; attr = attr->next) {
+      }
+      attr->next = parser->current_attr;
     } else {
-      parser->content = content;
+      parser->attrs = parser->current_attr;
+    }
+
+    sax_parser_state(parser, SAX_STATE_IN_ATTR_NAME);
+    return sax_parser_append(parser, &parser->current_attr->name, glyph);
+  }
+}
+
+static sax_event_t sax_parser_state_assigning_attr_value(sax_parser_t *restrict parser, const char *glyph) {
+
+  switch (glyph[0]) {
+  case '"':
+    sax_parser_state(parser, SAX_STATE_IN_ATTR_VALUE);
+    return 0;
+
+  default:
+    return sax_parser_error_unexpected_glyph(parser, glyph);
+  }
+}
+
+static sax_event_t sax_parser_state_in_content(sax_parser_t *restrict parser, const char *glyph) {
+
+  switch (glyph[0]) {
+
+    // case '&':
+    //   parser->data = sax_parser_append(parser, parser->data, glyph);
+    //   sax_parser_state(parser, SAX_STATE_IN_ESC_CHAR);
+    //   break;
+
+  case '<':
+    sax_parser_state(parser, SAX_STATE_IN_TAG);
+    if (parser->data) {
+
+      if (!parser->untrimmed_content) {
+        parser->data = sax_str_trim(parser->data);
+      }
+
+      if (sax_str_is_space(parser->data)) {
+        sax_parser_reset(parser);
+        return 0;
+      }
+
       return SAX_EVENT_CONTENT;
     }
-  } break;
+    return 0;
 
   default:
-    // noop
-    break;
+    return sax_parser_append(parser, &parser->data, glyph);
   }
-
-  return 0;
 }
 
-static sax_event_t sax_parser_state_in_end_tag(sax_parser_t *restrict parser, const sax_str_t glyph) {
+static sax_event_t sax_parser_state_in_end_tag(sax_parser_t *restrict parser, const char *glyph) {
 
-  switch (glyph.value[0]) {
+  switch (glyph[0]) {
   case '>':
+    if (parser->data == NULL || strlen(parser->data) == 0) {
+      sax_parser_error(parser, "Empty closing tag found at line %d column %d", parser->line, parser->column);
+      return SAX_EVENT_ERROR;
+    }
     sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     return SAX_EVENT_END_ELEMENT;
 
   case SAXAMAPHONE_SPACE:
     sax_parser_error_unexpected_glyph(parser, glyph);
-    break;
+    return 0;
 
   default:
-    if (parser->tag.size == 0) {
-      parser->tag.value = strrchr((char *)parser->alloc.arena, '/') + 1;
+    if (strchr(SAXAMAPHONE_EXCLUDE_TAG, glyph[0])) {
+      sax_parser_error_unexpected_glyph(parser, glyph);
+      return SAX_EVENT_ERROR;
     }
-    parser->tag.size += glyph.size;
-    break;
-  }
 
-  return 0;
+    return sax_parser_append(parser, &parser->data, glyph);
+  }
 }
 
-static sax_event_t sax_parser_state_in_attr_name(sax_parser_t *restrict parser, const sax_str_t glyph) {
+static sax_event_t sax_parser_state_in_attr_name(sax_parser_t *restrict parser, const char *glyph) {
 
-  switch (glyph.value[0]) {
+  switch (glyph[0]) {
 
   case '>':
+    SAXAMAPHONE_LOG("Parsed attr name \"%s\"\n", parser->current_attr->name);
+    parser->current_attr = NULL;
     sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     return SAX_EVENT_START_ELEMENT;
 
   case SAXAMAPHONE_SPACE:
-    if (++parser->attr_offset == SAXAMAPHONE_ATTR_MAX) {
-      sax_parser_state(parser, SAX_STATE_ERROR);
-      parser->error = sax_str("Maximum XML attributes exceeded");
-      return SAX_EVENT_ERROR;
-    }
-
-    break;
+    SAXAMAPHONE_LOG("Parsed attr name \"%s\"\n", parser->current_attr->name);
+    parser->current_attr = NULL;
+    sax_parser_state(parser, SAX_STATE_START_TAG_SPACE);
+    return 0;
 
   case '=':
-    sax_parser_state(parser, SAX_STATE_IN_ATTR_VALUE);
-    break;
-
-  default: {
-    sax_attr_t *restrict attr = &parser->attrs[parser->attr_offset];
-    if (sax_str_empty(attr->name)) {
-      attr->name = (sax_str_t){
-          .size = 0,
-          .value = (char *)parser->alloc.arena + (parser->alloc.offset - glyph.size),
-      };
-    }
-    attr->name.size += glyph.size;
-  } break;
-  }
-
-  return 0;
-}
-
-static sax_event_t sax_parser_state_in_attr_value(sax_parser_t *restrict parser, const sax_str_t glyph) {
-
-  switch (glyph.value[0]) {
-
-  case '>':
-    sax_parser_state(parser, SAX_STATE_IN_CONTENT);
-    return SAX_EVENT_START_ELEMENT;
-
-  case '"': {
-    const sax_str_t node = sax_parser_node(parser);
-    if (sax_str_endswith(node, sax_str("\"\""))) {
-      if (++parser->attr_offset == SAXAMAPHONE_ATTR_MAX) {
-        sax_parser_state(parser, SAX_STATE_ERROR);
-        parser->error = sax_str("Maximum XML attributes exceeded");
-        return SAX_EVENT_ERROR;
-      }
-    }
-
-    sax_attr_t *restrict attr = &parser->attrs[parser->attr_offset];
-    if (sax_str_empty(attr->value)) {
-      // initializing
-      attr->value.value = (char *)parser->alloc.arena + parser->alloc.offset;
-    } else {
-      sax_parser_state(parser, SAX_STATE_IN_ATTR_NAME);
-    }
-  } break;
-
-  default: {
-    sax_attr_t *restrict attr = &parser->attrs[parser->attr_offset];
-    attr->value.size += glyph.size;
-  } break;
-  }
-
-  return 0;
-}
-
-static sax_event_t sax_parser_state_in_comment(sax_parser_t *restrict parser, const sax_str_t glyph) {
-
-  switch (glyph.value[0]) {
-
-  case '>': {
-    const sax_str_t subj = {
-        .size = parser->alloc.offset,
-        .value = (char *)parser->alloc.arena,
-    };
-
-    if (sax_str_endswith(subj, sax_str("-->"))) {
-      parser->alloc.offset = 0;
-      sax_parser_state(parser, SAX_STATE_IN_CONTENT);
-    }
-  } break;
+    SAXAMAPHONE_LOG("Parsed attr name \"%s\"\n", parser->current_attr->name);
+    sax_parser_state(parser, SAX_STATE_ASSIGNING_ATTR_VALUE);
+    return 0;
 
   default:
-    // noop
-    break;
-  }
-
-  return 0;
-}
-
-static sax_event_t sax_parser_state_in_proc_inst(sax_parser_t *restrict parser, const sax_str_t glyph) {
-
-  switch (glyph.value[0]) {
-  case '>':
-    if (parser->alloc.arena[parser->alloc.offset - 2] == '?') {
-      parser->alloc.offset = 0;
-      sax_parser_state(parser, SAX_STATE_IN_CONTENT);
-    } else {
+    if (strchr(SAXAMAPHONE_EXCLUDE_TAG, glyph[0])) {
       return sax_parser_error_unexpected_glyph(parser, glyph);
     }
+    return sax_parser_append(parser, &parser->current_attr->name, glyph);
+  }
+}
+
+static sax_event_t sax_parser_state_in_attr_value(sax_parser_t *restrict parser, const char *glyph) {
+
+  switch (glyph[0]) {
+
+  case '"':
+    SAXAMAPHONE_LOG("Parsed attr value \"%s\"\n", parser->current_attr->value);
+    parser->current_attr = NULL;
+    sax_parser_state(parser, SAX_STATE_START_TAG_SPACE);
+    return 0;
+
+  default:
+    return sax_parser_append(parser, &parser->current_attr->value, glyph);
+  }
+}
+
+static sax_event_t sax_parser_state_in_comment(sax_parser_t *restrict parser, const char *glyph) {
+
+  switch (glyph[0]) {
+
+  case '>': {
+    if (sax_str_endswith(parser->data, "-->")) {
+      parser->data = NULL;
+      sax_parser_reset(parser);
+      sax_parser_state(parser, SAX_STATE_IN_CONTENT);
+    }
+  }
+    return 0;
+
+  default:
+    return sax_parser_append(parser, &parser->data, glyph);
+  }
+}
+
+static sax_event_t sax_parser_state_in_proc_inst(sax_parser_t *restrict parser, const char *glyph) {
+
+  switch (glyph[0]) {
+  case '>':
+    sax_parser_reset(parser);
+    sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     break;
   }
 
@@ -834,7 +837,7 @@ static sax_event_t sax_parser_state_in_proc_inst(sax_parser_t *restrict parser, 
 
 sax_parser_t *sax_parser(const sax_config_t *restrict config) {
 
-  SAXAMAPHONE_LOG("[SAXAMAPHONE] Configuration:\n"
+  SAXAMAPHONE_LOG("Configuration:\n"
                   "    SAXAMAPHONE_FILE_BUFFER_SIZE=%d\n"
                   "    SAXAMAPHONE_NODE_BUFFER_SIZE=%d\n",
                   SAXAMAPHONE_FILE_BUFFER_SIZE,
@@ -847,11 +850,11 @@ sax_parser_t *sax_parser(const sax_config_t *restrict config) {
 
   sax_alloc_t alloc = {
 #if SAXAMAPHONE_NODE_BUFFER_SIZE == 0
-      .arena = config->arena,
-      .arena_size = config->arena_size,
+      .bytes = config->arena,
+      .bytes_size = config->arena_size,
 #else
-      .arena = config->arena ? config->arena : SAXAMAPHONE_NODE_BUFFER,
-      .arena_size = config->arena ? config->arena_size : SAXAMAPHONE_NODE_BUFFER_SIZE,
+      .bytes = config->arena ? config->arena : SAXAMAPHONE_NODE_BUFFER,
+      .bytes_size = config->arena ? config->arena_size : SAXAMAPHONE_NODE_BUFFER_SIZE,
 #endif
   };
 
@@ -862,15 +865,17 @@ sax_parser_t *sax_parser(const sax_config_t *restrict config) {
     printf(
         "[SAXAMAPHONE] Failed to allocate parser; sizeof(sax_parser_t) {%zu} >= %zu\n",
         sizeof(sax_parser_t),
-        alloc.arena_size);
+        alloc.bytes_size);
 #endif
 
     return NULL;
   }
 
   *parser = (sax_parser_t){
-      .alloc = sax_alloc_partition(&alloc),
+      .arena = sax_alloc_partition(&alloc),
       .untrimmed_content = config->untrimmed_content,
+      .line = 1,
+      .column = 1,
   };
 
   if (config->path) {
@@ -931,35 +936,11 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
   sax_event_t ev = 0;
 
   // Reset state
-  parser->tag.size = 0;
-  parser->content.size = 0;
-  parser->attr_offset = 0;
-  parser->alloc.offset = 0;
-  memset(parser->attrs, 0, sizeof(parser->attrs));
+  sax_parser_reset(parser);
 
-  for (sax_str_t glyph = sax_iter_next_glyph(&parser->iter);
-       glyph.size > 0;
+  for (const char *glyph = sax_iter_next_glyph(&parser->iter);
+       glyph[0] != '\0';
        glyph = sax_iter_next_glyph(&parser->iter)) {
-
-#ifdef SAXAMAPHONE_DEBUG
-    printf("    DEBUG: buffer=\"%.*s\" glyph=\"%.*s\" state=%s\n",
-           (int)parser->alloc.offset,
-           parser->alloc.arena,
-           glyph.size,
-           glyph.value,
-           SAXAMAPHONE_STATES[parser->state]);
-#else
-    (void)SAXAMAPHONE_STATES;
-#endif
-
-    if (glyph.size + parser->alloc.offset >= parser->alloc.arena_size) {
-      parser->error = sax_str("Token buffer overflow");
-      sax_parser_state(parser, SAX_STATE_ERROR);
-      return SAX_EVENT_ERROR;
-    }
-
-    memcpy(parser->alloc.arena + parser->alloc.offset, glyph.value, glyph.size);
-    parser->alloc.offset += glyph.size;
 
     switch (parser->state) {
 
@@ -977,6 +958,14 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
 
     case SAX_STATE_IN_START_TAG:
       ev = sax_parser_state_in_start_tag(parser, glyph);
+      break;
+
+    case SAX_STATE_START_TAG_SPACE:
+      ev = sax_parser_state_start_tag_space(parser, glyph);
+      break;
+
+    case SAX_STATE_ASSIGNING_ATTR_VALUE:
+      ev = sax_parser_state_assigning_attr_value(parser, glyph);
       break;
 
     case SAX_STATE_IN_ESC_CHAR:
@@ -1009,14 +998,14 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
 
     default:
       // Unreachable
-      parser->error = sax_str("Unreachable section reached");
+      parser->data = "Unreachable section reached";
       ev = SAX_EVENT_ERROR;
       break;
     }
 
-    if (glyph.value[0] == '\n') {
+    if (glyph[0] == '\n') {
       ++parser->line;
-      parser->column = 0;
+      parser->column = 1;
     } else {
       ++parser->column;
     }
@@ -1029,140 +1018,94 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
   return SAX_EVENT_END_DOCUMENT;
 }
 
-sax_str_t sax_error(const sax_parser_t *restrict parser) {
-
-  if (!parser) {
-    return sax_str("NULL sax_parser_t provided");
-  }
-
-  return parser->error;
+const char *sax_error(const sax_parser_t *restrict parser) {
+  return parser && parser->data ? parser->data : "";
 }
 
-sax_str_t sax_tag(const sax_parser_t *restrict parser) {
-  return parser ? parser->tag : SAXAMAPHONE_EMPTY_STRING;
+const char *sax_tag(const sax_parser_t *restrict parser) {
+  return parser && parser->data ? parser->data : "";
 }
 
-sax_str_t sax_content(const sax_parser_t *restrict parser) {
-  return parser ? parser->content : SAXAMAPHONE_EMPTY_STRING;
+const char *sax_content(const sax_parser_t *restrict parser) {
+  return parser && parser->data ? parser->data : "";
 }
 
-sax_attrs_t sax_attrs(const sax_parser_t *restrict parser) {
-
-  if (!parser) {
-    return (sax_attrs_t){0};
-  }
-
-  for (sax_size_t i = 0; i < SAXAMAPHONE_ATTR_MAX; ++i) {
-    if (parser->attrs[i].name.size == 0) {
-      return (sax_attrs_t){
-          .attrs = parser->attrs,
-          .count = i,
-      };
-    }
-  }
-
-  ((sax_parser_t *restrict)parser)->state = SAX_STATE_ERROR;
-  ((sax_parser_t *restrict)parser)->error = sax_str(
-      "Unreachable code reached in " __FILE__
-      " " SAXAMAPHONE_STRINGIFY(__LINE__));
-  return (sax_attrs_t){0};
+const sax_attr_t *sax_attrs(const sax_parser_t *restrict parser) {
+  return parser && parser->attrs ? parser->attrs : NULL;
 }
 
 // --- public undocumented methods --- //
 
-sax_str_t sax_str_substr(
-    const sax_str_t src,
-    sax_size_t start,
-    sax_size_t len) {
+void sax_str_substr(
+    const char *src,
+    uint_fast32_t start,
+    uint_fast32_t len,
+    const char **substr,
+    size_t *substr_size) {
 
-  (void)len;
-
-  sax_size_t byte_offset = 0;
-  sax_size_t char_offset = 0;
+  size_t size = strlen(src);
+  uint_fast32_t byte_offset = 0;
+  uint_fast32_t char_offset = 0;
 
   for (;
-       byte_offset < src.size && char_offset < start;
-       byte_offset += sax_code_pt_size(src.value[byte_offset]), ++char_offset) {
+       byte_offset < size && char_offset < start;
+       byte_offset += sax_code_pt_size(src[byte_offset]), ++char_offset) {
   }
 
-  sax_str_t res = (sax_str_t){
-      .value = src.value + byte_offset,
-      .size = src.size - byte_offset,
-  };
+  *substr = src + byte_offset;
+  size = strlen(*substr);
+  size_t i = 0;
 
-  for (byte_offset = 0, char_offset = 0;
-       byte_offset < res.size && char_offset < len;
-       byte_offset += sax_code_pt_size(res.value[byte_offset]), ++char_offset) {
+  for (i = 0, char_offset = 0;
+       i < size && char_offset < len;
+       i += sax_code_pt_size((*substr)[i]), ++char_offset) {
   }
 
-  res.size = byte_offset;
-
-  return res;
+  *substr_size = i;
 }
 
-sax_str_t sax_str(const char *restrict value) {
+// sax_str_t sax_str_unescaped(const sax_str_t src) {
 
-  if (!value) {
-    return SAXAMAPHONE_EMPTY_STRING;
-  }
+//   static SAXAMAPHONE_THREAD_LOCAL char buf[16];
 
-  return (sax_str_t){
-      .size = strlen(value),
-      .value = value,
-  };
-}
+//   if (sax_str_equals(src, sax_str("&lt;"))) {
+//     return (sax_str_t){.size = 1, .value = "<"};
+//   }
 
-bool sax_str_equals(const sax_str_t lhs, const sax_str_t rhs) {
+//   if (sax_str_equals(src, sax_str("&gt;"))) {
+//     return (sax_str_t){.size = 1, .value = ">"};
+//   }
 
-  if (lhs.size != rhs.size) {
-    return false;
-  }
+//   if (sax_str_equals(src, sax_str("&amp;"))) {
+//     return (sax_str_t){.size = 1, .value = "&"};
+//   }
 
-  return strncmp(lhs.value, rhs.value, lhs.size) == 0;
-}
+//   if (sax_str_equals(src, sax_str("&apos;"))) {
+//     return (sax_str_t){.size = 1, .value = "'"};
+//   }
 
-sax_str_t sax_str_unescaped(const sax_str_t src) {
+//   if (sax_str_equals(src, sax_str("&quot;"))) {
+//     return (sax_str_t){.size = 1, .value = "\""};
+//   }
 
-  static SAXAMAPHONE_THREAD_LOCAL char buf[16];
+//   // if (sax_str_startswith(src, sax_str("&#x")) && sax_str_endswith(src, sax_str(";"))) {
 
-  if (sax_str_equals(src, sax_str("&lt;"))) {
-    return (sax_str_t){.size = 1, .value = "<"};
-  }
+//   // }
 
-  if (sax_str_equals(src, sax_str("&gt;"))) {
-    return (sax_str_t){.size = 1, .value = ">"};
-  }
+//   if (sax_str_startswith(src, sax_str("&#")) && sax_str_endswith(src, sax_str(";"))) {
 
-  if (sax_str_equals(src, sax_str("&amp;"))) {
-    return (sax_str_t){.size = 1, .value = "&"};
-  }
+//     const sax_str_t value = sax_str_substr(src, 2, src.size - 3);
+//     snprintf(buf, sizeof(buf), "%.*s", value.size, value.value);
+//     long code_pt = atol(value.value);
+//     if (code_pt == 0) {
+//       return src;
+//     }
 
-  if (sax_str_equals(src, sax_str("&apos;"))) {
-    return (sax_str_t){.size = 1, .value = "'"};
-  }
+//     return (sax_str_t){
+//         .size = sax_long_to_code_pt(code_pt, buf),
+//         .value = buf,
+//     };
+//   }
 
-  if (sax_str_equals(src, sax_str("&quot;"))) {
-    return (sax_str_t){.size = 1, .value = "\""};
-  }
-
-  // if (sax_str_startswith(src, sax_str("&#x")) && sax_str_endswith(src, sax_str(";"))) {
-
-  // }
-
-  if (sax_str_startswith(src, sax_str("&#")) && sax_str_endswith(src, sax_str(";"))) {
-
-    const sax_str_t value = sax_str_substr(src, 2, src.size - 3);
-    snprintf(buf, sizeof(buf), "%.*s", value.size, value.value);
-    long code_pt = atol(value.value);
-    if (code_pt == 0) {
-      return src;
-    }
-
-    return (sax_str_t){
-        .size = sax_long_to_code_pt(code_pt, buf),
-        .value = buf,
-    };
-  }
-
-  return src;
-}
+//   return src;
+// }
