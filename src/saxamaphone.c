@@ -8,11 +8,10 @@
 
 #include <saxamaphone.h>
 
-// TODO: Allign alloc
 // TODO: Ampersand escapes
 // TODO: CDATA
 
-#define SAXAMAPHONE_DEBUG
+// #define SAXAMAPHONE_DEBUG
 
 #ifndef SAXAMAPHONE_FILE_BUFFER_SIZE
 #define SAXAMAPHONE_FILE_BUFFER_SIZE 4096
@@ -21,9 +20,6 @@
 #ifndef SAXAMAPHONE_NODE_BUFFER_SIZE
 #define SAXAMAPHONE_NODE_BUFFER_SIZE 2048
 #endif
-
-// #define SAXAMAPHONE_STRINGIFY(val) #val
-// #define SAXAMAPHONE_DEBUG
 
 #if defined(__clang__) || defined(__GNUC__)
 #define SAXAMAPHONE_THREAD_LOCAL __thread

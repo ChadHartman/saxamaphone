@@ -15,7 +15,7 @@
 
 typedef struct string_node_t {
   char *value;
-  struct string_t *next;
+  struct string_node_t *next;
 } string_node_t;
 
 /// @brief Programming Language
@@ -70,11 +70,6 @@ static string_node_t *map_string_node(
     sax_parser_t *restrict parser,
     const char *restrict tag) {
 
-  if (!sax_next_is(parser, SAX_EVENT_START_ELEMENT, tag)) {
-    LOG("ERROR: unexpected tag \"%s\"\n", sax_tag(parser));
-    return NULL;
-  }
-
   string_node_t *restrict node = arena_alloc(arena, sizeof(string_node_t));
   if (SAX_EVENT_CONTENT != sax_next(parser)) {
     LOG("ERROR: missing content for \"%s\"\n", tag);
@@ -88,14 +83,54 @@ static string_node_t *map_string_node(
   }
 
   LOG("ERROR: unexpected tag \"%s\"\n", sax_tag(parser));
-
   return NULL;
+}
+
+static string_node_t *map_string_nodes(
+    arena_t *restrict arena,
+    sax_parser_t *restrict parser,
+    const char *restrict collection_tag,
+    const char *restrict tag) {
+
+  string_node_t *restrict root = NULL;
+  string_node_t *restrict tail = NULL;
+
+  for (sax_event_t ev = sax_next(parser);
+       ev != SAX_EVENT_END_ELEMENT && ev != SAX_EVENT_ERROR;
+       ev = sax_next(parser)) {
+
+    if (ev == SAX_EVENT_START_ELEMENT && sax_tag_is(parser, tag)) {
+
+      string_node_t *restrict node = map_string_node(arena, parser, tag);
+
+      if (!node) {
+        return NULL;
+      }
+
+      if (!root) {
+        root = node;
+      }
+
+      if (tail) {
+        tail->next = node;
+      }
+
+      tail = node;
+    } else if (ev == SAX_EVENT_END_ELEMENT && sax_tag_is(parser, collection_tag)) {
+      return root;
+    } else {
+      FAIL("Unexpected tag \"%s\"", sax_tag(parser));
+    }
+  }
+
+  FAIL("Unreachable section");
 }
 
 static prog_lang_t *map_prog_lang(
     arena_t *restrict arena,
     sax_parser_t *restrict parser) {
 
+  // In <language>
   prog_lang_t *restrict lang = arena_alloc(arena, sizeof(prog_lang_t));
   lang->name = arena_strdup(arena, sax_attr(parser, "name"));
   lang->first_appeared = sax_attr_d32(parser, "first-appeared");
@@ -104,22 +139,26 @@ static prog_lang_t *map_prog_lang(
        ev != SAX_EVENT_END_ELEMENT && ev != SAX_EVENT_ERROR;
        ev = sax_next(parser)) {
 
+    if (ev == SAX_EVENT_END_ELEMENT && sax_tag_is(parser, "language")) {
+      return lang;
+    }
+
     if (sax_tag_is(parser, "paradigms")) {
-      lang->paradigms = map_string_node(arena, parser, "paradigm");
+      lang->paradigms = map_string_nodes(arena, parser, "paradigms", "paradigm");
       if (!lang->paradigms) {
         return NULL;
       }
     }
 
     if (sax_tag_is(parser, "typing-dicipline")) {
-      lang->typing = map_string_node(arena, parser, "typing");
+      lang->typing = map_string_nodes(arena, parser, "typing-dicipline", "typing");
       if (!lang->typing) {
         return NULL;
       }
     }
 
     if (sax_tag_is(parser, "execution-model")) {
-      lang->exe_model = map_string_node(arena, parser, "model");
+      lang->exe_model = map_string_nodes(arena, parser, "execution-model", "model");
       if (!lang->exe_model) {
         return NULL;
       }
@@ -127,6 +166,7 @@ static prog_lang_t *map_prog_lang(
 
     if (sax_tag_is(parser, "application-domains")) {
       lang->app_doms = map_string_node(arena, parser, "domain");
+      map_string_nodes(arena, parser, "application-domains", "domain");
       if (!lang->app_doms) {
         return NULL;
       }
@@ -165,7 +205,7 @@ int main() {
     } else if (ev == SAX_EVENT_END_ELEMENT && sax_tag_is(parser, "programming-languages")) {
       break;
     } else {
-      FAIL("Unexpected tag %s", sax_tag(parser));
+      FAIL("Unexpected tag \"%s\"", sax_tag(parser));
     }
   }
 
