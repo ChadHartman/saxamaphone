@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<programming-languages>
+
+  <language name="Python" first-appeared="1991">
+    <paradigms>
+      <paradigm>Procedural</paradigm>
+      <paradigm>Object-Oriented</paradigm>
+      <paradigm>Functional</paradigm>
+    </paradigms>
+    <typing-dicipline>
+      <typing>Dynamic</typing>
+      <typing>Strong</typing>
+    </typing-dicipline>
+    <execution-model>
+      <model>Interpreted</model>
+    </execution-model>
+    <application-domains>
+      <domain>Web Development</domain>
+      <domain>Data Science</domain>
+      <domain>Machine Learning</domain>
+      <domain>Scripting</domain>
+    </application-domains>
+  </language>
+
+  <language name="Java" first-appeared="1995">
+    <paradigms>
+      <paradigm>Object-Oriented</paradigm>
+      <paradigm>Concurrent</paradigm>
+    </paradigms>
+    <typing-dicipline>
+      <typing>Static</typing>
+      <typing>Strong</typing>
+    </typing-dicipline>
+    <execution-model>
+      <model>Compiled (to bytecode)</model>
+      <model>Interpreted (by JVM)</model>
+    </execution-model>
+    <application-domains>
+      <domain>Enterprise Systems</domain>
+      <domain>Android Development</domain>
+      <domain>Web Development</domain>
+    </application-domains>
+  </language>
+
+  <language name="C" first-appeared="1972">
+    <paradigms>
+      <paradigm>Procedural</paradigm>
+    </paradigms>
+    <typing-dicipline>
+      <typing>Static</typing>
+      <typing>Weak</typing>
+    </typing-dicipline>
+    <execution-model>
+      <model>Compiled (to machine code)</model>
+    </execution-model>
+    <application-domains>
+      <domain>System Programming</domain>
+      <domain>Embedded Systems</domain>
+      <domain>Game Development</domain>
+    </application-domains>
+  </language>
+
+  <language name="JavaScript" first-appeared="1995">
+    <paradigms>
+      <paradigm>Event-Driven</paradigm>
+      <paradigm>Object-Oriented</paradigm>
+      <paradigm>Functional</paradigm>
+    </paradigms>
+    <typing-dicipline>
+      <typing>Dynamic</typing>
+      <typing>Weak</typing>
+    </typing-dicipline>
+    <execution-model>
+      <model>Interpreted (JIT compilation)</model>
+    </execution-model>
+    <application-domains>
+      <domain>Web Development (Frontend &amp; Backend)</domain>
+      <domain>Mobile Development</domain>
+    </application-domains>
+  </language>
+</programming-languages>
