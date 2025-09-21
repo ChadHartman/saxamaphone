@@ -621,15 +621,11 @@ static sax_event_t sax_parser_state_in_start_tag(sax_parser_t *restrict parser, 
   switch (glyph[0]) {
 
   case '/':
+    SAXAMAPHONE_LOG("Parsed tag \"%s\"\n", parser->data);
     sax_parser_state(parser, SAX_STATE_CLOSING_START_TAG);
     return 0;
 
   case '>':
-
-    if (parser->data == NULL || strlen(parser->data) == 0) {
-      return sax_parser_error_unexpected_glyph(parser, glyph);
-    }
-
     SAXAMAPHONE_LOG("Parsed tag \"%s\"\n", parser->data);
     sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     return SAX_EVENT_START_ELEMENT;
