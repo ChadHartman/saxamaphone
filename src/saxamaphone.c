@@ -500,9 +500,12 @@ static sax_event_t sax_parser_append(sax_parser_t *restrict parser, char **token
 
   const uint8_t *end = parser->arena.bytes + parser->arena.bytes_size;
   const size_t glyph_size = strlen(glyph) + 1;
+  uintptr_t alignment = 0;
 
   if (!*token) {
     *token = (char *)(parser->arena.bytes + parser->arena.offset);
+    alignment = (uintptr_t)(*token) % sizeof(char *);
+    (*token) += alignment; // align
     *token[0] = '\0';
   }
 
@@ -515,7 +518,7 @@ static sax_event_t sax_parser_append(sax_parser_t *restrict parser, char **token
   }
 
   strcpy(*token + token_len, glyph);
-  parser->arena.offset += glyph_size;
+  parser->arena.offset += glyph_size + alignment;
   return 0;
 }
 
