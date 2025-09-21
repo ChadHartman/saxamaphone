@@ -44,6 +44,13 @@ static void test_sax_str_substr() {
   ASSERT_STRN_EQ("", substr, substr_size);
   sax_str_substr("", 1, 2, &substr, &substr_size);
   ASSERT_STRN_EQ("", substr, substr_size);
+
+  sax_str_substr("Olá, Mun", 3, 5, &substr, &substr_size);
+  ASSERT_STRN_EQ(", Mun", substr, substr_size);
+  sax_str_substr("Γεια σου Κόσμε", 3, 9, &substr, &substr_size);
+  ASSERT_STRN_EQ("α σου Κόσ", substr, substr_size);
+  sax_str_substr("こんにちは世界", 3, 4, &substr, &substr_size);
+  ASSERT_STRN_EQ("ちは世界", substr, substr_size);
 }
 
 // static void test_sax_unescaped() {
