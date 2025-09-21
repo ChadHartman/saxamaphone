@@ -26,7 +26,7 @@ static void print_header(const char *header) {
   printf("+\n");
 }
 
-int main() {
+static void test_sax_str_substr() {
 
   print_header("sax_str_substr tests");
   ASSERT_STR_EQ("ooba", sax_str_substr(sax_str("foobar"), 1, 4));
@@ -35,6 +35,9 @@ int main() {
   ASSERT_STR_EQ("foob", sax_str_substr(sax_str("foobar"), 0, 4));
   ASSERT_STR_EQ("", sax_str_substr(sax_str("foobar"), UINT32_MAX, 1));
   ASSERT_STR_EQ("", sax_str_substr(sax_str(""), 1, 2));
+}
+
+static void test_sax_unescaped() {
 
   print_header("sax_str_unescaped");
   ASSERT_STR_EQ("foo", sax_str_unescaped(sax_str("foo")));
@@ -59,6 +62,12 @@ int main() {
   ASSERT_STR_EQ("🌸", sax_str_unescaped(sax_str("&#127800;")));
   ASSERT_STR_EQ("🎵", sax_str_unescaped(sax_str("&#127925;")));
   ASSERT_STR_EQ("🚀", sax_str_unescaped(sax_str("&#128640;")));
+}
+
+int main() {
+
+  test_sax_str_substr();
+  test_sax_unescaped();
 
   print_header("end-to-end");
   sax_event_t ev = 0;

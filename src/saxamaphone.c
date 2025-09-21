@@ -8,7 +8,6 @@
 
 #include <saxamaphone.h>
 
-// TODO: Remove config storage from parser
 // TODO: Make NULL term strings
 
 #define SAXAMAPHONE_DEBUG
