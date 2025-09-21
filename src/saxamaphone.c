@@ -181,36 +181,36 @@ static uint_fast32_t sax_code_pt_size(byte_t byte) {
   return 0;
 }
 
-static uint_fast32_t sax_long_to_code_pt(long value, char *out) {
+// static uint_fast32_t sax_long_to_code_pt(long value, char *out) {
 
-  if (value < 0 || value > 0x10FFFF || (value >= 0xD800 && value <= 0xDFFF)) {
-    return 0;
-  }
+//   if (value < 0 || value > 0x10FFFF || (value >= 0xD800 && value <= 0xDFFF)) {
+//     return 0;
+//   }
 
-  if (value <= 0x7F) {
-    out[0] = (char)value;
-    return 1;
-  }
+//   if (value <= 0x7F) {
+//     out[0] = (char)value;
+//     return 1;
+//   }
 
-  if (value <= 0x7FF) {
-    out[0] = (char)(0xC0 | ((value >> 6) & 0x1F));
-    out[1] = (char)(0x80 | (value & 0x3F));
-    return 2;
-  }
+//   if (value <= 0x7FF) {
+//     out[0] = (char)(0xC0 | ((value >> 6) & 0x1F));
+//     out[1] = (char)(0x80 | (value & 0x3F));
+//     return 2;
+//   }
 
-  if (value <= 0xFFFF) {
-    out[0] = (char)(0xE0 | ((value >> 12) & 0x0F));
-    out[1] = (char)(0x80 | ((value >> 6) & 0x3F));
-    out[2] = (char)(0x80 | (value & 0x3F));
-    return 3;
-  }
+//   if (value <= 0xFFFF) {
+//     out[0] = (char)(0xE0 | ((value >> 12) & 0x0F));
+//     out[1] = (char)(0x80 | ((value >> 6) & 0x3F));
+//     out[2] = (char)(0x80 | (value & 0x3F));
+//     return 3;
+//   }
 
-  out[0] = (char)(0xF0 | ((value >> 18) & 0x07));
-  out[1] = (char)(0x80 | ((value >> 12) & 0x3F));
-  out[2] = (char)(0x80 | ((value >> 6) & 0x3F));
-  out[3] = (char)(0x80 | (value & 0x3F));
-  return 4;
-}
+//   out[0] = (char)(0xF0 | ((value >> 18) & 0x07));
+//   out[1] = (char)(0x80 | ((value >> 12) & 0x3F));
+//   out[2] = (char)(0x80 | ((value >> 6) & 0x3F));
+//   out[3] = (char)(0x80 | (value & 0x3F));
+//   return 4;
+// }
 
 // --- private sax_alloc_t methods --- //
 
@@ -286,17 +286,17 @@ static bool sax_str_empty(const char *str) {
   return strlen(str) == 0;
 }
 
-static bool sax_str_startswith(const char *src, const char *prefix) {
+// static bool sax_str_startswith(const char *src, const char *prefix) {
 
-  const size_t prefix_size = strlen(prefix);
-  const size_t src_size = strlen(src);
+//   const size_t prefix_size = strlen(prefix);
+//   const size_t src_size = strlen(src);
 
-  if (prefix_size > src_size) {
-    return false;
-  }
+//   if (prefix_size > src_size) {
+//     return false;
+//   }
 
-  return strncmp(src, prefix, prefix_size) == 0;
-}
+//   return strncmp(src, prefix, prefix_size) == 0;
+// }
 
 /// @brief Remove spaces (' ', '\t', '\n', etc) to the left of the first non-space character
 /// @param src string to ltrim
