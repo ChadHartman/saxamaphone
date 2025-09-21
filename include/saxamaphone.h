@@ -50,25 +50,14 @@ typedef struct sax_config_t {
 
 } sax_config_t;
 
-/// @brief Saxamaphone string view type
-typedef struct sax_str_t {
-
-  /// @brief Value; always non-NULL and not NULL-terminated
-  const char *value;
-
-  /// @brief Size in bytes of the string
-  sax_size_t size;
-
-} sax_str_t;
-
 /// @brief Saxamaphone XML Attribute
 typedef struct sax_attr_t {
 
-  /// @brief Attribute Name; will only be empty when last element of a list
-  sax_str_t name;
+  /// @brief non-NULL Attribute
+  const char *name;
 
-  /// @brief Attribute value; may by empty when a value is not provided
-  sax_str_t value;
+  /// @brief non-NULL Attribute value; may by empty string "" when a value is not provided
+  const char *value;
 
 } sax_attr_t;
 
@@ -98,23 +87,23 @@ sax_event_t sax_next(sax_parser_t *restrict parser);
 /// @brief Retrieve an error message for a @see SAX_EVENT_ERROR
 /// @param sax parser instance
 /// @return the error string message
-sax_str_t sax_error(const sax_parser_t *restrict parser);
+const char *sax_error(const sax_parser_t *restrict parser);
 
 /// @brief Retrieve the tag for events @see SAX_EVENT_START_ELEMENT or
 ///   @see SAX_EVENT_END_ELEMENT
 /// @param sax parser instance
 /// @return tag name or empty if incorrect event
-sax_str_t sax_tag(const sax_parser_t *restrict parser);
+const char *sax_tag(const sax_parser_t *restrict parser);
 
 /// @brief Retrieve the content for the @see SAX_EVENT_CONTENT event
 /// @param sax parser instance
 /// @return content or empty if incorrect event
-sax_str_t sax_content(const sax_parser_t *restrict parser);
+const char *sax_content(const sax_parser_t *restrict parser);
 
 /// @brief Retrieve the XML attributes for the @see SAX_EVENT_START_ELEMENT
 ///   event
 /// @param sax parser instance
 /// @return attribute collection
-sax_attrs_t sax_attrs(const sax_parser_t *restrict parser);
+const char *sax_attrs(const sax_parser_t *restrict parser);
 
 #endif
