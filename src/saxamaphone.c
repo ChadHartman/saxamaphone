@@ -521,7 +521,7 @@ static void sax_parser_error(sax_parser_t *restrict parser, const char *restrict
   va_start(args, format);
 
   sax_parser_state(parser, SAX_STATE_ERROR);
-  vsnprintf((char *)parser->arena.arena, parser->arena.bytes_size, format, args);
+  vsnprintf((char *)parser->arena.bytes, parser->arena.bytes_size, format, args);
   parser->msg = parser->arena.bytes;
 
   va_end(args);
@@ -855,10 +855,10 @@ sax_parser_t *sax_parser(const sax_config_t *restrict config) {
   sax_alloc_t alloc = {
 #if SAXAMAPHONE_NODE_BUFFER_SIZE == 0
       .bytes = config->arena,
-      .bytes_size = config->bytes_size,
+      .bytes_size = config->arena_size,
 #else
-      .bytes = config->bytes ? config->bytes : SAXAMAPHONE_NODE_BUFFER,
-      .bytes_size = config->bytes ? config->bytes_size : SAXAMAPHONE_NODE_BUFFER_SIZE,
+      .bytes = config->arena ? config->arena : SAXAMAPHONE_NODE_BUFFER,
+      .bytes_size = config->arena ? config->arena_size : SAXAMAPHONE_NODE_BUFFER_SIZE,
 #endif
   };
 
@@ -876,7 +876,7 @@ sax_parser_t *sax_parser(const sax_config_t *restrict config) {
   }
 
   *parser = (sax_parser_t){
-      .alloc = sax_alloc_partition(&alloc),
+      .arena = sax_alloc_partition(&alloc),
       .untrimmed_content = config->untrimmed_content,
   };
 
