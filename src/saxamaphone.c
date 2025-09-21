@@ -482,6 +482,7 @@ static void sax_parser_reset(sax_parser_t *restrict parser) {
   parser->attrs = NULL;
   parser->current_attr = NULL;
   parser->arena.offset = 0;
+  parser->arena.bytes[0] = '\0';
 }
 
 static void sax_parser_state(sax_parser_t *restrict parser, sax_state_t state) {
@@ -497,22 +498,23 @@ static void sax_parser_state(sax_parser_t *restrict parser, sax_state_t state) {
 static sax_event_t sax_parser_append(sax_parser_t *restrict parser, char **token, const char *glyph) {
 
   const uint8_t *end = parser->arena.bytes + parser->arena.bytes_size;
-  const size_t glyph_size = strlen(glyph);
+  const size_t glyph_size = strlen(glyph) + 1;
 
   if (!*token) {
     *token = (char *)(parser->arena.bytes + parser->arena.offset);
+    *token[0] = '\0';
   }
 
-  const size_t token_size = strlen(*token);
+  const size_t token_len = strlen(*token);
 
-  if ((uint8_t *)(*token + token_size + glyph_size + 1) > end) {
+  if ((uint8_t *)(*token + token_len + glyph_size) > end) {
     parser->data = "Out of memory";
     sax_parser_state(parser, SAX_STATE_ERROR);
     return SAX_EVENT_ERROR;
   }
 
-  strcpy(*token + token_size, glyph);
-  parser->arena.offset += glyph_size + 1;
+  strcpy(*token + token_len, glyph);
+  parser->arena.offset += glyph_size;
   return 0;
 }
 
