@@ -1053,11 +1053,14 @@ void sax_str_substr(
 
   *substr = src + byte_offset;
   size = strlen(*substr);
+  size_t i = 0;
 
-  for (*substr_size = 0, char_offset = 0;
-       *substr_size < size && char_offset < len;
-       *substr_size += sax_code_pt_size(*substr[*substr_size]), ++char_offset) {
+  for (i = 0, char_offset = 0;
+       i < size && char_offset < len;
+       i += sax_code_pt_size((*substr)[i]), ++char_offset) {
   }
+
+  *substr_size = i;
 }
 
 // sax_str_t sax_str_unescaped(const sax_str_t src) {

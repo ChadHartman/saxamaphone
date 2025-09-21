@@ -78,20 +78,21 @@
     }                                                                      \
   }
 
-#define ASSERT_STRN_EQ(expected, computed, len)                            \
-  {                                                                        \
-    const char *lhs = expected;                                            \
-    const char *rhs = computed;                                            \
-    const bool passed = strncmp(lhs, rhs, len) == 0;                       \
-    printf("%s:%d: %s" COLOR_RESET "\n",                                   \
-           (strrchr(__FILE__, '/') + 1),                                   \
-           __LINE__,                                                       \
-           passed ? COLOR_GREEN "PASSED" : COLOR_RED "FAILED");            \
-    printf(COLOR_CYAN "  ASSERT_STR_EQ(" #expected ", " #computed ")\n");  \
-    printf(COLOR_YELLOW "    \"%s\" == \"%s\"\n\n" COLOR_RESET, lhs, rhs); \
-    if (!passed) {                                                         \
-      exit(EXIT_FAILURE);                                                  \
-    }                                                                      \
+#define ASSERT_STRN_EQ(expected, computed, len)                           \
+  {                                                                       \
+    const char *lhs = expected;                                           \
+    const char *rhs = computed;                                           \
+    const bool passed = strncmp(lhs, rhs, len) == 0;                      \
+    printf("%s:%d: %s" COLOR_RESET "\n",                                  \
+           (strrchr(__FILE__, '/') + 1),                                  \
+           __LINE__,                                                      \
+           passed ? COLOR_GREEN "PASSED" : COLOR_RED "FAILED");           \
+    printf(COLOR_CYAN "  ASSERT_STR_EQ(" #expected ", " #computed ")\n"); \
+    printf(COLOR_YELLOW "    \"%.*s\" == \"%.*s\"\n\n" COLOR_RESET,       \
+           (int)len, lhs, (int)len, rhs);                                 \
+    if (!passed) {                                                        \
+      exit(EXIT_FAILURE);                                                 \
+    }                                                                     \
   }
 
 void sax_str_substr(
