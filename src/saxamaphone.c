@@ -97,7 +97,8 @@ typedef struct sax_str_iter_t {
 typedef struct sax_iter_t {
 
   sax_iter_type_t type;
-  char glyph[4];
+  /// @brief Largest code pt == 4; +1 null term
+  char glyph[5];
 
   union {
     sax_file_iter_t file;
@@ -466,26 +467,24 @@ static byte_t sax_iter_next_byte(sax_iter_t *restrict iter) {
 ///   malformed or reached the end of file; an empty string is returned
 /// @param iter instance
 /// @return glyph string sized 0-4 bytes
-static sax_str_t sax_iter_next_glyph(sax_iter_t *restrict iter) {
+static const char *sax_iter_next_glyph(sax_iter_t *restrict iter) {
 
   byte_t byte = sax_iter_next_byte(iter);
   if (byte == 0) {
     sax_iter_close(iter);
-    return SAXAMAPHONE_EMPTY_STRING;
+    return "";
   }
 
   iter->glyph[0] = (char)byte;
   const sax_size_t pt_size = sax_code_pt_size(byte);
 
-  for (sax_size_t i = 1; i < pt_size && byte != 0; ++i) {
+  sax_size_t i = 1;
+  for (; i < pt_size && byte != 0; ++i) {
     byte = sax_iter_next_byte(iter);
     iter->glyph[i] = (char)byte;
   }
-
-  return (sax_str_t){
-      .size = pt_size,
-      .value = iter->glyph,
-  };
+  iter->glyph[i] = '\0';
+  return iter->glyph;
 }
 
 // --- private parser methods --- //
@@ -493,16 +492,6 @@ static sax_str_t sax_iter_next_glyph(sax_iter_t *restrict iter) {
 static void sax_parser_state(sax_parser_t *restrict parser, sax_state_t state) {
   parser->prev_state = parser->state;
   parser->state = state;
-}
-
-/// @brief Get a string representation of the contents of the node buffer
-/// @param parser instance
-/// @return string representation of the node buffer
-static sax_str_t sax_parser_node(sax_parser_t *restrict parser) {
-  return (sax_str_t){
-      .size = parser->alloc.offset,
-      .value = (char *)parser->alloc.arena,
-  };
 }
 
 /// @brief Set the parser to the error state
@@ -515,10 +504,8 @@ static void sax_parser_error(sax_parser_t *restrict parser, const char *restrict
   va_start(args, format);
 
   sax_parser_state(parser, SAX_STATE_ERROR);
-  parser->error = (sax_str_t){
-      .size = vsnprintf((char *)parser->alloc.arena, parser->alloc.offset, format, args),
-      .value = (char *)parser->alloc.arena,
-  };
+  vsnprintf((char *)parser->alloc.arena, parser->alloc.arena_size, format, args);
+  parser->msg = parser->alloc.arena;
 
   va_end(args);
 }
@@ -527,12 +514,11 @@ static void sax_parser_error(sax_parser_t *restrict parser, const char *restrict
 /// @param parser instance
 /// @param glyph the unexpected glyph
 /// @return SAX_EVENT_ERROR
-static sax_event_t sax_parser_error_unexpected_glyph(sax_parser_t *restrict parser, const sax_str_t glyph) {
+static sax_event_t sax_parser_error_unexpected_glyph(sax_parser_t *restrict parser, const char *glyph) {
 
   sax_parser_error(parser,
-                   "Unexpected character \"%.*s\" located on line %" PRIuFAST16 " column %" PRIuFAST16,
-                   glyph.size,
-                   glyph.value,
+                   "Unexpected character \"%s\" located on line %" PRIuFAST16 " column %" PRIuFAST16,
+                   glyph,
                    parser->line,
                    parser->column);
 
