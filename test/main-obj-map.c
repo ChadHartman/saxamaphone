@@ -184,6 +184,17 @@ int main() {
   }
 
   ASSERT_STR_EQ("Python", langs[0].name);
+  ASSERT_STR_EQ("Procedural", langs[0].paradigms[0]);
+  ASSERT_STR_EQ("Object-Oriented", langs[0].paradigms[1]);
+  ASSERT_STR_EQ("Functional", langs[0].paradigms[2]);
+  ASSERT_STR_EQ("Dynamic", langs[0].typing[0]);
+  ASSERT_STR_EQ("Strong", langs[0].typing[1]);
+  ASSERT_STR_EQ("Interpreted", langs[0].exe_model[0]);
+  ASSERT_STR_EQ("Web Development", langs[0].app_doms[0]);
+  ASSERT_STR_EQ("Data Science", langs[0].app_doms[1]);
+  ASSERT_STR_EQ("Machine Learning", langs[0].app_doms[2]);
+  ASSERT_STR_EQ("Scripting", langs[0].app_doms[3]);
+
   ASSERT_STR_EQ("Java", langs[1].name);
   ASSERT_STR_EQ("C", langs[2].name);
   ASSERT_STR_EQ("JavaScript", langs[3].name);
