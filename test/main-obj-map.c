@@ -196,7 +196,18 @@ int main() {
   ASSERT_STR_EQ("Scripting", langs[0].app_doms[3]);
 
   ASSERT_STR_EQ("Java", langs[1].name);
+  ASSERT_STR_EQ("Object-Oriented", langs[1].paradigms[0]);
+  ASSERT_STR_EQ("Concurrent", langs[1].paradigms[1]);
+  ASSERT_STR_EQ("Static", langs[1].typing[0]);
+  ASSERT_STR_EQ("Strong", langs[1].typing[1]);
+  ASSERT_STR_EQ("Compiled (to bytecode)", langs[1].exe_model[0]);
+  ASSERT_STR_EQ("Interpreted (by JVM)", langs[1].exe_model[1]);
+  ASSERT_STR_EQ("Enterprise Systems", langs[1].app_doms[0]);
+  ASSERT_STR_EQ("Android Development", langs[1].app_doms[1]);
+  ASSERT_STR_EQ("Web Development", langs[1].app_doms[2]);
+
   ASSERT_STR_EQ("C", langs[2].name);
+
   ASSERT_STR_EQ("JavaScript", langs[3].name);
 
   arena_free(arena);
