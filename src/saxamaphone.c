@@ -510,7 +510,7 @@ static void sax_parser_state(sax_parser_t *restrict parser, sax_state_t state) {
 static sax_str_t sax_parser_node(sax_parser_t *restrict parser) {
   return (sax_str_t){
       .size = parser->node_offset,
-      .value = (char *)SAXAMAPHONE_NODE_BUFFER,
+      .value = (char *)parser->alloc.arena,
   };
 }
 
