@@ -43,9 +43,11 @@ typedef enum {
   SAX_STATE_IN_TAG,
   SAX_STATE_IN_START_TAG,
   SAX_STATE_CLOSING_START_TAG,
+  SAX_STATE_ASSIGNING_ATTR_VALUE,
   SAX_STATE_IN_ESC_CHAR,
   SAX_STATE_IN_CONTENT,
   SAX_STATE_IN_END_TAG,
+  SAX_STATE_EXPECTING_ATTR_NAME,
   SAX_STATE_IN_ATTR_NAME,
   SAX_STATE_IN_ATTR_VALUE,
   SAX_STATE_IN_COMMENT,
@@ -646,17 +648,16 @@ static sax_event_t sax_parser_state_in_start_tag(sax_parser_t *restrict parser, 
     return SAX_EVENT_START_ELEMENT;
 
   case SAXAMAPHONE_SPACE:
-    sax_parser_state(parser, SAX_STATE_IN_ATTR_NAME);
+    sax_parser_state(parser, SAX_STATE_EXPECTING_ATTR_NAME);
     break;
 
   default:
 
     if (strchr(SAXAMAPHONE_EXCLUDE_TAG, glyph[0])) {
-      sax_parser_error(parser, "Tag names cannot contain '%c'", glyph[0]);
+      return sax_parser_error_unexpected_glyph(parser, glyph);
     }
 
     sax_parser_msg_append(parser, glyph);
-
     break;
   }
 
@@ -727,23 +728,19 @@ static sax_event_t sax_parser_state_in_end_tag(sax_parser_t *restrict parser, co
 
 static sax_event_t sax_parser_state_in_attr_name(sax_parser_t *restrict parser, const char *glyph) {
 
-  switch (glyph.value[0]) {
+  switch (glyph[0]) {
 
   case '>':
+
     sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     return SAX_EVENT_START_ELEMENT;
 
   case SAXAMAPHONE_SPACE:
-    if (++parser->attr_offset == SAXAMAPHONE_ATTR_MAX) {
-      sax_parser_state(parser, SAX_STATE_ERROR);
-      parser->error = sax_str("Maximum XML attributes exceeded");
-      return SAX_EVENT_ERROR;
-    }
-
+    sax_parser_state(parser, SAX_STATE_EXPECTING_ATTR_NAME);
     break;
 
   case '=':
-    sax_parser_state(parser, SAX_STATE_IN_ATTR_VALUE);
+    sax_parser_state(parser, SAX_STATE_ASSIGNING_ATTR_VALUE);
     break;
 
   default: {
@@ -797,24 +794,20 @@ static sax_event_t sax_parser_state_in_attr_value(sax_parser_t *restrict parser,
   return 0;
 }
 
-static sax_event_t sax_parser_state_in_comment(sax_parser_t *restrict parser, const sax_str_t glyph) {
+static sax_event_t sax_parser_state_in_comment(sax_parser_t *restrict parser, const char *glyph) {
 
-  switch (glyph.value[0]) {
+  switch (glyph[0]) {
 
   case '>': {
-    const sax_str_t subj = {
-        .size = parser->alloc.offset,
-        .value = (char *)parser->alloc.arena,
-    };
-
-    if (sax_str_endswith(subj, sax_str("-->"))) {
-      parser->alloc.offset = 0;
+    if (sax_str_endswith(parser->msg, sax_str("-->"))) {
+      parser->msg = NULL;
+      sax_alloc_reset(&parser->alloc);
       sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     }
   } break;
 
   default:
-    // noop
+    sax_parser_msg_append(parser, glyph);
     break;
   }
 
