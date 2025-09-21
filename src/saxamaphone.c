@@ -483,7 +483,7 @@ static void sax_parser_reset(sax_parser_t *restrict parser) {
 /// @param token token to appen
 /// @param glyph glyph to append
 /// @return resulting token
-static char *sax_parser_token_append(sax_parser_t *restrict parser, char *token, const char *glyph) {
+static char *sax_token_append(sax_parser_t *restrict parser, char *token, const char *glyph) {
 
   const uint8_t *end = parser->arena.bytes + parser->arena.bytes_size;
   const size_t glyph_size = strlen(glyph);
@@ -497,7 +497,7 @@ static char *sax_parser_token_append(sax_parser_t *restrict parser, char *token,
   if ((uint8_t *)(token + token_size + glyph_size + 1) > end) {
     parser->msg = "Out of memory";
     sax_parser_state(parser, SAX_STATE_ERROR);
-    return;
+    return token;
   }
 
   strcpy(token + token_size, glyph);
@@ -676,7 +676,7 @@ static sax_event_t sax_parser_state_expecting_attr_name(sax_parser_t *restrict p
 
     parser->current_attr = sax_alloc(&parser->arena, sizeof(sax_attr_t));
     *parser->current_attr = (sax_attr_t){
-        .name = sax_parser_token_append(parser, NULL, glyph),
+        .name = sax_token_append(parser, NULL, glyph),
         .value = NULL,
     };
 
@@ -778,7 +778,7 @@ static sax_event_t sax_parser_state_in_attr_name(sax_parser_t *restrict parser, 
     if (strchr(SAXAMAPHONE_EXCLUDE_TAG, glyph[0])) {
       return sax_parser_error_unexpected_glyph(parser, glyph);
     }
-    parser->current_attr->name = sax_parser_token_append(parser, parser->current_attr->name, glyph);
+    parser->current_attr->name = sax_token_append(parser, parser->current_attr->name, glyph);
     break;
   }
 
@@ -795,7 +795,7 @@ static sax_event_t sax_parser_state_in_attr_value(sax_parser_t *restrict parser,
     break;
 
   default:
-    parser->current_attr->value = sax_parser_token_append(parser, parser->current_attr->value, glyph);
+    parser->current_attr->value = sax_token_append(parser, parser->current_attr->value, glyph);
     break;
   }
 
