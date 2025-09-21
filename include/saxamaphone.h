@@ -1,6 +1,8 @@
 #ifndef SAXAMAPHONE
 #define SAXAMAPHONE
 
+#include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 /// @brief Possible Saxamaphone event types
@@ -29,6 +31,22 @@ typedef struct sax_config_t {
 
   /// @brief Leave content leading and trailing spaces
   bool untrimmed_content;
+
+  /// @brief If thread local buffers are undesirable, i.e.
+  ///   `#define SAXAMAPHONE_NODE_BUFFER_SIZE 0`; and alternate arena can be
+  ///   provided here. `arena_size_size` must be provided too
+  uint8_t *arena;
+
+  /// @brief The size in bytes of the `arena` field
+  size_t arena_size;
+
+  /// @brief If thread local buffers are undesirable, i.e.
+  ///   `#ifndef SAXAMAPHONE_FILE_BUFFER_SIZE 0`; an alternate buffer can be
+  ///   provided here. `file_buffer_size` must be provided too
+  uint8_t *file_buffer;
+
+  /// @brief The size in bytes of the `file_buffer` field
+  size_t file_buffer_size;
 
 } sax_config_t;
 

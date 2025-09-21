@@ -7,38 +7,6 @@
 #include "test.h"
 #include <saxamaphone.h>
 
-#define COLOR_RED "\x1b[31m"
-#define COLOR_GREEN "\x1b[32m"
-#define COLOR_YELLOW "\x1b[33m"
-#define COLOR_BLUE "\x1b[34m"
-#define COLOR_MAGENTA "\x1b[35m"
-#define COLOR_CYAN "\x1b[36m"
-#define COLOR_RESET "\x1b[0m"
-
-#define FILENAME (strrchr(__FILE__, '/') + 1)
-
-#define ASSERT_STR_EQ(expected, computed)                           \
-  {                                                                 \
-    const sax_str_t lhs = sax_str(expected);                        \
-    const sax_str_t rhs = computed;                                 \
-    const bool passed = sax_str_equals(lhs, rhs);                   \
-    /* clang-format off */                                        \
-    printf("%s:%d: %s" COLOR_RESET "\n"                           \
-           COLOR_CYAN "  ASSERT_STR_EQ(" #expected ", " #computed ")\n"     \
-           COLOR_YELLOW "    \"%.*s\" == \"%.*s\"\n\n" COLOR_RESET, \
-           FILENAME,                                              \
-           __LINE__,                                              \
-           passed ? COLOR_GREEN "PASSED" : COLOR_RED "FAILED",    \
-           lhs.size,                                             \
-           lhs.value,                                            \
-           rhs.size,                                             \
-           rhs.value); \
-    /* clang-format on */                                           \
-    if (!passed) {                                                  \
-      exit(EXIT_FAILURE);                                           \
-    }                                                               \
-  }
-
 static void print_header(const char *header) {
 
   const size_t len = strlen(header);
