@@ -113,9 +113,8 @@ struct sax_parser_t {
   sax_iter_t iter;
   sax_state_t state;
   sax_state_t prev_state;
-  sax_str_t error;
-  sax_str_t tag;
-  sax_str_t content;
+  /// @brief Used for error (SAX_EVENT_ERROR), tag (SAX_EVENT_START_TAG), or content (SAX_EVENT_CONTENT)
+  const char *msg;
   sax_size_t attr_offset;
   sax_size_t line;
   sax_size_t column;

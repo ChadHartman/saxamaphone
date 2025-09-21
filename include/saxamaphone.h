@@ -59,18 +59,10 @@ typedef struct sax_attr_t {
   /// @brief non-NULL Attribute value; may by empty string "" when a value is not provided
   const char *value;
 
+  /// @brief NULLable pointer to next attribute pair
+  struct sax_attr_t *next;
+
 } sax_attr_t;
-
-/// @brief Saxamaphone XML Attribute array slice
-typedef struct sax_attrs_t {
-
-  /// @brief Attributes array
-  const sax_attr_t *attrs;
-
-  /// @brief Number of attributes in attrs
-  sax_size_t count;
-
-} sax_attrs_t;
 
 /// @brief Initialize the thread-local parser (only 1 parser per thread can run
 ///   at a time). Initializing an in-progress parser will close resources and
@@ -86,24 +78,24 @@ sax_event_t sax_next(sax_parser_t *restrict parser);
 
 /// @brief Retrieve an error message for a @see SAX_EVENT_ERROR
 /// @param sax parser instance
-/// @return the error string message
+/// @return non-NULL the error string message or "" if not in error state
 const char *sax_error(const sax_parser_t *restrict parser);
 
 /// @brief Retrieve the tag for events @see SAX_EVENT_START_ELEMENT or
 ///   @see SAX_EVENT_END_ELEMENT
 /// @param sax parser instance
-/// @return tag name or empty if incorrect event
+/// @return  non-NULL tag name or "" if incorrect event
 const char *sax_tag(const sax_parser_t *restrict parser);
 
 /// @brief Retrieve the content for the @see SAX_EVENT_CONTENT event
 /// @param sax parser instance
-/// @return content or empty if incorrect event
+/// @return non-NULL content or "" if incorrect event
 const char *sax_content(const sax_parser_t *restrict parser);
 
 /// @brief Retrieve the XML attributes for the @see SAX_EVENT_START_ELEMENT
 ///   event
 /// @param sax parser instance
-/// @return attribute collection
-const char *sax_attrs(const sax_parser_t *restrict parser);
+/// @return NULLable attribute linked list
+const sax_attr_t *sax_attrs(const sax_parser_t *restrict parser);
 
 #endif
