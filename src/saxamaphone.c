@@ -172,6 +172,14 @@ static SAXAMAPHONE_THREAD_LOCAL uint8_t SAXAMAPHONE_NODE_BUFFER[SAXAMAPHONE_NODE
 
 // === private methods === //
 
+#ifdef SAXAMAPHONE_DEBUG
+#define SAXAMAPHONE_LOG(...)                                              \
+  printf("[SAXAMAPHONE] %s:%d ", (strrchr(__FILE__, "/") + 1), __LINE__); \
+  printf(__VA_ARGS__)
+#else
+#define SAXAMAPHONE_LOG(...)
+#endif
+
 /// @brief Given the provided byte determine the UTF-8 code point size
 /// @param byte byte value
 /// @return size 1-4 if value; 0 if invalid
