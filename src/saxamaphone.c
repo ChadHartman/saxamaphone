@@ -21,7 +21,7 @@
 #define SAXAMAPHONE_NODE_BUFFER_SIZE 2048
 #endif
 
-#define SAXAMAPHONE_STRINGIFY(val) #val
+// #define SAXAMAPHONE_STRINGIFY(val) #val
 // #define SAXAMAPHONE_DEBUG
 
 #if defined(__clang__) || defined(__GNUC__)
@@ -478,32 +478,31 @@ static void sax_parser_reset(sax_parser_t *restrict parser) {
   parser->arena.offset = 0;
 }
 
-/// @brief Append a glyph to the current message (tag or content)
-/// @param parser
-/// @param glyph
-static void sax_parser_arena_append(sax_parser_t *restrict parser, const char *glyph) {
+/// @brief Append a glyph to the current token (tag, content, attr name, attr value)
+/// @param parser instance
+/// @param token token to appen
+/// @param glyph glyph to append
+/// @return resulting token
+static char *sax_parser_token_append(sax_parser_t *restrict parser, char *token, const char *glyph) {
 
   const uint8_t *end = parser->arena.bytes + parser->arena.bytes_size;
   const size_t glyph_size = strlen(glyph);
 
-  if (!parser->msg) {
-    // We're kind of abusing the arena here; the first "allocation" from the
-    //   arena should always be msg (tag name or content)
-    parser->msg = parser->arena.bytes;
+  if (!token) {
+    token = parser->arena.bytes + parser->arena.offset;
   }
 
-  const size_t msg_size = strlen(parser->msg);
+  const size_t token_size = strlen(token);
 
-  if ((uint8_t *)(parser->msg + msg_size + glyph_size + 1) > end) {
+  if ((uint8_t *)(token + token_size + glyph_size + 1) > end) {
     parser->msg = "Out of memory";
     sax_parser_state(parser, SAX_STATE_ERROR);
     return;
   }
 
-  strcpy(parser->msg + msg_size, glyph);
-
-  // Ensure subsequent "allocations" are after msg
-  parser->arena.offset = msg_size + glyph_size + 1;
+  strcpy(token + token_size, glyph);
+  parser->arena.offset += glyph_size + 1;
+  return token;
 }
 
 static void sax_parser_state(sax_parser_t *restrict parser, sax_state_t state) {
@@ -662,7 +661,7 @@ static sax_event_t sax_parser_state_expecting_attr_name(sax_parser_t *restrict p
     return SAX_EVENT_START_ELEMENT;
 
   case SAXAMAPHONE_SPACE:
-    // TODO
+    // noop
     break;
 
   default:
@@ -960,6 +959,10 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
 
     case SAX_STATE_IN_START_TAG:
       ev = sax_parser_state_in_start_tag(parser, glyph);
+      break;
+
+    case SAX_STATE_EXPECTING_ATTR_NAME:
+      ev = sax_parser_state_expecting_attr_name(parser, glyph);
       break;
 
     case SAX_STATE_IN_ESC_CHAR:
