@@ -116,6 +116,9 @@ static void test_object_mapping() {
 
   prog_lang_t *restrict lang = prog_lang(arena, parser);
   ASSERT_NON_NULL(lang);
+  ASSERT_STR_EQ("Python", lang->name);
+  ASSERT_EQ(1991, lang->first_appeared);
+  ASSERT_NULL(lang->next);
 
   arena_free(arena);
 }
