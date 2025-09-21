@@ -1,6 +1,7 @@
 #define SAXAMAPHONE_FILE_BUFFER_SIZE 0
 #define SAXAMAPHONE_NODE_BUFFER_SIZE 0
 
+#include <saxamaphone.h>
 #include <stdlib.h>
 
 #include "test.h"
@@ -18,7 +19,7 @@ int main() {
       .arena_size = sizeof(buf),
       .string = "",
   }));
-  
+
   {
     uint8_t buf[2048];
     sax_parser_t *parser = sax_parser(&(sax_config_t){
