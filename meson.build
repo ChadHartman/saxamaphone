@@ -16,7 +16,9 @@ srcs = [
 # === Tests === #
 
 all_tests = executable('saxamaphone-tests',
-    sources: srcs + 'test/main.c',
+    sources: srcs 
+        + 'test/arena.c' 
+        + 'test/main.c',
     include_directories: includes,
     c_args: c_args)
 

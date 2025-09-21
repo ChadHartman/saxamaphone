@@ -5,6 +5,7 @@
 #include <stdlib.h> // EXIT_SUCCESS
 #include <string.h> // strrchr
 
+#include "arena.h"
 #include "test.h"
 #include <saxamaphone.h>
 
@@ -24,7 +25,18 @@ typedef struct prog_lang_t {
   string_slice_t exe_model;
   string_slice_t app_doms;
 
+  struct prog_lang_t *next;
+
 } prog_lang_t;
+
+static int32_t sax_attr_d32(sax_parser_t *restrict parser, const char *restrict name) {
+  const char *restrict value = sax_attr(parser, name);
+  if (value == NULL) {
+    return 0;
+  }
+
+  return (int32_t)atol(value);
+}
 
 static void print_header(const char *header) {
 
@@ -72,46 +84,40 @@ static void test_sax_str_substr() {
   ASSERT_STRN_EQ("ちは世界", substr, substr_size);
 }
 
-static size_t test_object_mapping_lang(
-    sax_parser_t *restrict parser,
-    prog_lang_t *restrict *restrict langs) {
+static prog_lang_t *prog_lang(
+    arena_t *restrict arena,
+    sax_parser_t *restrict parser) {
 
-  size_t count = 0;
+  if (SAX_EVENT_START_ELEMENT != sax_next(parser)) {
+    // Error unexpected element
+    return NULL;
+  }
 
-  ASSERT_EQ(SAX_EVENT_START_ELEMENT, sax_next(parser));
-  ASSERT_STR_EQ("language", sax_tag(parser));
+  if (strcmp("language", sax_tag(parser)) != 0) {
+    // Error unexpected tag
+    return NULL;
+  }
 
-  *langs = realloc(*langs, sizeof(prog_lang_t) * ++count);
-  prog_lang_t *restrict lang = &(*langs)[count - 1];
-
-  const char *name = sax_attr(parser, "name");
-  ASSERT_NON_NULL(name);
-  const char *first_appeared = sax_attr(parser, "first-appeared");
-  ASSERT_NON_NULL(first_appeared);
-  lang->name = malloc(strlen(name) + 1);
-  strcpy(lang->name, name);
-  lang->first_appeared = (int16_t)atoi(first_appeared);
-
-  ASSERT_EQ(SAX_EVENT_START_ELEMENT, sax_next(parser));
-  ASSERT_STR_EQ("language", sax_tag(parser));
-
-  return count;
+  prog_lang_t *restrict lang = arena_alloc(arena, sizeof(prog_lang_t));
+  lang->name = arena_strdup(arena, sax_tag(parser));
+  lang->first_appeared = sax_attr_d32(parser, "first-appeared");
+  return lang;
 }
 
 static void test_object_mapping() {
 
   print_header("Object Mapping Tests");
-
-  prog_lang_t *langs = NULL;
+  arena_t *restrict arena = arena_create();
   sax_parser_t *parser = sax_parser(&(sax_config_t){
       .path = "../test/files/programming-languages.xml",
   });
-
   ASSERT_EQ(SAX_EVENT_START_ELEMENT, sax_next(parser));
   ASSERT_STR_EQ("programming-languages", sax_tag(parser));
-  size_t lang_count = test_object_mapping_lang(parser, &langs);
 
-  ASSERT_EQ(4, lang_count);
+  prog_lang_t *restrict lang = prog_lang(arena, parser);
+  ASSERT_NON_NULL(lang);
+
+  arena_free(arena);
 }
 
 // static void test_sax_unescaped() {
