@@ -192,6 +192,7 @@ int main() {
   ASSERT_STR_EQ("programming-languages", sax_tag(parser));
 
   prog_lang_t *restrict langs = NULL;
+  prog_lang_t *restrict tail = NULL;
 
   for (sax_event_t ev = sax_next(parser);
        ev != SAX_EVENT_END_DOCUMENT && ev != SAX_EVENT_ERROR;
@@ -202,11 +203,16 @@ int main() {
       prog_lang_t *restrict lang = map_prog_lang(arena, parser);
       ASSERT_NON_NULL(lang);
 
-      if (langs) {
-        langs->next = langs;
+      if (!langs) {
+        langs = lang;
       }
 
-      langs = lang;
+      if (tail) {
+        tail->next = lang;
+      }
+
+      tail = lang;
+
     } else if (ev == SAX_EVENT_END_ELEMENT && sax_tag_is(parser, "programming-languages")) {
       break;
     } else {
@@ -215,11 +221,7 @@ int main() {
   }
 
   ASSERT_NON_NULL(langs);
-  ASSERT_STR_EQ("JavaScript", langs->name);
-
-  langs = langs->next;
-  ASSERT_NON_NULL(langs);
-  ASSERT_STR_EQ("C", langs->name);
+  ASSERT_STR_EQ("Python", langs->name);
 
   langs = langs->next;
   ASSERT_NON_NULL(langs);
@@ -227,7 +229,11 @@ int main() {
 
   langs = langs->next;
   ASSERT_NON_NULL(langs);
-  ASSERT_STR_EQ("Python", langs->name);
+  ASSERT_STR_EQ("C", langs->name);
+
+  langs = langs->next;
+  ASSERT_NON_NULL(langs);
+  ASSERT_STR_EQ("JavaScript", langs->name);
 
   arena_free(arena);
   return EXIT_SUCCESS;
