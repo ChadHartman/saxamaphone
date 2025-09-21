@@ -836,8 +836,8 @@ static sax_event_t sax_parser_state_in_proc_inst(sax_parser_t *restrict parser, 
 sax_parser_t *sax_parser(const sax_config_t *restrict config) {
 
   SAXAMAPHONE_LOG("[SAXAMAPHONE] Configuration:\n"
-                  "SAXAMAPHONE_FILE_BUFFER_SIZE=%d\n"
-                  "SAXAMAPHONE_NODE_BUFFER_SIZE=%d\n",
+                  "    SAXAMAPHONE_FILE_BUFFER_SIZE=%d\n"
+                  "    SAXAMAPHONE_NODE_BUFFER_SIZE=%d\n",
                   SAXAMAPHONE_FILE_BUFFER_SIZE,
                   SAXAMAPHONE_NODE_BUFFER_SIZE);
 
@@ -878,7 +878,7 @@ sax_parser_t *sax_parser(const sax_config_t *restrict config) {
 
 #if SAXAMAPHONE_NODE_BUFFER_SIZE == 0
     if (!config->file_buffer || config->file_buffer_size == 0) {
-      SAXAMAPHONE_LOG("Path \"%s\" provided but insufficient file_buffer %p sized %zu provided",
+      SAXAMAPHONE_LOG("Path \"%s\" provided but insufficient file_buffer %p sized %zu provided\n",
                       config->path,
                       config->file_buffer,
                       config->file_buffer_size);
