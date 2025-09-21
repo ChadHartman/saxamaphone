@@ -627,18 +627,18 @@ static sax_event_t sax_parser_state_in_start_tag(sax_parser_t *restrict parser, 
   case '>':
 
     if (parser->msg == NULL || strlen(parser->msg) == 0) {
-      sax_parser_error(
-          parser,
-          "Empty tag found at line %d column %d",
-          parser->line,
-          parser->column);
-      return SAX_EVENT_ERROR;
+      return sax_parser_error_unexpected_glyph(parser, glyph);
     }
 
+    SAXAMAPHONE_LOG("Parsed tag \"%s\"\n", parser->msg);
     sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     return SAX_EVENT_START_ELEMENT;
 
   case SAXAMAPHONE_SPACE:
+    if (parser->msg == NULL || strlen(parser->msg) == 0) {
+      return sax_parser_error_unexpected_glyph(parser, glyph);
+    }
+    SAXAMAPHONE_LOG("Parsed tag \"%s\"\n", parser->msg);
     sax_parser_state(parser, SAX_STATE_EXPECTING_ATTR_NAME);
     break;
 
