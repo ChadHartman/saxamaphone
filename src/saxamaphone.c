@@ -138,7 +138,8 @@ char *sax_str_substr(
 
 #define SAX_SIZE_MAX UINT_FAST32_MAX
 
-#define SAXAMAPHONE_EXCLUDE_TAG_PREFIX "!\"#$%&'()*+,/;<=>?@[\\]^`{|}~ .-0123456789"
+#define SAXAMAPHONE_EXCLUDE_TAG "!\"#$%&'()*+,/;<=>?@[\\]^`{|}~"
+#define SAXAMAPHONE_EXCLUDE_TAG_PREFIX (SAXAMAPHONE_EXCLUDE_TAG ".-0123456789")
 
 #define SAXAMAPHONE_SPACE \
   ' ' : case '\f':        \
@@ -650,7 +651,7 @@ static sax_event_t sax_parser_state_in_start_tag(sax_parser_t *restrict parser, 
 
   default:
 
-    if (strchr("!\"#$%&'()*+,/;<=>?@[\\]^`{|}~", glyph[0])) {
+    if (strchr(SAXAMAPHONE_EXCLUDE_TAG, glyph[0])) {
       sax_parser_error(parser, "Tag names cannot contain '%c'", glyph[0]);
     }
 
@@ -696,10 +697,14 @@ static sax_event_t sax_parser_state_in_content(sax_parser_t *restrict parser, co
   return 0;
 }
 
-static sax_event_t sax_parser_state_in_end_tag(sax_parser_t *restrict parser, const sax_str_t glyph) {
+static sax_event_t sax_parser_state_in_end_tag(sax_parser_t *restrict parser, const char *glyph) {
 
-  switch (glyph.value[0]) {
+  switch (glyph[0]) {
   case '>':
+    if (parser->msg == NULL || strlen(parser->msg) == 0) {
+      sax_parser_error(parser, "Empty closing tag found at line %d column %d", parser->line, parser->column);
+      return SAX_EVENT_ERROR;
+    }
     sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     return SAX_EVENT_END_ELEMENT;
 
@@ -708,17 +713,19 @@ static sax_event_t sax_parser_state_in_end_tag(sax_parser_t *restrict parser, co
     break;
 
   default:
-    if (parser->tag.size == 0) {
-      parser->tag.value = strrchr((char *)parser->alloc.arena, '/') + 1;
+    if (strchr(SAXAMAPHONE_EXCLUDE_TAG, glyph[0])) {
+      sax_parser_error_unexpected_glyph(parser, glyph);
+      return SAX_EVENT_ERROR;
     }
-    parser->tag.size += glyph.size;
+
+    sax_parser_msg_append(parser, glyph);
     break;
   }
 
   return 0;
 }
 
-static sax_event_t sax_parser_state_in_attr_name(sax_parser_t *restrict parser, const sax_str_t glyph) {
+static sax_event_t sax_parser_state_in_attr_name(sax_parser_t *restrict parser, const char *glyph) {
 
   switch (glyph.value[0]) {
 
