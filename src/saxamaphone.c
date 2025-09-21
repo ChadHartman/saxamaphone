@@ -107,7 +107,9 @@ typedef struct sax_iter_t {
 } sax_iter_t;
 
 struct sax_parser_t {
-  sax_config_t config;
+
+  bool untrimmed_content;
+
   sax_alloc_t alloc;
   sax_iter_t iter;
   sax_state_t state;
@@ -676,7 +678,7 @@ static sax_event_t sax_parser_state_in_content(sax_parser_t *restrict parser, co
     sax_parser_state(parser, SAX_STATE_IN_TAG);
     sax_str_t content = sax_parser_node(parser);
     --content.size; // For the '<'
-    content = parser->config.untrimmed_content ? content : sax_str_trim(content);
+    content = parser->untrimmed_content ? content : sax_str_trim(content);
 
     if (sax_str_is_space(parser->content)) {
       parser->alloc.offset = 1;
@@ -869,7 +871,7 @@ sax_parser_t *sax_parser(const sax_config_t *restrict config) {
 
   *parser = (sax_parser_t){
       .alloc = sax_alloc_partition(&alloc),
-      .config = *config,
+      .untrimmed_content = config->untrimmed_content,
   };
 
   if (config->path) {
