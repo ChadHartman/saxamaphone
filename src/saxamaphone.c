@@ -818,12 +818,7 @@ static sax_event_t sax_parser_state_in_proc_inst(sax_parser_t *restrict parser, 
 
   switch (glyph.value[0]) {
   case '>':
-    if (parser->alloc.arena[parser->alloc.offset - 2] == '?') {
-      parser->alloc.offset = 0;
-      sax_parser_state(parser, SAX_STATE_IN_CONTENT);
-    } else {
-      return sax_parser_error_unexpected_glyph(parser, glyph);
-    }
+    sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     break;
   }
 
