@@ -700,6 +700,18 @@ static sax_event_t sax_parser_state_expecting_attr_name(sax_parser_t *restrict p
   return 0;
 }
 
+static sax_event_t sax_parser_state_assigning_attr_value(sax_parser_t *restrict parser, const char *glyph) {
+
+  switch (glyph[0]) {
+  case '"':
+    sax_parser_state(parser, SAX_STATE_IN_ATTR_NAME);
+    return 0;
+
+  default:
+    return sax_parser_error_unexpected_glyph(parser, glyph);
+  }
+}
+
 static sax_event_t sax_parser_state_in_content(sax_parser_t *restrict parser, const char *glyph) {
 
   switch (glyph[0]) {
@@ -965,6 +977,10 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
 
     case SAX_STATE_EXPECTING_ATTR_NAME:
       ev = sax_parser_state_expecting_attr_name(parser, glyph);
+      break;
+
+    case SAX_STATE_ASSIGNING_ATTR_VALUE:
+      ev = sax_parser_state_assigning_attr_value(parser, glyph);
       break;
 
     case SAX_STATE_IN_ESC_CHAR:
