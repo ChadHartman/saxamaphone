@@ -105,6 +105,9 @@ typedef struct sax_iter_t {
 
 } sax_iter_t;
 
+#define PRISAXSIZE PRIuFAST16
+typedef uint_fast32_t sax_size_t;
+
 struct sax_parser_t {
 
   bool untrimmed_content;
@@ -115,7 +118,6 @@ struct sax_parser_t {
   sax_state_t prev_state;
   /// @brief Used for error (SAX_EVENT_ERROR), tag (SAX_EVENT_START_TAG), or content (SAX_EVENT_CONTENT)
   const char *msg;
-  sax_size_t attr_offset;
   sax_size_t line;
   sax_size_t column;
   sax_attr_t attrs[SAXAMAPHONE_ATTR_MAX];
@@ -128,8 +130,8 @@ struct sax_parser_t {
 /// @param start inclusive start character offset
 /// @param len number of bytes to leave
 /// @return resulting substring
-sax_str_t sax_str_substr(
-    const sax_str_t src,
+char *sax_str_substr(
+    char *src,
     sax_size_t start,
     sax_size_t len);
 
@@ -1069,34 +1071,31 @@ sax_attrs_t sax_attrs(const sax_parser_t *restrict parser) {
 
 // --- public undocumented methods --- //
 
-sax_str_t sax_str_substr(
-    const sax_str_t src,
+char *sax_str_substr(
+    char *str,
     sax_size_t start,
     sax_size_t len) {
 
-  (void)len;
-
+  size_t size = strlen(str);
   sax_size_t byte_offset = 0;
   sax_size_t char_offset = 0;
 
   for (;
-       byte_offset < src.size && char_offset < start;
-       byte_offset += sax_code_pt_size(src.value[byte_offset]), ++char_offset) {
+       byte_offset < size && char_offset < start;
+       byte_offset += sax_code_pt_size(str[byte_offset]), ++char_offset) {
   }
 
-  sax_str_t res = (sax_str_t){
-      .value = src.value + byte_offset,
-      .size = src.size - byte_offset,
-  };
+  str += byte_offset;
+  size = strlen(str);
 
   for (byte_offset = 0, char_offset = 0;
-       byte_offset < res.size && char_offset < len;
-       byte_offset += sax_code_pt_size(res.value[byte_offset]), ++char_offset) {
+       byte_offset < size && char_offset < len;
+       byte_offset += sax_code_pt_size(str[byte_offset]), ++char_offset) {
   }
 
-  res.size = byte_offset;
+  str[byte_offset] = '/0';
 
-  return res;
+  return str;
 }
 
 sax_str_t sax_str(const char *restrict value) {

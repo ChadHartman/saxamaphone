@@ -14,9 +14,6 @@ typedef enum {
   SAX_EVENT_ERROR,
 } sax_event_t;
 
-#define PRISAXSIZE PRIuFAST16
-typedef uint_fast32_t sax_size_t;
-
 /// @brief Saxamaphone parser instance
 typedef struct sax_parser_t sax_parser_t;
 
