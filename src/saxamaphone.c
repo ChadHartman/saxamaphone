@@ -177,7 +177,7 @@ static SAXAMAPHONE_THREAD_LOCAL uint8_t SAXAMAPHONE_NODE_BUFFER[SAXAMAPHONE_NODE
   printf("[SAXAMAPHONE] %s:%d ", (strrchr(__FILE__, "/") + 1), __LINE__); \
   printf(__VA_ARGS__)
 #else
-#define SAXAMAPHONE_LOG(...)
+#define SAXAMAPHONE_LOG(...) (void)0
 #endif
 
 /// @brief Given the provided byte determine the UTF-8 code point size
@@ -857,10 +857,6 @@ sax_parser_t *sax_parser(const sax_config_t *restrict config) {
   };
 
   sax_parser_t *parser = sax_alloc(&alloc, sizeof(sax_parser_t));
-  *parser = (sax_parser_t){
-      .alloc = sax_alloc_partition(&alloc),
-      .config = *config,
-  };
 
   if (!parser) {
 #ifdef SAXAMAPHONE_DEBUG
@@ -872,6 +868,11 @@ sax_parser_t *sax_parser(const sax_config_t *restrict config) {
 
     return NULL;
   }
+
+  *parser = (sax_parser_t){
+      .alloc = sax_alloc_partition(&alloc),
+      .config = *config,
+  };
 
   if (config->path) {
 
