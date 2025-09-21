@@ -47,7 +47,7 @@ typedef enum {
   SAX_STATE_IN_ESC_CHAR,
   SAX_STATE_IN_CONTENT,
   SAX_STATE_IN_END_TAG,
-  SAX_STATE_EXPECTING_ATTR_NAME,
+  SAX_STATE_START_TAG_SPACE,
   SAX_STATE_IN_ATTR_NAME,
   SAX_STATE_IN_ATTR_VALUE,
   SAX_STATE_IN_COMMENT,
@@ -639,7 +639,7 @@ static sax_event_t sax_parser_state_in_start_tag(sax_parser_t *restrict parser, 
       return sax_parser_error_unexpected_glyph(parser, glyph);
     }
     SAXAMAPHONE_LOG("Parsed tag \"%s\"\n", parser->msg);
-    sax_parser_state(parser, SAX_STATE_EXPECTING_ATTR_NAME);
+    sax_parser_state(parser, SAX_STATE_START_TAG_SPACE);
     break;
 
   default:
@@ -655,7 +655,7 @@ static sax_event_t sax_parser_state_in_start_tag(sax_parser_t *restrict parser, 
   return 0;
 }
 
-static sax_event_t sax_parser_state_expecting_attr_name(sax_parser_t *restrict parser, const char *glyph) {
+static sax_event_t sax_parser_state_start_tag_space(sax_parser_t *restrict parser, const char *glyph) {
 
   switch (glyph[0]) {
 
@@ -665,15 +665,16 @@ static sax_event_t sax_parser_state_expecting_attr_name(sax_parser_t *restrict p
 
   case '/':
     sax_parser_state(parser, SAX_STATE_CLOSING_START_TAG);
-    break;
+    return 0;
 
   case SAXAMAPHONE_SPACE:
     // noop
-    break;
+    return 0;
 
   default:
 
-    if (strchr(SAXAMAPHONE_EXCLUDE_TAG, glyph[0])) {
+    if (strchr(SAXAMAPHONE_EXCLUDE_TAG_PREFIX, glyph[0])) {
+      // Invalid start of attr name
       return sax_parser_error_unexpected_glyph(parser, glyph);
     }
 
@@ -694,17 +695,15 @@ static sax_event_t sax_parser_state_expecting_attr_name(sax_parser_t *restrict p
     }
 
     sax_parser_state(parser, SAX_STATE_IN_ATTR_NAME);
-    break;
+    return 0;
   }
-
-  return 0;
 }
 
 static sax_event_t sax_parser_state_assigning_attr_value(sax_parser_t *restrict parser, const char *glyph) {
 
   switch (glyph[0]) {
   case '"':
-    sax_parser_state(parser, SAX_STATE_IN_ATTR_NAME);
+    sax_parser_state(parser, SAX_STATE_IN_ATTR_VALUE);
     return 0;
 
   default:
@@ -778,27 +777,29 @@ static sax_event_t sax_parser_state_in_attr_name(sax_parser_t *restrict parser, 
   switch (glyph[0]) {
 
   case '>':
+    SAXAMAPHONE_LOG("Parsed attr name \"%s\"\n", parser->current_attr->name);
+    parser->current_attr = NULL;
     sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     return SAX_EVENT_START_ELEMENT;
 
   case SAXAMAPHONE_SPACE:
+    SAXAMAPHONE_LOG("Parsed attr name \"%s\"\n", parser->current_attr->name);
     parser->current_attr = NULL;
-    sax_parser_state(parser, SAX_STATE_EXPECTING_ATTR_NAME);
-    break;
+    sax_parser_state(parser, SAX_STATE_START_TAG_SPACE);
+    return 0;
 
   case '=':
+    SAXAMAPHONE_LOG("Parsed attr name \"%s\"\n", parser->current_attr->name);
     sax_parser_state(parser, SAX_STATE_ASSIGNING_ATTR_VALUE);
-    break;
+    return 0;
 
   default:
     if (strchr(SAXAMAPHONE_EXCLUDE_TAG, glyph[0])) {
       return sax_parser_error_unexpected_glyph(parser, glyph);
     }
     parser->current_attr->name = sax_token_append(parser, parser->current_attr->name, glyph);
-    break;
+    return 0;
   }
-
-  return 0;
 }
 
 static sax_event_t sax_parser_state_in_attr_value(sax_parser_t *restrict parser, const char *glyph) {
@@ -806,8 +807,9 @@ static sax_event_t sax_parser_state_in_attr_value(sax_parser_t *restrict parser,
   switch (glyph[0]) {
 
   case '"':
+    SAXAMAPHONE_LOG("Parsed attr value \"%s\"\n", parser->current_attr->value);
     parser->current_attr = NULL;
-    sax_parser_state(parser, SAX_STATE_EXPECTING_ATTR_NAME);
+    sax_parser_state(parser, SAX_STATE_START_TAG_SPACE);
     break;
 
   default:
@@ -977,8 +979,8 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
       ev = sax_parser_state_in_start_tag(parser, glyph);
       break;
 
-    case SAX_STATE_EXPECTING_ATTR_NAME:
-      ev = sax_parser_state_expecting_attr_name(parser, glyph);
+    case SAX_STATE_START_TAG_SPACE:
+      ev = sax_parser_state_start_tag_space(parser, glyph);
       break;
 
     case SAX_STATE_ASSIGNING_ATTR_VALUE:
