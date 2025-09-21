@@ -9,6 +9,7 @@
 #include <saxamaphone.h>
 
 // TODO: Make NULL term strings
+// TODO: Allign alloc
 
 #define SAXAMAPHONE_DEBUG
 
@@ -135,17 +136,6 @@ char *sax_str_substr(
     sax_size_t start,
     sax_size_t len);
 
-/// @brief Wrap a NULL-terminated string into a sax_str_t
-/// @param value the value to wrap
-/// @return sax_str_t instance
-sax_str_t sax_str(const char *restrict value);
-
-/// @brief Test whether the provided strings are equal
-/// @param lhs left-hand-arg
-/// @param rhs right-hand-arg
-/// @return true if they are equal and their values match
-bool sax_str_equals(const sax_str_t lhs, const sax_str_t rhs);
-
 // === constants === //
 
 #define SAX_SIZE_MAX UINT_FAST32_MAX
@@ -158,11 +148,6 @@ bool sax_str_equals(const sax_str_t lhs, const sax_str_t rhs);
   case '\r':              \
   case '\t':              \
   case '\v'
-
-static const sax_str_t SAXAMAPHONE_EMPTY_STRING = {
-    .size = 0,
-    .value = "",
-};
 
 #if SAXAMAPHONE_FILE_BUFFER_SIZE > 0
 static SAXAMAPHONE_THREAD_LOCAL uint8_t SAXAMAPHONE_FILE_BUFFER[SAXAMAPHONE_FILE_BUFFER_SIZE];
@@ -255,6 +240,12 @@ static void *sax_alloc(sax_alloc_t *restrict alloc, size_t size) {
   return res;
 }
 
+/// @brief Reset the allocator for a fresh round of allocations
+/// @param alloc instance
+static void sax_alloc_reset(sax_alloc_t *restrict alloc) {
+  alloc->offset = 0;
+}
+
 /// @brief Return a new allocator instance which manages the remaining memory
 /// @param alloc instance
 /// @return arena allocator managing remaining bytes
@@ -270,13 +261,13 @@ static sax_alloc_t sax_alloc_partition(sax_alloc_t *restrict alloc) {
 /// @brief Test whether the provided string is all spaces
 /// @param str string to test
 /// @return true if all spaces
-static bool sax_str_is_space(const sax_str_t str) {
+static bool sax_str_is_space(const char *str) {
 
   for (sax_size_t i = 0;
-       i < str.size;
-       i += sax_code_pt_size(str.value[i])) {
+       str[i] != 0;
+       i += sax_code_pt_size(str[i])) {
 
-    if (!isspace(str.value[i])) {
+    if (!isspace(str[i])) {
       return false;
     }
   }
@@ -288,87 +279,88 @@ static bool sax_str_is_space(const sax_str_t str) {
 /// @param subject the string to test
 /// @param suffix the suffix to match
 /// @return true if subject endswith the suffix
-static bool sax_str_endswith(const sax_str_t subject, const sax_str_t suffix) {
+static bool sax_str_endswith(const char *subject, const char *suffix) {
 
-  if (suffix.size == 0) {
+  const size_t subj_size = strlen(subject);
+  const size_t suffix_size = strlen(suffix);
+
+  if (suffix_size == 0) {
     return true;
   }
 
-  if (suffix.size > subject.size) {
+  if (suffix_size > subj_size) {
     return false;
   }
 
-  const size_t offset = subject.size - suffix.size;
-  return strcmp(subject.value + offset, suffix.value) == 0;
+  const size_t offset = subj_size - suffix_size;
+  return strcmp(subject + offset, suffix) == 0;
 }
 
 /// @brief Test whether the provided string is empty
 /// @param str to test
 /// @return true if the size is zero
-static bool sax_str_empty(sax_str_t str) {
-  return str.size == 0;
+static bool sax_str_empty(const char *str) {
+  return strlen(str) == 0;
 }
 
-static bool sax_str_startswith(const sax_str_t src, const sax_str_t prefix) {
+static bool sax_str_startswith(const char *src, const char *prefix) {
 
-  if (prefix.size > src.size) {
+  const size_t prefix_size = strlen(prefix);
+  const size_t src_size = strlen(src);
+
+  if (prefix_size > src_size) {
     return false;
   }
 
-  return strncmp(src.value, prefix.value, prefix.size) == 0;
+  return strncmp(src, prefix, prefix_size) == 0;
 }
 
 /// @brief Remove spaces (' ', '\t', '\n', etc) to the left of the first non-space character
 /// @param src string to ltrim
 /// @return left-trimmed string
-static sax_str_t sax_str_ltrim(const sax_str_t src) {
+static char *sax_str_ltrim(char *src) {
 
-  sax_str_t copy = SAXAMAPHONE_EMPTY_STRING;
+  const size_t src_size = strlen(src);
 
-  for (sax_size_t i = 0; i < src.size; i += sax_code_pt_size(src.value[i])) {
-    if (!isspace(src.value[i])) {
-      copy = (sax_str_t){
-          .size = src.size - i,
-          .value = src.value + i,
-      };
+  for (sax_size_t i = 0; i < src_size; i += sax_code_pt_size(src[i])) {
+    if (!isspace(src[i])) {
+      src += i;
       break;
     }
   }
 
-  return copy;
+  return src;
 }
 
 /// @brief Remove spaces (' ', '\t', '\n', etc) to the right of the first non-space character
 /// @param src string to rtrim
 /// @return right-trimmed string
-static sax_str_t sax_str_rtrim(const sax_str_t src) {
+static char *sax_str_rtrim(char *src) {
 
   if (sax_str_empty(src)) {
     return src;
   }
 
   sax_size_t last_non_space = 0;
+  const size_t src_size = strlen(src);
 
   for (sax_size_t i = 0;
-       i < src.size;
-       i += sax_code_pt_size(src.value[i])) {
+       i < src_size;
+       i += sax_code_pt_size(src[i])) {
 
-    if (!isspace(src.value[i])) {
+    if (!isspace(src[i])) {
       last_non_space = i;
     }
   }
 
-  return (sax_str_t){
-      // +1 to include the last non_space char
-      .size = last_non_space + 1,
-      .value = src.value,
-  };
+  src[last_non_space + 1] = '\0';
+  return src;
 }
 
 /// @brief Perform both an ltrim & rtrim
 /// @param str to trim
 /// @return trimmed string
-static sax_str_t sax_str_trim(sax_str_t str) {
+static char *sax_str_trim(char *str) {
   return sax_str_ltrim(sax_str_rtrim(str));
 }
 
@@ -1096,27 +1088,6 @@ char *sax_str_substr(
   str[byte_offset] = '/0';
 
   return str;
-}
-
-sax_str_t sax_str(const char *restrict value) {
-
-  if (!value) {
-    return SAXAMAPHONE_EMPTY_STRING;
-  }
-
-  return (sax_str_t){
-      .size = strlen(value),
-      .value = value,
-  };
-}
-
-bool sax_str_equals(const sax_str_t lhs, const sax_str_t rhs) {
-
-  if (lhs.size != rhs.size) {
-    return false;
-  }
-
-  return strncmp(lhs.value, rhs.value, lhs.size) == 0;
 }
 
 sax_str_t sax_str_unescaped(const sax_str_t src) {
