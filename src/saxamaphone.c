@@ -819,7 +819,7 @@ static sax_event_t sax_parser_state_in_proc_inst(sax_parser_t *restrict parser, 
 
   switch (glyph.value[0]) {
   case '>':
-    if (SAXAMAPHONE_NODE_BUFFER[parser->alloc.arena_size - 2] == '?') {
+    if (parser->alloc.arena[parser->alloc.arena_size - 2] == '?') {
       parser->alloc.arena_size = 0;
       sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     } else {
