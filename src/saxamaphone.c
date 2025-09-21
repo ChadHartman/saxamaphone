@@ -61,9 +61,9 @@ typedef enum {
 } sax_iter_type_t;
 
 typedef struct sax_alloc_t {
-  uint8_t *arena;
+  uint8_t *bytes;
   size_t offset;
-  size_t arena_size;
+  size_t bytes_size;
 } sax_alloc_t;
 
 typedef struct sax_file_iter_t {
@@ -100,7 +100,7 @@ struct sax_parser_t {
 
   bool untrimmed_content;
 
-  sax_alloc_t alloc;
+  sax_alloc_t arena;
   sax_iter_t iter;
   sax_state_t state;
   sax_state_t prev_state;
@@ -108,7 +108,8 @@ struct sax_parser_t {
   const char *msg;
   sax_size_t line;
   sax_size_t column;
-  sax_attr_t *attr;
+  sax_attr_t *attrs;
+  sax_attr_t *current_attr;
 };
 
 // === undocumented api declarations === //
@@ -219,19 +220,13 @@ static sax_size_t sax_long_to_code_pt(long value, char *out) {
 /// @return the pointer or NULL if insufficient memory
 static void *sax_alloc(sax_alloc_t *restrict alloc, size_t size) {
 
-  if (alloc->offset + size > alloc->arena_size) {
+  if (alloc->offset + size > alloc->bytes_size) {
     return NULL;
   }
 
-  void *res = alloc->arena + alloc->offset;
+  void *res = alloc->bytes + alloc->offset;
   alloc->offset += size;
   return res;
-}
-
-/// @brief Reset the allocator for a fresh round of allocations
-/// @param alloc instance
-static void sax_alloc_reset(sax_alloc_t *restrict alloc) {
-  alloc->offset = 0;
 }
 
 /// @brief Return a new allocator instance which manages the remaining memory
@@ -239,8 +234,8 @@ static void sax_alloc_reset(sax_alloc_t *restrict alloc) {
 /// @return arena allocator managing remaining bytes
 static sax_alloc_t sax_alloc_partition(sax_alloc_t *restrict alloc) {
   return (sax_alloc_t){
-      .arena = alloc->arena + alloc->offset,
-      .arena_size = alloc->arena_size - alloc->offset,
+      .bytes = alloc->bytes + alloc->offset,
+      .bytes_size = alloc->bytes_size - alloc->offset,
   };
 }
 
@@ -476,18 +471,25 @@ static const char *sax_iter_next_glyph(sax_iter_t *restrict iter) {
 
 // --- private parser methods --- //
 
+static void sax_parser_reset(sax_parser_t *restrict parser) {
+  parser->msg = NULL;
+  parser->attrs = NULL;
+  parser->current_attr = NULL;
+  parser->arena.offset = 0;
+}
+
 /// @brief Append a glyph to the current message (tag or content)
 /// @param parser
 /// @param glyph
-static void sax_parser_msg_append(sax_parser_t *restrict parser, const char *glyph) {
+static void sax_parser_arena_append(sax_parser_t *restrict parser, const char *glyph) {
 
-  const uint8_t *end = parser->alloc.arena + parser->alloc.arena_size;
+  const uint8_t *end = parser->arena.bytes + parser->arena.bytes_size;
   const size_t glyph_size = strlen(glyph);
 
   if (!parser->msg) {
     // We're kind of abusing the arena here; the first "allocation" from the
     //   arena should always be msg (tag name or content)
-    parser->msg = parser->alloc.arena;
+    parser->msg = parser->arena.bytes;
   }
 
   const size_t msg_size = strlen(parser->msg);
@@ -501,7 +503,7 @@ static void sax_parser_msg_append(sax_parser_t *restrict parser, const char *gly
   strcpy(parser->msg + msg_size, glyph);
 
   // Ensure subsequent "allocations" are after msg
-  parser->alloc.offset = msg_size + glyph_size + 1;
+  parser->arena.offset = msg_size + glyph_size + 1;
 }
 
 static void sax_parser_state(sax_parser_t *restrict parser, sax_state_t state) {
@@ -519,8 +521,8 @@ static void sax_parser_error(sax_parser_t *restrict parser, const char *restrict
   va_start(args, format);
 
   sax_parser_state(parser, SAX_STATE_ERROR);
-  vsnprintf((char *)parser->alloc.arena, parser->alloc.arena_size, format, args);
-  parser->msg = parser->alloc.arena;
+  vsnprintf((char *)parser->arena.arena, parser->arena.bytes_size, format, args);
+  parser->msg = parser->arena.bytes;
 
   va_end(args);
 }
@@ -584,7 +586,7 @@ static sax_event_t sax_parser_state_in_tag(sax_parser_t *restrict parser, const 
       return sax_parser_error_unexpected_glyph(parser, glyph);
     }
 
-    parser->msg = sax_alloc(&parser->alloc, strlen(glyph) + 1);
+    parser->msg = sax_alloc(&parser->arena, strlen(glyph) + 1);
     strcpy(parser->msg, glyph);
     sax_parser_state(parser, SAX_STATE_IN_START_TAG);
     break;
@@ -605,7 +607,7 @@ static sax_event_t sax_parser_state_in_escaped_char(sax_parser_t *restrict parse
     break;
 
   default:
-    sax_parser_msg_append(parser, glyph);
+    sax_parser_arena_append(parser, glyph);
     break;
   }
 
@@ -644,11 +646,33 @@ static sax_event_t sax_parser_state_in_start_tag(sax_parser_t *restrict parser, 
       return sax_parser_error_unexpected_glyph(parser, glyph);
     }
 
-    sax_parser_msg_append(parser, glyph);
+    sax_parser_arena_append(parser, glyph);
     break;
   }
 
   return 0;
+}
+
+static sax_event_t sax_parser_state_expecting_attr_name(sax_parser_t *restrict parser, const char *glyph) {
+
+  switch (glyph[0]) {
+
+  case '>':
+    sax_parser_state(parser, SAX_STATE_IN_CONTENT);
+    return SAX_EVENT_START_ELEMENT;
+
+  case SAXAMAPHONE_SPACE:
+    // TODO
+    break;
+
+  default:
+
+    if (strchr(SAXAMAPHONE_EXCLUDE_TAG, glyph[0])) {
+      return sax_parser_error_unexpected_glyph(parser, glyph);
+    }
+
+    break;
+  }
 }
 
 static sax_event_t sax_parser_state_in_content(sax_parser_t *restrict parser, const char *glyph) {
@@ -656,7 +680,7 @@ static sax_event_t sax_parser_state_in_content(sax_parser_t *restrict parser, co
   switch (glyph[0]) {
 
   case '&':
-    sax_parser_msg_append(parser, glyph);
+    sax_parser_arena_append(parser, glyph);
     sax_parser_state(parser, SAX_STATE_IN_ESC_CHAR);
     break;
 
@@ -670,7 +694,7 @@ static sax_event_t sax_parser_state_in_content(sax_parser_t *restrict parser, co
 
     if (sax_str_is_space(parser->msg)) {
       parser->msg = NULL;
-      sax_alloc_reset(&parser->alloc);
+      sax_alloc_reset(&parser->arena);
     } else {
       return SAX_EVENT_CONTENT;
     }
@@ -678,7 +702,7 @@ static sax_event_t sax_parser_state_in_content(sax_parser_t *restrict parser, co
   } break;
 
   default:
-    sax_parser_msg_append(parser, glyph);
+    sax_parser_arena_append(parser, glyph);
     break;
   }
 
@@ -706,7 +730,7 @@ static sax_event_t sax_parser_state_in_end_tag(sax_parser_t *restrict parser, co
       return SAX_EVENT_ERROR;
     }
 
-    sax_parser_msg_append(parser, glyph);
+    sax_parser_arena_append(parser, glyph);
     break;
   }
 
@@ -735,7 +759,7 @@ static sax_event_t sax_parser_state_in_attr_name(sax_parser_t *restrict parser, 
     if (sax_str_empty(attr->name)) {
       attr->name = (sax_str_t){
           .size = 0,
-          .value = (char *)parser->alloc.arena + (parser->alloc.offset - glyph.size),
+          .value = (char *)parser->alloc.bytes + (parser->alloc.offset - glyph.size),
       };
     }
     attr->name.size += glyph.size;
@@ -766,7 +790,7 @@ static sax_event_t sax_parser_state_in_attr_value(sax_parser_t *restrict parser,
     sax_attr_t *restrict attr = &parser->attrs[parser->attr_offset];
     if (sax_str_empty(attr->value)) {
       // initializing
-      attr->value.value = (char *)parser->alloc.arena + parser->alloc.offset;
+      attr->value.value = (char *)parser->alloc.bytes + parser->alloc.offset;
     } else {
       sax_parser_state(parser, SAX_STATE_IN_ATTR_NAME);
     }
@@ -788,13 +812,13 @@ static sax_event_t sax_parser_state_in_comment(sax_parser_t *restrict parser, co
   case '>': {
     if (sax_str_endswith(parser->msg, sax_str("-->"))) {
       parser->msg = NULL;
-      sax_alloc_reset(&parser->alloc);
+      sax_parser_reset(parser);
       sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     }
   } break;
 
   default:
-    sax_parser_msg_append(parser, glyph);
+    sax_parser_arena_append(parser, glyph);
     break;
   }
 
@@ -805,6 +829,7 @@ static sax_event_t sax_parser_state_in_proc_inst(sax_parser_t *restrict parser, 
 
   switch (glyph[0]) {
   case '>':
+    sax_parser_reset(parser);
     sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     break;
   }
@@ -829,11 +854,11 @@ sax_parser_t *sax_parser(const sax_config_t *restrict config) {
 
   sax_alloc_t alloc = {
 #if SAXAMAPHONE_NODE_BUFFER_SIZE == 0
-      .arena = config->arena,
-      .arena_size = config->arena_size,
+      .bytes = config->arena,
+      .bytes_size = config->bytes_size,
 #else
-      .arena = config->arena ? config->arena : SAXAMAPHONE_NODE_BUFFER,
-      .arena_size = config->arena ? config->arena_size : SAXAMAPHONE_NODE_BUFFER_SIZE,
+      .bytes = config->bytes ? config->bytes : SAXAMAPHONE_NODE_BUFFER,
+      .bytes_size = config->bytes ? config->bytes_size : SAXAMAPHONE_NODE_BUFFER_SIZE,
 #endif
   };
 
@@ -844,7 +869,7 @@ sax_parser_t *sax_parser(const sax_config_t *restrict config) {
     printf(
         "[SAXAMAPHONE] Failed to allocate parser; sizeof(sax_parser_t) {%zu} >= %zu\n",
         sizeof(sax_parser_t),
-        alloc.arena_size);
+        alloc.bytes_size);
 #endif
 
     return NULL;
@@ -913,8 +938,7 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
   sax_event_t ev = 0;
 
   // Reset state
-  parser->msg = NULL;
-  sax_alloc_reset(&parser->alloc);
+  sax_parser_reset(parser);
 
   for (const char *glyph = sax_iter_next_glyph(&parser->iter);
        glyph[0] != '\0';
@@ -1001,7 +1025,7 @@ const char *sax_content(const sax_parser_t *restrict parser) {
 }
 
 const sax_attr_t *sax_attrs(const sax_parser_t *restrict parser) {
-  return parser && parser->attr ? parser->attr : NULL;
+  return parser && parser->attrs ? parser->attrs : NULL;
 }
 
 // --- public undocumented methods --- //
