@@ -891,6 +891,8 @@ sax_parser_t *sax_parser(const sax_config_t *restrict config) {
   *parser = (sax_parser_t){
       .arena = sax_alloc_partition(&alloc),
       .untrimmed_content = config->untrimmed_content,
+      .line = 1,
+      .column = 1,
   };
 
   if (config->path) {
@@ -1020,7 +1022,7 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
 
     if (glyph[0] == '\n') {
       ++parser->line;
-      parser->column = 0;
+      parser->column = 1;
     } else {
       ++parser->column;
     }
