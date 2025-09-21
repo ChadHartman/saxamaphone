@@ -29,12 +29,21 @@ static void print_header(const char *header) {
 static void test_sax_str_substr() {
 
   print_header("sax_str_substr tests");
-  ASSERT_STR_EQ("ooba", sax_str_substr("foobar", 1, 4));
-  ASSERT_STR_EQ("oobar", sax_str_substr("foobar", 1, UINT32_MAX));
-  ASSERT_STR_EQ("", sax_str_substr("foobar", 1, 0));
-  ASSERT_STR_EQ("foob", sax_str_substr("foobar", 0, 4));
-  ASSERT_STR_EQ("", sax_str_substr("foobar", UINT32_MAX, 1));
-  ASSERT_STR_EQ("", sax_str_substr("", 1, 2));
+  const char *substr = NULL;
+  size_t substr_size = 0;
+
+  sax_str_substr("foobar", 1, 4, &substr, &substr_size);
+  ASSERT_STRN_EQ("ooba", substr, substr_size);
+  sax_str_substr("foobar", 1, UINT32_MAX, &substr, &substr_size);
+  ASSERT_STRN_EQ("oobar", substr, substr_size);
+  sax_str_substr("foobar", 1, 0, &substr, &substr_size);
+  ASSERT_STRN_EQ("", substr, substr_size);
+  sax_str_substr("foobar", 0, 4, &substr, &substr_size);
+  ASSERT_STRN_EQ("foob", substr, substr_size);
+  sax_str_substr("foobar", UINT32_MAX, 1, &substr, &substr_size);
+  ASSERT_STRN_EQ("", substr, substr_size);
+  sax_str_substr("", 1, 2, &substr, &substr_size);
+  ASSERT_STRN_EQ("", substr, substr_size);
 }
 
 // static void test_sax_unescaped() {

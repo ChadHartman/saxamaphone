@@ -114,15 +114,18 @@ struct sax_parser_t {
 
 // === undocumented api declarations === //
 
-/// @brief Create a substring
-/// @param src value to substring
-/// @param start inclusive start character offset
-/// @param len number of bytes to leave
-/// @return resulting substring
-char *sax_str_substr(
-    char *src,
+/// @brief Compute the substring of the provided string
+/// @param src string to substring
+/// @param start desired character start index
+/// @param len desired resulting string length
+/// @param substr [out] resulting substring
+/// @param substr_bytes [out] resulting subtring size in bytes
+void sax_str_substr(
+    const char *src,
     uint_fast32_t start,
-    uint_fast32_t len);
+    uint_fast32_t len,
+    const char **substr,
+    size_t *substr_size);
 
 // === constants === //
 
@@ -1032,31 +1035,29 @@ const sax_attr_t *sax_attrs(const sax_parser_t *restrict parser) {
 
 // --- public undocumented methods --- //
 
-char *sax_str_substr(
-    char *str,
+void sax_str_substr(
+    const char *src,
     uint_fast32_t start,
-    uint_fast32_t len) {
+    uint_fast32_t len,
+    const char **substr,
+    size_t *substr_size) {
 
-  size_t size = strlen(str);
+  size_t size = strlen(src);
   uint_fast32_t byte_offset = 0;
   uint_fast32_t char_offset = 0;
 
   for (;
        byte_offset < size && char_offset < start;
-       byte_offset += sax_code_pt_size(str[byte_offset]), ++char_offset) {
+       byte_offset += sax_code_pt_size(src[byte_offset]), ++char_offset) {
   }
 
-  str += byte_offset;
-  size = strlen(str);
+  *substr = src + byte_offset;
+  size = strlen(*substr);
 
-  for (byte_offset = 0, char_offset = 0;
-       byte_offset < size && char_offset < len;
-       byte_offset += sax_code_pt_size(str[byte_offset]), ++char_offset) {
+  for (*substr_size = 0, char_offset = 0;
+       *substr_size < size && char_offset < len;
+       *substr_size += sax_code_pt_size(*substr[*substr_size]), ++char_offset) {
   }
-
-  str[byte_offset] = '\0';
-
-  return str;
 }
 
 // sax_str_t sax_str_unescaped(const sax_str_t src) {
