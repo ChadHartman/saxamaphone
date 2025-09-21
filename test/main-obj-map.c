@@ -97,7 +97,7 @@ static string_node_t *map_string_nodes(
   string_node_t *restrict tail = NULL;
 
   for (sax_event_t ev = sax_next(parser);
-       ev != SAX_EVENT_END_ELEMENT && ev != SAX_EVENT_ERROR;
+       ev != SAX_EVENT_END_DOCUMENT && ev != SAX_EVENT_ERROR;
        ev = sax_next(parser)) {
 
     if (ev == SAX_EVENT_START_ELEMENT && sax_tag_is(parser, tag)) {
