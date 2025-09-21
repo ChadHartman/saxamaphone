@@ -21,10 +21,6 @@
 #define SAXAMAPHONE_NODE_BUFFER_SIZE 2048
 #endif
 
-#ifndef SAXAMAPHONE_ATTR_MAX
-#define SAXAMAPHONE_ATTR_MAX 32
-#endif
-
 #define SAXAMAPHONE_STRINGIFY(val) #val
 // #define SAXAMAPHONE_DEBUG
 
@@ -46,6 +42,7 @@ typedef enum {
   SAX_STATE_INIT,
   SAX_STATE_IN_TAG,
   SAX_STATE_IN_START_TAG,
+  SAX_STATE_CLOSING_START_TAG,
   SAX_STATE_IN_ESC_CHAR,
   SAX_STATE_IN_CONTENT,
   SAX_STATE_IN_END_TAG,
@@ -122,7 +119,7 @@ struct sax_parser_t {
   const char *msg;
   sax_size_t line;
   sax_size_t column;
-  sax_attr_t attrs[SAXAMAPHONE_ATTR_MAX];
+  sax_attr_t *attr;
 };
 
 // === undocumented api declarations === //
@@ -489,6 +486,34 @@ static const char *sax_iter_next_glyph(sax_iter_t *restrict iter) {
 
 // --- private parser methods --- //
 
+/// @brief Append a glyph to the current message (tag or content)
+/// @param parser
+/// @param glyph
+static void sax_parser_msg_append(sax_parser_t *restrict parser, const char *glyph) {
+
+  const uint8_t *end = parser->alloc.arena + parser->alloc.arena_size;
+  const size_t glyph_size = strlen(glyph);
+
+  if (!parser->msg) {
+    // We're kind of abusing the arena here; the first "allocation" from the
+    //   arena should always be msg (tag name or content)
+    parser->msg = parser->alloc.arena;
+  }
+
+  const size_t msg_size = strlen(parser->msg);
+
+  if ((uint8_t *)(parser->msg + msg_size + glyph_size + 1) > end) {
+    parser->msg = "Out of memory";
+    sax_parser_state(parser, SAX_STATE_ERROR);
+    return;
+  }
+
+  strcpy(parser->msg + msg_size, glyph);
+
+  // Ensure subsequent "allocations" are after msg
+  parser->alloc.offset = msg_size + glyph_size + 1;
+}
+
 static void sax_parser_state(sax_parser_t *restrict parser, sax_state_t state) {
   parser->prev_state = parser->state;
   parser->state = state;
@@ -529,9 +554,9 @@ static sax_event_t sax_parser_error_unexpected_glyph(sax_parser_t *restrict pars
 /// @param parser instance
 /// @param glyph glyph to process
 /// @return event if raised
-sax_event_t sax_parser_state_init(sax_parser_t *restrict parser, const sax_str_t glyph) {
+sax_event_t sax_parser_state_init(sax_parser_t *restrict parser, const char *glyph) {
 
-  switch (glyph.value[0]) {
+  switch (glyph[0]) {
   case '<':
     sax_parser_state(parser, SAX_STATE_IN_TAG);
     break;
@@ -547,14 +572,9 @@ sax_event_t sax_parser_state_init(sax_parser_t *restrict parser, const sax_str_t
 /// @param parser instance
 /// @param glyph glyph to process
 /// @return event if raised
-static sax_event_t sax_parser_state_in_tag(sax_parser_t *restrict parser, const sax_str_t glyph) {
+static sax_event_t sax_parser_state_in_tag(sax_parser_t *restrict parser, const char *glyph) {
 
-  // We could be coming from sax_parser_in_content which eats the '<' char
-  parser->alloc.arena[0] = '<';
-  memcpy(parser->alloc.arena + 1, glyph.value, glyph.size);
-  parser->alloc.offset = 1 + glyph.size;
-
-  switch (glyph.value[0]) {
+  switch (glyph[0]) {
 
   case '?':
     sax_parser_state(parser, SAX_STATE_IN_PROC_INST);
@@ -570,15 +590,12 @@ static sax_event_t sax_parser_state_in_tag(sax_parser_t *restrict parser, const 
     break;
 
   default:
-    if (strchr(SAXAMAPHONE_EXCLUDE_TAG_PREFIX, glyph.value[0])) {
+    if (strchr(SAXAMAPHONE_EXCLUDE_TAG_PREFIX, glyph[0])) {
       return sax_parser_error_unexpected_glyph(parser, glyph);
     }
 
-    parser->tag = (sax_str_t){
-        .size = glyph.size,
-        // +1 to skip the '<'
-        .value = (char *)parser->alloc.arena + 1,
-    };
+    parser->msg = sax_alloc(&parser->alloc, strlen(glyph) + 1);
+    strcpy(parser->msg, glyph);
     sax_parser_state(parser, SAX_STATE_IN_START_TAG);
     break;
   }
@@ -586,10 +603,11 @@ static sax_event_t sax_parser_state_in_tag(sax_parser_t *restrict parser, const 
   return 0;
 }
 
-static sax_event_t sax_parser_state_in_escaped_char(sax_parser_t *restrict parser, const sax_str_t glyph) {
+static sax_event_t sax_parser_state_in_escaped_char(sax_parser_t *restrict parser, const char *glyph) {
 
-  switch (glyph.value[0]) {
+  switch (glyph[0]) {
   case ';':
+    // TODO
     // sax_str_t node = sax_parser_node(parser);
     // sax_str_t esc = sax_str_rfind(node, '&');
     // sax_str_t unesc = sax_str_unescaped(esc);
@@ -597,35 +615,32 @@ static sax_event_t sax_parser_state_in_escaped_char(sax_parser_t *restrict parse
     break;
 
   default:
-    // noop
+    sax_parser_msg_append(parser, glyph);
     break;
   }
 
   return 0;
 }
 
-static sax_event_t sax_parser_state_in_start_tag(sax_parser_t *restrict parser, const sax_str_t glyph) {
+static sax_event_t sax_parser_state_in_start_tag(sax_parser_t *restrict parser, const char *glyph) {
 
-  // TODO: validate valid chars
-
-  switch (glyph.value[0]) {
-
-  case '"':
-  case '\'':
-  case '!':
-  case '?':
-    return sax_parser_error_unexpected_glyph(parser, glyph);
+  switch (glyph[0]) {
 
   case '/':
-    if (parser->tag.size == 0) {
-      return sax_parser_error_unexpected_glyph(parser, glyph);
-    }
+    sax_parser_state(parser, SAX_STATE_CLOSING_START_TAG);
     break;
 
   case '>':
-    if (parser->tag.size == 0) {
-      return sax_parser_error_unexpected_glyph(parser, glyph);
+
+    if (parser->msg == NULL || strlen(parser->msg) == 0) {
+      sax_parser_error(
+          parser,
+          "Empty tag found at line %d column %d",
+          parser->line,
+          parser->column);
+      return SAX_EVENT_ERROR;
     }
+
     sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     return SAX_EVENT_START_ELEMENT;
 
@@ -634,10 +649,13 @@ static sax_event_t sax_parser_state_in_start_tag(sax_parser_t *restrict parser, 
     break;
 
   default:
-    if (sax_str_empty(parser->tag)) {
-      parser->tag.value = (char *)parser->alloc.arena + parser->alloc.offset;
+
+    if (strchr("!\"#$%&'()*+,/;<=>?@[\\]^`{|}~", glyph[0])) {
+      sax_parser_error(parser, "Tag names cannot contain '%c'", glyph[0]);
     }
-    parser->tag.size += glyph.size;
+
+    sax_parser_msg_append(parser, glyph);
+
     break;
   }
 
@@ -910,11 +928,8 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
   sax_event_t ev = 0;
 
   // Reset state
-  parser->tag.size = 0;
-  parser->content.size = 0;
-  parser->attr_offset = 0;
-  parser->alloc.offset = 0;
-  memset(parser->attrs, 0, sizeof(parser->attrs));
+  parser->msg = NULL;
+  sax_alloc_reset(&parser->alloc);
 
   for (sax_str_t glyph = sax_iter_next_glyph(&parser->iter);
        glyph.size > 0;
