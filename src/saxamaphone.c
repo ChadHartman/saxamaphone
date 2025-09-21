@@ -176,7 +176,7 @@ static SAXAMAPHONE_THREAD_LOCAL uint8_t SAXAMAPHONE_NODE_BUFFER[SAXAMAPHONE_NODE
 
 #ifdef SAXAMAPHONE_DEBUG
 #define SAXAMAPHONE_LOG(...)                                              \
-  printf("[SAXAMAPHONE] %s:%d ", (strrchr(__FILE__, "/") + 1), __LINE__); \
+  printf("[SAXAMAPHONE] %s:%d ", (strrchr(__FILE__, '/') + 1), __LINE__); \
   printf(__VA_ARGS__)
 #else
 #define SAXAMAPHONE_LOG(...) ((void)0)
@@ -901,14 +901,15 @@ sax_parser_t *sax_parser(const sax_config_t *restrict config) {
             .file = {
                 .fp = fp,
 #if SAXAMAPHONE_NODE_BUFFER_SIZE == 0
-                .file_buffer = config->file_buffer      ? config->file_buffer,
-                .file_buffer_size = config->file_buffer ? config->file_buffer_size,
+                .file_buffer = config->file_buffer,
+                .file_buffer_size = config->file_buffer_size,
 #else
                 .file_buffer = config->file_buffer ? config->file_buffer : SAXAMAPHONE_FILE_BUFFER,
                 .file_buffer_size = config->file_buffer ? config->file_buffer_size : SAXAMAPHONE_FILE_BUFFER_SIZE,
 #endif
-    }, },
-        };
+            },
+        },
+    };
   } else if (config->string) {
 
     parser->iter = (sax_iter_t){
@@ -943,8 +944,8 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
 
 #ifdef SAXAMAPHONE_DEBUG
     printf("    DEBUG: buffer=\"%.*s\" glyph=\"%.*s\" state=%s\n",
-           parser->alloc.arena_size,
-           SAXAMAPHONE_NODE_BUFFER,
+           (int)parser->alloc.offset,
+           parser->alloc.arena,
            glyph.size,
            glyph.value,
            SAXAMAPHONE_STATES[parser->state]);
@@ -952,14 +953,14 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
     (void)SAXAMAPHONE_STATES;
 #endif
 
-    if (glyph.size + parser->alloc.arena_size >= SAXAMAPHONE_NODE_BUFFER_SIZE) {
+    if (glyph.size + parser->alloc.offset >= parser->alloc.arena_size) {
       parser->error = sax_str("Token buffer overflow");
       sax_parser_state(parser, SAX_STATE_ERROR);
       return SAX_EVENT_ERROR;
     }
 
-    memcpy(SAXAMAPHONE_NODE_BUFFER + parser->alloc.arena_size, glyph.value, glyph.size);
-    parser->alloc.arena_size += glyph.size;
+    memcpy(parser->alloc.arena + parser->alloc.offset, glyph.value, glyph.size);
+    parser->alloc.offset += glyph.size;
 
     switch (parser->state) {
 
