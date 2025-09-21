@@ -9,8 +9,6 @@
 #include <saxamaphone.h>
 
 // TODO: Remove config storage from parser
-// TODO: Support provided buffers (and 0 sized thread locals)
-// TODO: Make parser instance from buffer
 // TODO: Make NULL term strings
 
 #define SAXAMAPHONE_DEBUG
