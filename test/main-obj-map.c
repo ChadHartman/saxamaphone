@@ -77,6 +77,7 @@ static string_node_t *map_string_node(
   }
 
   node->value = arena_strdup(arena, sax_content(parser));
+  LOG("Mapped \"%s\" value \"%s\"\n", tag, node->value);
 
   if (sax_next_is(parser, SAX_EVENT_END_ELEMENT, tag)) {
     return node;
