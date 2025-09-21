@@ -17,8 +17,14 @@ srcs = [
 
 all_tests = executable('saxamaphone-tests',
     sources: srcs 
-        + 'test/arena.c' 
         + 'test/main.c',
+    include_directories: includes,
+    c_args: c_args)
+
+all_tests = executable('saxamaphone-tests-obj-map',
+    sources: srcs 
+        + 'test/arena.c' 
+        + 'test/main-obj-map.c',
     include_directories: includes,
     c_args: c_args)
 

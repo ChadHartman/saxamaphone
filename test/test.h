@@ -14,6 +14,20 @@
 #define COLOR_CYAN "\x1b[36m"
 #define COLOR_RESET "\x1b[0m"
 
+#define TEST(header)                                                  \
+  {                                                                   \
+    const size_t len = strlen(header);                                \
+    putchar('+');                                                     \
+    for (size_t i = 0; i < len + 4; ++i) {                            \
+      putchar('-');                                                   \
+    }                                                                 \
+    printf("+\n| " COLOR_MAGENTA " %s " COLOR_RESET " |\n+", header); \
+    for (size_t i = 0; i < len + 4; ++i) {                            \
+      putchar('-');                                                   \
+    }                                                                 \
+    printf("+\n");                                                    \
+  }
+
 #define FAIL()                                   \
   {                                              \
     printf("%s:%d: %s" COLOR_RESET "\n",         \
