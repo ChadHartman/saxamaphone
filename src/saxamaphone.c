@@ -8,6 +8,7 @@
 
 #include <saxamaphone.h>
 
+// TODO: Remove config storage from parser
 // TODO: Support provided buffers (and 0 sized thread locals)
 // TODO: Make parser instance from buffer
 // TODO: Make NULL term strings
@@ -85,6 +86,8 @@ typedef struct sax_file_iter_t {
   FILE *fp;
   sax_size_t offset;
   sax_size_t bytes_read;
+  uint8_t *file_buffer;
+  size_t file_buffer_size;
 } sax_file_iter_t;
 
 typedef struct sax_str_iter_t {
@@ -429,16 +432,16 @@ static byte_t sax_iter_next_byte(sax_iter_t *restrict iter) {
     if (fiter->offset == fiter->bytes_read) {
 
       if (0 < fiter->bytes_read &&
-          fiter->bytes_read < SAXAMAPHONE_FILE_BUFFER_SIZE) {
+          fiter->bytes_read < fiter->file_buffer_size) {
         // Hit eof
         return 0;
       }
 
       fiter->offset = 0;
       fiter->bytes_read = fread(
-          SAXAMAPHONE_FILE_BUFFER,
-          sizeof(char),
-          SAXAMAPHONE_FILE_BUFFER_SIZE,
+          fiter->file_buffer,
+          sizeof(uint8_t),
+          fiter->file_buffer_size,
           fiter->fp);
 
       if (fiter->bytes_read == 0) {
@@ -446,7 +449,7 @@ static byte_t sax_iter_next_byte(sax_iter_t *restrict iter) {
       }
     }
 
-    return (byte_t)SAXAMAPHONE_FILE_BUFFER[fiter->offset++];
+    return (byte_t)fiter->file_buffer[fiter->offset++];
   }
 
   case SAX_ITER_STR: {
@@ -878,6 +881,18 @@ sax_parser_t *sax_parser(const sax_config_t *restrict config) {
 
   if (config->path) {
 
+#if SAXAMAPHONE_NODE_BUFFER_SIZE == 0
+    if (!config->file_buffer || config->file_buffer_size == 0) {
+      SAXAMAPHONE_LOG("Path \"%s\" provided but insufficient file_buffer %p sized %zu provided",
+                      config->path,
+                      config->file_buffer,
+                      config->file_buffer_size);
+      // TODO: error message
+      parser->state = SAX_STATE_ERROR;
+      return parser;
+    }
+#endif
+
     FILE *fp = fopen(config->path, "r");
 
     if (!fp) {
@@ -890,9 +905,15 @@ sax_parser_t *sax_parser(const sax_config_t *restrict config) {
         .impl = {
             .file = {
                 .fp = fp,
-            },
-        },
-    };
+#if SAXAMAPHONE_NODE_BUFFER_SIZE == 0
+                .file_buffer = config->file_buffer      ? config->file_buffer,
+                .file_buffer_size = config->file_buffer ? config->file_buffer_size,
+#else
+                .file_buffer = config->file_buffer ? config->file_buffer : SAXAMAPHONE_FILE_BUFFER,
+                .file_buffer_size = config->file_buffer ? config->file_buffer_size : SAXAMAPHONE_FILE_BUFFER_SIZE,
+#endif
+    }, },
+        };
   } else if (config->string) {
 
     parser->iter = (sax_iter_t){
