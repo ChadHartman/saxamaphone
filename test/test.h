@@ -26,6 +26,18 @@
     printf(COLOR_YELLOW "    %p\n\n" COLOR_RESET, result);      \
   }
 
+#define ASSERT_NON_NULL(computed)                               \
+  {                                                             \
+    const void *result = computed;                              \
+    const bool passed = result != NULL;                         \
+    printf("%s:%d: %s" COLOR_RESET "\n",                        \
+           (strrchr(__FILE__, '/') + 1),                        \
+           __LINE__,                                            \
+           passed ? COLOR_GREEN "PASSED" : COLOR_RED "FAILED"); \
+    printf(COLOR_CYAN "  ASSERT_NON_NULL(" #computed ")\n");        \
+    printf(COLOR_YELLOW "    %p\n\n" COLOR_RESET, result);      \
+  }
+
 #define ASSERT_STR_EQ(expected, computed)                                 \
   {                                                                       \
     const sax_str_t lhs = sax_str(expected);                              \

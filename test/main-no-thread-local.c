@@ -12,5 +12,12 @@ int main() {
       .string = "",
   }));
 
+  uint8_t buf[2048];
+  ASSERT_NON_NULL(sax_parser(&(sax_config_t){
+      .arena = buf,
+      .arena_size = sizeof(buf),
+      .string = "",
+  }));
+
   return EXIT_SUCCESS;
 }
