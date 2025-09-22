@@ -273,16 +273,25 @@ static
     return "\"";
   }
 
-  // if (sax_str_startswith(src, sax_str("&#x")) && sax_str_endswith(src, sax_str(";"))) {
+  // Longest is &#1114111; (10 chars)
+  char num[16];
 
-  // }
+  if (sax_str_startswith(src, "&#x") && sax_str_endswith(src, ";")) {
+    // -3 for "&#x" + ";"
+    snprintf(num, sizeof(num), "%.*s", (int)(strlen(src) - 4), src + 3);
+    long code_pt = strtol(num, NULL, 16);
+    if (code_pt == 0) {
+      return src;
+    }
+    sax_long_to_code_pt(code_pt, buf);
+    return buf;
+  }
 
   if (sax_str_startswith(src, "&#") && sax_str_endswith(src, ";")) {
-    // Longest is &#1114111; (10 chars)
-    char num[16];
+
     // -3 for "&#" + ";"
     snprintf(num, sizeof(num), "%.*s", (int)(strlen(src) - 3), src + 2);
-    long code_pt = atol(num);
+    long code_pt = strtol(num, NULL, 10);
     if (code_pt == 0) {
       return src;
     }
