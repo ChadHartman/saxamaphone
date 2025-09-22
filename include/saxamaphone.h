@@ -105,7 +105,6 @@ const sax_attr_t *sax_attrs(const sax_parser_t *restrict parser);
 /// @return paired value or NULL if not found
 const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict name);
 
-// #define SAXAMAPHONE_IMPLEMENTATION
 #ifdef SAXAMAPHONE_IMPLEMENTATION
 
 #include <ctype.h>    // isspace
@@ -119,7 +118,6 @@ const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict n
 
 // TODO: test attrvalue  startswith `&`
 // TODO: CDATA
-// TODO: remove thread locals
 
 // #define SAXAMAPHONE_DEBUG
 
