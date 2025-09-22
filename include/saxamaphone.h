@@ -227,14 +227,6 @@ struct sax_parser_t {
   case '\t':              \
   case '\v'
 
-#if SAXAMAPHONE_FILE_BUFFER_SIZE > 0
-static SAXAMAPHONE_THREAD_LOCAL uint8_t SAXAMAPHONE_FILE_BUFFER[SAXAMAPHONE_FILE_BUFFER_SIZE];
-#endif
-
-#if SAXAMAPHONE_NODE_BUFFER_SIZE > 0
-static SAXAMAPHONE_THREAD_LOCAL uint8_t SAXAMAPHONE_NODE_BUFFER[SAXAMAPHONE_NODE_BUFFER_SIZE];
-#endif
-
 // === private methods === //
 
 #ifdef SAXAMAPHONE_DEBUG
@@ -923,7 +915,7 @@ static sax_event_t sax_parser_state_start_tag_space(sax_parser_t *restrict parse
       return sax_parser_error_unexpected_glyph(parser, glyph);
     }
 
-    parser->current_attr = sax_alloc(&parser->arena, sizeof(sax_attr_t));
+    parser->current_attr = sax_arena_alloc(&parser->arena, sizeof(sax_attr_t));
     memset(parser->current_attr, 0, sizeof(sax_attr_t));
 
     // Add to end of linked list
@@ -1124,7 +1116,7 @@ sax_parser_t *sax_parser(const sax_config_t *restrict config) {
       return parser;
     }
 
-    char *file_buf = NULL;
+    uint8_t *file_buf = NULL;
     size_t file_buf_size = 0;
 
     if (parser->arena.alloc) {
