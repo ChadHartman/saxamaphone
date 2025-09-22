@@ -152,15 +152,6 @@ typedef struct sax_allocator_t {
   size_t bytes_size;
 } sax_allocator_t;
 
-typedef struct sax_allocator_t {
-  uint8_t *bytes;
-  size_t offset;
-  size_t bytes_size;
-  sax_alloc_t alloc;
-  void *alloc_ctx;
-  struct sax_allocator_t *upstream;
-} sax_allocator_t;
-
 typedef struct sax_file_iter_t {
   FILE *fp;
   uint_fast32_t offset;
@@ -507,20 +498,24 @@ static sax_arena_t sax_arena(const sax_config_t *restrict config) {
 /// @return the pointer or NULL if insufficient memory
 static void *sax_arena_alloc(sax_arena_t *restrict arena, size_t size) {
 
-  if (arena == NULL || size == 0) {
+  if (arena == NULL || arena->bytes == NULL || size == 0) {
     return NULL;
   }
 
   const uintptr_t align = (arena->offset + size) % sizeof(uint8_t *);
-
   if (arena->offset + size + align > arena->bytes_size) {
-    // TODO: use func
+
+    if (arena->alloc) {
+      arena->bytes = arena->alloc(arena->alloc_ctx, arena->bytes, arena->bytes_size * 2);
+      return sax_arena_alloc(arena, size);
+    }
+
     // Out of memory
     return NULL;
   }
 
-  void *restrict res = arena->bytes + alloc->offset;
-  alloc->offset += size;
+  void *restrict res = arena->bytes + arena->offset;
+  arena->offset += size + align;
   return res;
 }
 
@@ -1128,18 +1123,30 @@ sax_parser_t *sax_parser(const sax_config_t *restrict config) {
       return parser;
     }
 
+    char *file_buf = NULL;
+    size_t file_buf_size = 0;
+
+    if (parser->arena.alloc) {
+      file_buf_size = 4096;
+      file_buf = parser->arena.alloc(parser->arena.alloc_ctx, NULL, 4096);
+      if (file_buf == NULL) {
+        // TODO: free
+        SAXAMAPHONE_LOG("Failed to allocate file buffer");
+        return NULL;
+      }
+    } else {
+      file_buf_size = sax_file_buf_size(parser->arena.bytes_size);
+      file_buf = sax_arena_alloc(&parser->arena, file_buf_size);
+      parser->arena = sax_arena_partition(&parser->arena);
+    }
+
     parser->iter = (sax_iter_t){
         .type = SAX_ITER_FILE,
         .impl = {
             .file = {
                 .fp = fp,
-#if SAXAMAPHONE_NODE_BUFFER_SIZE == 0
-                .file_buffer = config->file_buffer,
-                .file_buffer_size = config->file_buffer_size,
-#else
-                .file_buffer = config->file_buffer ? config->file_buffer : SAXAMAPHONE_FILE_BUFFER,
-                .file_buffer_size = config->file_buffer ? config->file_buffer_size : SAXAMAPHONE_FILE_BUFFER_SIZE,
-#endif
+                .file_buffer = file_buf,
+                .file_buffer_size = file_buf_size,
             },
         },
     };
