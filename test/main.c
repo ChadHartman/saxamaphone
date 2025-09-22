@@ -43,8 +43,13 @@ static const char *xml_parse_attr_val(const char *restrict attr_val) {
       .string = xml,
   });
 
-  // <content>
-  ASSERT_EQ(SAX_EVENT_START_ELEMENT, sax_next(parser));
+  sax_event_t ev = sax_next(parser);
+  if (ev == SAX_EVENT_ERROR) {
+    printf("%s\n", sax_error(parser));
+    return NULL;
+  }
+
+  ASSERT_EQ(SAX_EVENT_START_ELEMENT, ev);
   return sax_attr(parser, "name");
 }
 
