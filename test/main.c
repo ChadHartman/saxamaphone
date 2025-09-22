@@ -12,33 +12,6 @@
 #define TEST_DECL(test_name) test_##test_name(void)
 #define TEST_REG(test_name) {.name = #test_name, .func = test_##test_name}
 
-static void TEST_DECL(substr) {
-
-  TEST("substr");
-  const char *substr = NULL;
-  size_t substr_size = 0;
-
-  sax_str_substr("foobar", 1, 4, &substr, &substr_size);
-  ASSERT_STRN_EQ("ooba", substr, substr_size);
-  sax_str_substr("foobar", 1, UINT32_MAX, &substr, &substr_size);
-  ASSERT_STRN_EQ("oobar", substr, substr_size);
-  sax_str_substr("foobar", 1, 0, &substr, &substr_size);
-  ASSERT_STRN_EQ("", substr, substr_size);
-  sax_str_substr("foobar", 0, 4, &substr, &substr_size);
-  ASSERT_STRN_EQ("foob", substr, substr_size);
-  sax_str_substr("foobar", UINT32_MAX, 1, &substr, &substr_size);
-  ASSERT_STRN_EQ("", substr, substr_size);
-  sax_str_substr("", 1, 2, &substr, &substr_size);
-  ASSERT_STRN_EQ("", substr, substr_size);
-
-  sax_str_substr("Olá, Mun", 3, 5, &substr, &substr_size);
-  ASSERT_STRN_EQ(", Mun", substr, substr_size);
-  sax_str_substr("Γεια σου Κόσμε", 3, 9, &substr, &substr_size);
-  ASSERT_STRN_EQ("α σου Κόσ", substr, substr_size);
-  sax_str_substr("こんにちは世界", 3, 4, &substr, &substr_size);
-  ASSERT_STRN_EQ("ちは世界", substr, substr_size);
-}
-
 const char *sax_str_unescape(const char *restrict src);
 
 static void TEST_DECL(unescaped) {
@@ -76,7 +49,6 @@ int main(int argc, char **args) {
   } test_t;
 
   const test_t tests[] = {
-      TEST_REG(substr),
       TEST_REG(unescaped),
   };
   const size_t count = sizeof(tests) / sizeof(test_t);

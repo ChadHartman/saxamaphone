@@ -115,19 +115,6 @@ struct sax_parser_t {
 
 // === undocumented api declarations === //
 
-/// @brief Compute the substring of the provided string
-/// @param src string to substring
-/// @param start desired character start index
-/// @param len desired resulting string length
-/// @param substr [out] resulting substring
-/// @param substr_bytes [out] resulting subtring size in bytes
-void sax_str_substr(
-    const char *restrict src,
-    uint_fast32_t start,
-    uint_fast32_t len,
-    const char *restrict *restrict substr,
-    size_t *substr_size);
-
 // === constants === //
 
 // #define SAX_SIZE_MAX UINT_FAST32_MAX
@@ -291,12 +278,10 @@ static
   // }
 
   if (sax_str_startswith(src, "&#") && sax_str_endswith(src, ";")) {
-    // Longest is &#1114111;
-    const char *restrict sub = NULL;
-    size_t usize;
-    sax_str_substr(src, 2, strlen(src) - 3, &sub, &usize);
+    // Longest is &#1114111; (10 chars)
     char num[16];
-    snprintf(num, sizeof(num), "%.*s", (int)usize, sub);
+    // -3 for "&#" + ";"
+    snprintf(num, sizeof(num), "%.*s", (int)(strlen(src) - 3), src + 2);
     long code_pt = atol(num);
     if (code_pt == 0) {
       return src;
@@ -1104,36 +1089,6 @@ const char *sax_content(const sax_parser_t *restrict parser) {
 
 const sax_attr_t *sax_attrs(const sax_parser_t *restrict parser) {
   return parser && parser->attrs ? parser->attrs : NULL;
-}
-
-// --- public undocumented methods --- //
-
-void sax_str_substr(
-    const char *restrict src,
-    uint_fast32_t start,
-    uint_fast32_t len,
-    const char *restrict *restrict substr,
-    size_t *substr_size) {
-
-  size_t size = strlen(src);
-  uint_fast32_t byte_offset = 0;
-  uint_fast32_t char_offset = 0;
-
-  for (;
-       byte_offset < size && char_offset < start;
-       byte_offset += sax_code_pt_size(src[byte_offset]), ++char_offset) {
-  }
-
-  *substr = src + byte_offset;
-  size = strlen(*substr);
-  size_t i = 0;
-
-  for (i = 0, char_offset = 0;
-       i < size && char_offset < len;
-       i += sax_code_pt_size((*substr)[i]), ++char_offset) {
-  }
-
-  *substr_size = i;
 }
 
 const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict name) {
