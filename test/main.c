@@ -12,7 +12,32 @@
 #define TEST_DECL(test_name) test_##test_name(void)
 #define TEST_REG(test_name) {.name = #test_name, .func = test_##test_name}
 
+// === forward declares === //
+
 const char *sax_str_unescape(const char *restrict src);
+char *sax_str_trim(char *str);
+
+// === utilities === //
+
+static const char *xml_parse_content(arena_t *restrict arena, const char *restrict content) {
+
+  char xml[1024];
+  snprintf(xml, sizeof(xml), "<content>%s</content>", content);
+
+  sax_parser_t *parser = sax_parser(&(sax_config_t){
+      .string = xml,
+      .arena = arena_alloc(arena, 2048),
+      .arena_size = 2048,
+  });
+
+  // <content>
+  ASSERT_EQ(SAX_EVENT_START_ELEMENT, sax_next(parser));
+  // ...
+  ASSERT_EQ(SAX_EVENT_CONTENT, sax_next(parser));
+  return sax_content(parser);
+}
+
+// === test cases === //
 
 static void TEST_DECL(unescape) {
 
@@ -64,24 +89,6 @@ static void TEST_DECL(unescape16) {
   ASSERT_STR_EQ("🚀", sax_str_unescape("&#x1f680;"));
 }
 
-static const char *xml_parse_content(arena_t *restrict arena, const char *restrict content) {
-
-  char xml[1024];
-  snprintf(xml, sizeof(xml), "<content>%s</content>", content);
-
-  sax_parser_t *parser = sax_parser(&(sax_config_t){
-      .string = xml,
-      .arena = arena_alloc(arena, 2048),
-      .arena_size = 2048,
-  });
-
-  // <content>
-  ASSERT_EQ(SAX_EVENT_START_ELEMENT, sax_next(parser));
-  // ...
-  ASSERT_EQ(SAX_EVENT_CONTENT, sax_next(parser));
-  return sax_content(parser);
-}
-
 static void TEST_DECL(content) {
 
   arena_t *restrict arena = arena_create();
@@ -94,6 +101,17 @@ static void TEST_DECL(content) {
   arena_free(arena);
 }
 
+static void TEST_DECL(trim) {
+
+  char buf[1024];
+  strcpy(buf, "   Foo Bar   \n");
+  ASSERT_STR_EQ("Foo Bar", sax_str_trim(buf));
+  strcpy(buf, "   🚀   \n");
+  ASSERT_STR_EQ("🚀", sax_str_trim(buf));
+}
+
+// === main === //
+
 int main(int argc, char **args) {
 
   typedef struct test_t {
@@ -103,9 +121,11 @@ int main(int argc, char **args) {
 
   const test_t tests[] = {
       TEST_REG(content),
+      TEST_REG(trim),
       TEST_REG(unescape),
       TEST_REG(unescape10),
       TEST_REG(unescape16),
+
   };
   const size_t count = sizeof(tests) / sizeof(test_t);
 

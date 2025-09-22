@@ -420,7 +420,11 @@ static char *sax_str_rtrim(char *src) {
 /// @brief Perform both an ltrim & rtrim
 /// @param str to trim
 /// @return trimmed string
-static char *sax_str_trim(char *str) {
+#ifndef SAXAMAPHONE_TEST
+static
+#endif
+    char *
+    sax_str_trim(char *str) {
   return sax_str_ltrim(sax_str_rtrim(str));
 }
 
