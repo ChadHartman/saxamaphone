@@ -381,7 +381,10 @@ static char *sax_str_ltrim(char *src) {
 
   const size_t src_size = strlen(src);
 
-  for (uint_fast32_t i = 0; i < src_size; i += sax_code_pt_size(src[i])) {
+  for (uint_fast64_t i = 0;
+       i < src_size;
+       i += sax_code_pt_size(src[i])) {
+
     if (!isspace(src[i])) {
       src += i;
       break;
@@ -402,9 +405,10 @@ static char *sax_str_rtrim(char *src) {
 
   uint_fast64_t last_non_space = 0;
   const size_t src_size = strlen(src);
+  uint_fast64_t i = 0;
 
   // Can't tell utf-8 from top to bottom; have to start from bottom
-  for (uint_fast64_t i = 0;
+  for (;
        i < src_size;
        i += sax_code_pt_size(src[i])) {
 
@@ -413,7 +417,8 @@ static char *sax_str_rtrim(char *src) {
     }
   }
 
-  src[last_non_space + 1] = '\0';
+  const uint_fast64_t end = last_non_space + sax_code_pt_size(src[last_non_space]);
+  src[end] = '\0';
   return src;
 }
 
