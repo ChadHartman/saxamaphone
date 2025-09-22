@@ -8,7 +8,7 @@
 
 #include <saxamaphone.h>
 
-// TODO: test attrvalue & content startswith `&`
+// TODO: test attrvalue  startswith `&`
 // TODO: CDATA
 // TODO: remove thread locals
 
@@ -176,11 +176,9 @@ static uint_fast8_t sax_code_pt_size(uint8_t byte) {
 
 /// @brief Convert a long numerical representation of a utf-8 character to a character string buffer
 /// @param value to convert
-/// @return ephemeral stringified character
-static const char *sax_long_to_code_pt(long value) {
-
-  // 4 pts  + NULL term
-  static SAXAMAPHONE_THREAD_LOCAL char buf[5];
+/// @param buf buffer to populate and return; must be at least sized 5
+/// @return buf
+static const char *sax_long_to_code_pt(long value, char *restrict buf) {
 
   if (value < 0 || value > 0x10FFFF || (value >= 0xD800 && value <= 0xDFFF)) {
     buf[0] = '\0';
@@ -277,11 +275,16 @@ static bool sax_str_is_space(const char *restrict str) {
   return true;
 }
 
+/// @brief Unescape the provided string and populate the buffer with the
+///   resulting utf-8 character
+/// @param src string to convert
+/// @param buf at least sized 5; must be populated
+/// @return string literal or populated buf depending on the encoding
 #ifndef SAXAMAPHONE_TEST
 static
 #endif
     const char *
-    sax_str_unescape(const char *restrict src) {
+    sax_str_unescape(const char *restrict src, char *restrict buf) {
 
   if (strcmp("&lt;", src) == 0) {
     return "<";
@@ -313,7 +316,8 @@ static
     if (code_pt == 0) {
       return src;
     }
-    return sax_long_to_code_pt(code_pt);
+
+    return sax_long_to_code_pt(code_pt, buf);
   }
 
   if (sax_str_startswith(src, "&#") && sax_str_endswith(src, ";")) {
@@ -325,7 +329,7 @@ static
       return src;
     }
 
-    return sax_long_to_code_pt(code_pt);
+    return sax_long_to_code_pt(code_pt, buf);
   }
 
   return src;
@@ -681,18 +685,20 @@ static sax_event_t sax_parser_state_in_tag(sax_parser_t *restrict parser, const 
 static sax_event_t sax_parser_state_in_escaped_char(sax_parser_t *restrict parser, const char *glyph) {
 
   switch (glyph[0]) {
-  case ';': {
+  case ';':
 
     if (SAX_EVENT_ERROR == sax_parser_append(parser, &parser->escaped, glyph)) {
       return SAX_EVENT_ERROR;
     }
 
     sax_parser_state(parser, parser->prev_state);
-    const char *restrict unesc = sax_str_unescape(parser->escaped);
-    sax_event_t ev = sax_parser_append(parser, &parser->data, unesc);
+    char unesc[5];
+    sax_event_t ev = sax_parser_append(
+        parser,
+        &parser->data,
+        sax_str_unescape(parser->escaped, unesc));
     parser->escaped = NULL;
     return ev;
-  }
 
   default:
     return sax_parser_append(parser, &parser->escaped, glyph);
