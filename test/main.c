@@ -42,92 +42,54 @@ static const char *xml_parse_content(arena_t *restrict arena, const char *restri
 static void TEST_DECL(unescape) {
 
   char buf[5];
-  sax_str_unescape("foo", buf);
-  ASSERT_STR_EQ("foo", buf);
-  sax_str_unescape("&lt;", buf);
-  ASSERT_STR_EQ("<", buf);
-  sax_str_unescape("&gt;", buf);
-  ASSERT_STR_EQ(">", buf);
-  sax_str_unescape("&amp;", buf);
-  ASSERT_STR_EQ("&", buf);
-  sax_str_unescape("&apos;", buf);
-  ASSERT_STR_EQ("'", buf);
-  sax_str_unescape("&quot;", buf);
-  ASSERT_STR_EQ("\"", buf);
+  ASSERT_STR_EQ("foo", sax_str_unescape("foo", buf));
+  ASSERT_STR_EQ("<", sax_str_unescape("&lt;", buf));
+  ASSERT_STR_EQ(">", sax_str_unescape("&gt;", buf));
+  ASSERT_STR_EQ("&", sax_str_unescape("&amp;", buf));
+  ASSERT_STR_EQ("'", sax_str_unescape("&apos;", buf));
+  ASSERT_STR_EQ("\"", sax_str_unescape("&quot;", buf));
 }
 
 static void TEST_DECL(unescape10) {
 
   char buf[5];
-  sax_str_unescape("&#65;", buf);
-  ASSERT_STR_EQ("A", buf);
-  sax_str_unescape("&#97;", buf);
-  ASSERT_STR_EQ("a", buf);
-  sax_str_unescape("&#36;", buf);
-  ASSERT_STR_EQ("$", buf);
-  sax_str_unescape("&#63;", buf);
-  ASSERT_STR_EQ("?", buf);
-  sax_str_unescape("&#161;", buf);
-  ASSERT_STR_EQ("¡", buf);
-  sax_str_unescape("&#181;", buf);
-  ASSERT_STR_EQ("µ", buf);
-  sax_str_unescape("&#233;", buf);
-  ASSERT_STR_EQ("é", buf);
-  sax_str_unescape("&#1040;", buf);
-  ASSERT_STR_EQ("А", buf);
-  sax_str_unescape("&#8364;", buf);
-  ASSERT_STR_EQ("€", buf);
-  sax_str_unescape("&#8482;", buf);
-  ASSERT_STR_EQ("™", buf);
-  sax_str_unescape("&#20013;", buf);
-  ASSERT_STR_EQ("中", buf);
-  sax_str_unescape("&#24515;", buf);
-  ASSERT_STR_EQ("心", buf);
-  sax_str_unescape("&#128512;", buf);
-  ASSERT_STR_EQ("😀", buf);
-  sax_str_unescape("&#127800;", buf);
-  ASSERT_STR_EQ("🌸", buf);
-  sax_str_unescape("&#127925;", buf);
-  ASSERT_STR_EQ("🎵", buf);
-  sax_str_unescape("&#128640;", buf);
-  ASSERT_STR_EQ("🚀", buf);
+  ASSERT_STR_EQ("A", sax_str_unescape("&#65;", buf));
+  ASSERT_STR_EQ("a", sax_str_unescape("&#97;", buf));
+  ASSERT_STR_EQ("$", sax_str_unescape("&#36;", buf));
+  ASSERT_STR_EQ("?", sax_str_unescape("&#63;", buf));
+  ASSERT_STR_EQ("¡", sax_str_unescape("&#161;", buf));
+  ASSERT_STR_EQ("µ", sax_str_unescape("&#181;", buf));
+  ASSERT_STR_EQ("é", sax_str_unescape("&#233;", buf));
+  ASSERT_STR_EQ("А", sax_str_unescape("&#1040;", buf));
+  ASSERT_STR_EQ("€", sax_str_unescape("&#8364;", buf));
+  ASSERT_STR_EQ("™", sax_str_unescape("&#8482;", buf));
+  ASSERT_STR_EQ("中", sax_str_unescape("&#20013;", buf));
+  ASSERT_STR_EQ("心", sax_str_unescape("&#24515;", buf));
+  ASSERT_STR_EQ("😀", sax_str_unescape("&#128512;", buf));
+  ASSERT_STR_EQ("🌸", sax_str_unescape("&#127800;", buf));
+  ASSERT_STR_EQ("🎵", sax_str_unescape("&#127925;", buf));
+  ASSERT_STR_EQ("🚀", sax_str_unescape("&#128640;", buf));
 }
 
 static void TEST_DECL(unescape16) {
 
   char buf[5];
-  sax_str_unescape("&#x41;", buf);
-  ASSERT_STR_EQ("A", buf);
-  sax_str_unescape("&#x61;", buf);
-  ASSERT_STR_EQ("a", buf);
-  sax_str_unescape("&#x24;", buf);
-  ASSERT_STR_EQ("$", buf);
-  sax_str_unescape("&#x3f;", buf);
-  ASSERT_STR_EQ("?", buf);
-  sax_str_unescape("&#xa1;", buf);
-  ASSERT_STR_EQ("¡", buf);
-  sax_str_unescape("&#xb5;", buf);
-  ASSERT_STR_EQ("µ", buf);
-  sax_str_unescape("&#xe9;", buf);
-  ASSERT_STR_EQ("é", buf);
-  sax_str_unescape("&#x410;", buf);
-  ASSERT_STR_EQ("А", buf);
-  sax_str_unescape("&#x20ac;", buf);
-  ASSERT_STR_EQ("€", buf);
-  sax_str_unescape("&#x2122;", buf);
-  ASSERT_STR_EQ("™", buf);
-  sax_str_unescape("&#x4e2d;", buf);
-  ASSERT_STR_EQ("中", buf);
-  sax_str_unescape("&#x5fc3;", buf);
-  ASSERT_STR_EQ("心", buf);
-  sax_str_unescape("&#x1f600;", buf);
-  ASSERT_STR_EQ("😀", buf);
-  sax_str_unescape("&#x1f338;", buf);
-  ASSERT_STR_EQ("🌸", buf);
-  sax_str_unescape("&#x1f3b5;", buf);
-  ASSERT_STR_EQ("🎵", buf);
-  sax_str_unescape("&#x1f680;", buf);
-  ASSERT_STR_EQ("🚀", buf);
+  ASSERT_STR_EQ("A", sax_str_unescape("&#x41;", buf));
+  ASSERT_STR_EQ("a", sax_str_unescape("&#x61;", buf));
+  ASSERT_STR_EQ("$", sax_str_unescape("&#x24;", buf));
+  ASSERT_STR_EQ("?", sax_str_unescape("&#x3f;", buf));
+  ASSERT_STR_EQ("¡", sax_str_unescape("&#xa1;", buf));
+  ASSERT_STR_EQ("µ", sax_str_unescape("&#xb5;", buf));
+  ASSERT_STR_EQ("é", sax_str_unescape("&#xe9;", buf));
+  ASSERT_STR_EQ("А", sax_str_unescape("&#x410;", buf));
+  ASSERT_STR_EQ("€", sax_str_unescape("&#x20ac;", buf));
+  ASSERT_STR_EQ("™", sax_str_unescape("&#x2122;", buf));
+  ASSERT_STR_EQ("中", sax_str_unescape("&#x4e2d;", buf));
+  ASSERT_STR_EQ("心", sax_str_unescape("&#x5fc3;", buf));
+  ASSERT_STR_EQ("😀", sax_str_unescape("&#x1f600;", buf));
+  ASSERT_STR_EQ("🌸", sax_str_unescape("&#x1f338;", buf));
+  ASSERT_STR_EQ("🎵", sax_str_unescape("&#x1f3b5;", buf));
+  ASSERT_STR_EQ("🚀", sax_str_unescape("&#x1f680;", buf));
 }
 
 static void TEST_DECL(content) {
