@@ -26,8 +26,8 @@ static const char *xml_parse_content(arena_t *restrict arena, const char *restri
 
   sax_parser_t *parser = sax_parser(&(sax_config_t){
       .string = xml,
-      .arena = arena_alloc(arena, 2048),
-      .arena_size = 2048,
+      .buf = arena_alloc(arena, 2048),
+      .buf_size = 2048,
   });
 
   // <content>

@@ -3,6 +3,7 @@
 
 #include <stdbool.h> // bool
 #include <stddef.h>  // size_t
+#include <stdint.h>  // uint8_t
 
 /// @brief Possible Saxamaphone event types
 typedef enum {
