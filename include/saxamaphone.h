@@ -105,15 +105,15 @@ const sax_attr_t *sax_attrs(const sax_parser_t *restrict parser);
 /// @return paired value or NULL if not found
 const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict name);
 
+// #define SAXAMAPHONE_IMPLEMENTATION
 #ifdef SAXAMAPHONE_IMPLEMENTATION
 
 #include <ctype.h>    // isspace
 #include <inttypes.h> // PRIuFAST16
 #include <stdarg.h>   // va_start
-#include <stdbool.h>
-#include <stdio.h>  // fopen
-#include <stdlib.h> // atoll
-#include <string.h> // memset
+#include <stdio.h>    // fopen
+#include <stdlib.h>   // malloc, realloc, free
+#include <string.h>   // memset
 
 #include <saxamaphone.h>
 
@@ -179,9 +179,6 @@ typedef struct sax_iter_t {
   } impl;
 
 } sax_iter_t;
-
-#define PRISAXSIZE PRIuFAST16
-typedef uint_fast32_t uint_fast32_t;
 
 typedef struct sax_arena_t {
   uint8_t *bytes;
