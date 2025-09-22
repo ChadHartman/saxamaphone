@@ -9,9 +9,13 @@
 #include "test.h"
 #include <saxamaphone.h>
 
+#if 0
 #define LOG(...)                                                                   \
   printf(COLOR_CYAN "%s:%d " COLOR_RESET, (strrchr(__FILE__, '/') + 1), __LINE__); \
   printf(__VA_ARGS__)
+#else
+#define LOG(...) ((void)0)
+#endif
 
 /// @brief Programming Language
 typedef struct prog_lang_t {
@@ -95,6 +99,9 @@ static bool map_string_nodes(
 
     if (ev == SAX_EVENT_START_ELEMENT && sax_tag_is(parser, tag)) {
       nodes[node_offset++] = map_string_node(arena, parser, tag);
+      if (!nodes[node_offset - 1]) {
+        return false;
+      }
 
     } else if (ev == SAX_EVENT_END_ELEMENT && sax_tag_is(parser, collection_tag)) {
       return true;
@@ -226,7 +233,7 @@ int main() {
   ASSERT_STR_EQ("Dynamic", langs[3].typing[0]);
   ASSERT_STR_EQ("Weak", langs[3].typing[1]);
   ASSERT_STR_EQ("Interpreted (JIT compilation)", langs[3].exe_model[0]);
-  ASSERT_STR_EQ("Web Development (Frontend &amp; Backend)", langs[3].app_doms[0]);
+  ASSERT_STR_EQ("Web Development (Frontend & Backend)", langs[3].app_doms[0]);
   ASSERT_STR_EQ("Mobile Development", langs[3].app_doms[1]);
 
   arena_free(arena);

@@ -9,9 +9,12 @@
 #include "test.h"
 #include <saxamaphone.h>
 
-static void test_sax_str_substr() {
+#define TEST_DECL(test_name) test_##test_name(void)
+#define TEST_REG(test_name) {.name = #test_name, .func = test_##test_name}
 
-  TEST("sax_str_substr tests");
+static void TEST_DECL(substr) {
+
+  TEST("substr");
   const char *substr = NULL;
   size_t substr_size = 0;
 
@@ -36,101 +39,73 @@ static void test_sax_str_substr() {
   ASSERT_STRN_EQ("ちは世界", substr, substr_size);
 }
 
-// static void test_sax_unescaped() {
+static void TEST_DECL(unescaped) {
 
-//   print_header("sax_str_unescaped");
-//   ASSERT_STR_EQ("foo", sax_str_unescaped(sax_str("foo")));
-//   ASSERT_STR_EQ("<", sax_str_unescaped(sax_str("&lt;")));
-//   ASSERT_STR_EQ(">", sax_str_unescaped(sax_str("&gt;")));
-//   ASSERT_STR_EQ("&", sax_str_unescaped(sax_str("&amp;")));
-//   ASSERT_STR_EQ("'", sax_str_unescaped(sax_str("&apos;")));
-//   ASSERT_STR_EQ("\"", sax_str_unescaped(sax_str("&quot;")));
-//   ASSERT_STR_EQ("A", sax_str_unescaped(sax_str("&#65;")));
-//   ASSERT_STR_EQ("a", sax_str_unescaped(sax_str("&#97;")));
-//   ASSERT_STR_EQ("$", sax_str_unescaped(sax_str("&#36;")));
-//   ASSERT_STR_EQ("?", sax_str_unescaped(sax_str("&#63;")));
-//   ASSERT_STR_EQ("¡", sax_str_unescaped(sax_str("&#161;")));
-//   ASSERT_STR_EQ("µ", sax_str_unescaped(sax_str("&#181;")));
-//   ASSERT_STR_EQ("é", sax_str_unescaped(sax_str("&#233;")));
-//   ASSERT_STR_EQ("А", sax_str_unescaped(sax_str("&#1040;")));
-//   ASSERT_STR_EQ("€", sax_str_unescaped(sax_str("&#8364;")));
-//   ASSERT_STR_EQ("™", sax_str_unescaped(sax_str("&#8482;")));
-//   ASSERT_STR_EQ("中", sax_str_unescaped(sax_str("&#20013;")));
-//   ASSERT_STR_EQ("心", sax_str_unescaped(sax_str("&#24515;")));
-//   ASSERT_STR_EQ("😀", sax_str_unescaped(sax_str("&#128512;")));
-//   ASSERT_STR_EQ("🌸", sax_str_unescaped(sax_str("&#127800;")));
-//   ASSERT_STR_EQ("🎵", sax_str_unescaped(sax_str("&#127925;")));
-//   ASSERT_STR_EQ("🚀", sax_str_unescaped(sax_str("&#128640;")));
-// }
+  TEST("unescaped");
+  ASSERT_STR_EQ("foo", sax_str_unescaped("foo"));
+  ASSERT_STR_EQ("<", sax_str_unescaped("&lt;"));
+  ASSERT_STR_EQ(">", sax_str_unescaped("&gt;"));
+  ASSERT_STR_EQ("&", sax_str_unescaped("&amp;"));
+  ASSERT_STR_EQ("'", sax_str_unescaped("&apos;"));
+  ASSERT_STR_EQ("\"", sax_str_unescaped("&quot;"));
+  ASSERT_STR_EQ("A", sax_str_unescaped("&#65;"));
+  ASSERT_STR_EQ("a", sax_str_unescaped("&#97;"));
+  ASSERT_STR_EQ("$", sax_str_unescaped("&#36;"));
+  ASSERT_STR_EQ("?", sax_str_unescaped("&#63;"));
+  ASSERT_STR_EQ("¡", sax_str_unescaped("&#161;"));
+  ASSERT_STR_EQ("µ", sax_str_unescaped("&#181;"));
+  ASSERT_STR_EQ("é", sax_str_unescaped("&#233;"));
+  ASSERT_STR_EQ("А", sax_str_unescaped("&#1040;"));
+  ASSERT_STR_EQ("€", sax_str_unescaped("&#8364;"));
+  ASSERT_STR_EQ("™", sax_str_unescaped("&#8482;"));
+  ASSERT_STR_EQ("中", sax_str_unescaped("&#20013;"));
+  ASSERT_STR_EQ("心", sax_str_unescaped("&#24515;"));
+  ASSERT_STR_EQ("😀", sax_str_unescaped("&#128512;"));
+  ASSERT_STR_EQ("🌸", sax_str_unescaped("&#127800;"));
+  ASSERT_STR_EQ("🎵", sax_str_unescaped("&#127925;"));
+  ASSERT_STR_EQ("🚀", sax_str_unescaped("&#128640;"));
+}
 
 int main(int argc, char **args) {
 
-  if (argc == 2) {
+  typedef struct test_t {
+    const char *name;
+    void (*func)(void);
+  } test_t;
 
-    if (strcmp("-h", args[1]) == 0) {
-      printf("Usage: %s [-h, substr, objmap]\n", args[0]);
-      return EXIT_SUCCESS;
+  const test_t tests[] = {
+      TEST_REG(substr),
+      TEST_REG(unescaped),
+  };
+  const size_t count = sizeof(tests) / sizeof(test_t);
+
+  if (argc == 1) {
+    for (size_t i = 0; i < count; ++i) {
+      tests[i].func();
     }
-
-    if (strcmp("substr", args[1]) == 0) {
-      test_sax_str_substr();
-      return EXIT_SUCCESS;
-    }
-
-    printf("Unknown test \"%s\"\n", args[1]);
-    return EXIT_FAILURE;
-  }
-
-  test_sax_str_substr();
-  // test_sax_unescaped();
-
-  TEST("end-to-end");
-  sax_event_t ev = 0;
-  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
-      .path = "../test/files/xml-well-formed.xml",
-  });
-
-  for (ev = sax_next(parser);
-       ev != SAX_EVENT_END_DOCUMENT && ev != SAX_EVENT_ERROR;
-       ev = sax_next(parser)) {
-    switch (ev) {
-
-    case SAX_EVENT_START_ELEMENT: {
-      const char *tag = sax_tag(parser);
-      printf("SAX_EVENT_START_ELEMENT tag=\"%s\" attrs={", tag);
-      for (const sax_attr_t *attr = sax_attrs(parser);
-           attr != NULL;
-           attr = attr->next) {
-        printf("\"%s\"=\"%s\", ", attr->name, attr->value);
-      }
-      printf("}\n");
-
-    } break;
-
-    case SAX_EVENT_CONTENT: {
-      printf("SAX_EVENT_CONTENT content=\"%s\"\n", sax_content(parser));
-    } break;
-
-    case SAX_EVENT_END_ELEMENT: {
-      printf("SAX_EVENT_END_ELEMENT tag=\"%s\"\n", sax_tag(parser));
-    } break;
-
-    default:
-      assert(false);
-      break;
-    }
-  }
-
-  if (ev == SAX_EVENT_END_DOCUMENT) {
-    printf("SAX_EVENT_END_DOCUMENT\n");
     return EXIT_SUCCESS;
   }
 
-  if (ev == SAX_EVENT_ERROR) {
-    printf("SAX_EVENT_ERROR \"%s\"\n", sax_error(parser));
-  } else {
-    printf("Unknown event %d\n", ev);
+  if (strcmp("-h", args[1]) == 0) {
+    printf("Usage: %s [-h] [-l] [<test-name>]\n", args[0]);
+    return EXIT_SUCCESS;
   }
 
+  if (strcmp("-l", args[1]) == 0) {
+
+    for (size_t i = 0; i < count; ++i) {
+      printf("%s\n", tests[i].name);
+    }
+    return EXIT_SUCCESS;
+  }
+
+  for (size_t i = 0; i < count; ++i) {
+    if (strcmp(tests[i].name, args[1]) == 0) {
+      tests[i].func();
+      return EXIT_SUCCESS;
+    }
+  }
+
+  printf("Unknown test \"%s\"\n", args[1]);
   return EXIT_FAILURE;
 }
