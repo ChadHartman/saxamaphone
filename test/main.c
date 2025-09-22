@@ -104,9 +104,20 @@ static void TEST_DECL(content) {
 static void TEST_DECL(trim) {
 
   char buf[1024];
+
   strcpy(buf, "   Foo Bar   \n");
   ASSERT_STR_EQ("Foo Bar", sax_str_trim(buf));
-  strcpy(buf, "   🚀   \n");
+
+  strcpy(buf, "🎵");
+  ASSERT_STR_EQ("🎵", sax_str_trim(buf));
+
+  strcpy(buf, "   😀   \n");
+  ASSERT_STR_EQ("😀", sax_str_trim(buf));
+
+  strcpy(buf, "   🌸");
+  ASSERT_STR_EQ("🌸", sax_str_trim(buf));
+
+  strcpy(buf, "🚀   \n");
   ASSERT_STR_EQ("🚀", sax_str_trim(buf));
 }
 
