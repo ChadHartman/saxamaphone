@@ -64,6 +64,30 @@ static void TEST_DECL(unescape16) {
   ASSERT_STR_EQ("🚀", sax_str_unescape("&#x1f680;"));
 }
 
+static const char *xml_parse_content(arena_t *restrict arena, const char *restrict content) {
+
+  char xml[1024];
+  snprintf(xml, sizeof(xml), "<content>%s</content>", content);
+
+  sax_parser_t *parser = sax_parser(&(sax_config_t){
+      .string = xml,
+      .arena = arena_alloc(arena, 2048),
+      .arena_size = 2048,
+  });
+
+  // <content>
+  ASSERT_EQ(SAX_EVENT_START_ELEMENT, sax_next(parser));
+  // ...
+  ASSERT_EQ(SAX_EVENT_CONTENT, sax_next(parser));
+  return sax_content(parser);
+}
+
+static void TEST_DECL(content) {
+  arena_t *restrict arena = arena_create();
+  ASSERT_STR_EQ("🚀", xml_parse_content(arena, "&#x1f680;"));
+  arena_free(arena);
+}
+
 int main(int argc, char **args) {
 
   typedef struct test_t {
@@ -72,6 +96,7 @@ int main(int argc, char **args) {
   } test_t;
 
   const test_t tests[] = {
+      TEST_REG(content),
       TEST_REG(unescape),
       TEST_REG(unescape10),
       TEST_REG(unescape16),
