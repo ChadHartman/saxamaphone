@@ -17,6 +17,8 @@ typedef enum {
 /// @brief Saxamaphone parser instance
 typedef struct sax_parser_t sax_parser_t;
 
+typedef void *(*sax_alloc_t)(void *ctx, void *ptr, size_t size);
+
 /// @brief Saxamaphone parser configuration
 typedef struct sax_config_t {
 
@@ -29,21 +31,17 @@ typedef struct sax_config_t {
   /// @brief Leave content leading and trailing spaces
   bool untrimmed_content;
 
-  /// @brief If thread local buffers are undesirable, i.e.
-  ///   `#define SAXAMAPHONE_NODE_BUFFER_SIZE 0`; and alternate arena can be
-  ///   provided here. `arena_size_size` must be provided too
-  uint8_t *arena;
+  /// @brief Provide this buffer if allocation is undesired; 4096 is recommended.
+  uint8_t *buf;
 
-  /// @brief The size in bytes of the `arena` field
-  size_t arena_size;
+  /// @brief Size of buf
+  size_t buf_size;
 
-  /// @brief If thread local buffers are undesirable, i.e.
-  ///   `#ifndef SAXAMAPHONE_FILE_BUFFER_SIZE 0`; an alternate buffer can be
-  ///   provided here. `file_buffer_size` must be provided too
-  uint8_t *file_buffer;
+  /// @brief Custom allocator to use
+  sax_alloc_t alloc;
 
-  /// @brief The size in bytes of the `file_buffer` field
-  size_t file_buffer_size;
+  /// @brief First argument in the customer allocator
+  void *alloc_ctx;
 
 } sax_config_t;
 
@@ -100,5 +98,7 @@ const sax_attr_t *sax_attrs(const sax_parser_t *restrict parser);
 /// @param name to lookup
 /// @return paired value or NULL if not found
 const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict name);
+
+void *sax_default_alloc(void *ctx, void *ptr, size_t size);
 
 #endif

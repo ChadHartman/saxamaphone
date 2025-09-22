@@ -14,24 +14,6 @@
 
 // #define SAXAMAPHONE_DEBUG
 
-#ifndef SAXAMAPHONE_FILE_BUFFER_SIZE
-#define SAXAMAPHONE_FILE_BUFFER_SIZE 4096
-#endif
-
-#ifndef SAXAMAPHONE_NODE_BUFFER_SIZE
-#define SAXAMAPHONE_NODE_BUFFER_SIZE 2048
-#endif
-
-#if defined(__clang__) || defined(__GNUC__)
-#define SAXAMAPHONE_THREAD_LOCAL __thread
-#elif defined(_MSC_VER)
-#define SAXAMAPHONE_THREAD_LOCAL __declspec(thread)
-#elif __STDC_VERSION__ >= 201112L
-#define SAXAMAPHONE_THREAD_LOCAL _Thread_local
-#else
-#error "Compiler does not support thread-local storage"
-#endif
-
 // === typedefs === //
 
 typedef enum {
@@ -56,11 +38,11 @@ typedef enum {
   SAX_ITER_STR,
 } sax_iter_type_t;
 
-typedef struct sax_alloc_t {
+typedef struct sax_allocator_t {
   uint8_t *bytes;
   size_t offset;
   size_t bytes_size;
-} sax_alloc_t;
+} sax_allocator_t;
 
 typedef struct sax_file_iter_t {
   FILE *fp;
@@ -98,7 +80,7 @@ struct sax_parser_t {
   bool untrimmed_content;
 
   // Resources
-  sax_alloc_t arena;
+  sax_allocator_t arena;
   sax_iter_t iter;
 
   // Metadayas
@@ -335,13 +317,13 @@ static
   return src;
 }
 
-// --- private sax_alloc_t methods --- //
+// --- private sax_allocator_t methods --- //
 
 /// @brief Perform an object allocation
 /// @param alloc instance
 /// @param size in bytes of the allocation
 /// @return the pointer or NULL if insufficient memory
-static void *sax_alloc(sax_alloc_t *restrict alloc, size_t size) {
+static void *sax_alloc(sax_allocator_t *restrict alloc, size_t size) {
 
   if (alloc == NULL || size == 0) {
     return NULL;
@@ -360,8 +342,8 @@ static void *sax_alloc(sax_alloc_t *restrict alloc, size_t size) {
 /// @brief Return a new allocator instance which manages the remaining memory
 /// @param alloc instance
 /// @return arena allocator managing remaining bytes
-static sax_alloc_t sax_alloc_partition(sax_alloc_t *restrict alloc) {
-  return (sax_alloc_t){
+static sax_allocator_t sax_alloc_partition(sax_allocator_t *restrict alloc) {
+  return (sax_allocator_t){
       .bytes = alloc->bytes + alloc->offset,
       .bytes_size = alloc->bytes_size - alloc->offset,
   };
@@ -941,7 +923,7 @@ sax_parser_t *sax_parser(const sax_config_t *restrict config) {
     return NULL;
   }
 
-  sax_alloc_t alloc = {
+  sax_allocator_t alloc = {
 #if SAXAMAPHONE_NODE_BUFFER_SIZE == 0
       .bytes = config->arena,
       .bytes_size = config->arena_size,
@@ -1139,4 +1121,20 @@ const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict n
   }
 
   return NULL;
+}
+
+void *sax_default_alloc(void *ctx, void *ptr, size_t size) {
+
+  (void)ctx;
+
+  if (size == 0) {
+    free(ptr);
+    return NULL;
+  }
+
+  if (ptr == NULL) {
+    return malloc(size);
+  }
+
+  return realloc(ptr, size);
 }
