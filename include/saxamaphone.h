@@ -898,7 +898,7 @@ static sax_event_t sax_parser_state_start_tag_space(sax_parser_t *restrict parse
 
   case '/':
     sax_parser_state(parser, SAX_STATE_CLOSING_START_TAG);
-    return 0;
+    return SAX_EVENT_START_ELEMENT;
 
   case SAXAMAPHONE_SPACE:
     // noop
@@ -927,6 +927,16 @@ static sax_event_t sax_parser_state_start_tag_space(sax_parser_t *restrict parse
     sax_parser_state(parser, SAX_STATE_IN_ATTR_NAME);
     return sax_parser_append(parser, &parser->current_attr->name, glyph);
   }
+}
+
+static sax_event_t sax_parser_state_closing_start_tag(sax_parser_t *restrict parser, const char *glyph) {
+
+  if (glyph[0] == '>') {
+    // TODO: tag name
+    return SAX_EVENT_END_ELEMENT;
+  }
+
+  return sax_parser_error_unexpected_glyph(parser, glyph);
 }
 
 static sax_event_t sax_parser_state_assigning_attr_value(sax_parser_t *restrict parser, const char *glyph) {
@@ -1183,6 +1193,10 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
 
     case SAX_STATE_IN_START_TAG:
       ev = sax_parser_state_in_start_tag(parser, glyph);
+      break;
+
+    case SAX_STATE_CLOSING_START_TAG:
+      ev = sax_parser_state_closing_start_tag(parser, glyph);
       break;
 
     case SAX_STATE_START_TAG_SPACE:
