@@ -83,8 +83,14 @@ static const char *xml_parse_content(arena_t *restrict arena, const char *restri
 }
 
 static void TEST_DECL(content) {
+
   arena_t *restrict arena = arena_create();
+
+  ASSERT_STR_EQ("Foo Bar", xml_parse_content(arena, "   Foo Bar   \n"));
+
+  arena_reset(arena);
   ASSERT_STR_EQ("🚀", xml_parse_content(arena, "&#x1f680;"));
+
   arena_free(arena);
 }
 
