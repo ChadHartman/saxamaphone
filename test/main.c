@@ -96,7 +96,16 @@ static void TEST_DECL(content) {
   ASSERT_STR_EQ("Foo Bar", xml_parse_content(arena, "   Foo Bar   \n"));
 
   arena_reset(arena);
-  ASSERT_STR_EQ("🚀", xml_parse_content(arena, "&#x1f680;"));
+  ASSERT_STR_EQ("😀", xml_parse_content(arena, "&#x1f600;"));
+
+  arena_reset(arena);
+  ASSERT_STR_EQ("🌸", xml_parse_content(arena, "    \t  &#x1f338;"));
+
+  arena_reset(arena);
+  ASSERT_STR_EQ("🎵", xml_parse_content(arena, "&#x1f3b5;    \t  \n"));
+
+  arena_reset(arena);
+  ASSERT_STR_EQ("🚀", xml_parse_content(arena, "\t   \r\n   &#x1f680;  \t  \n"));
 
   arena_free(arena);
 }
