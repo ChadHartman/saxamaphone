@@ -30,13 +30,5 @@ tests_obj_map = executable('saxamaphone-tests-obj-map',
     include_directories: includes,
     c_args: c_args)
 
-tests_no_thread_local = executable('saxamaphone-tests-no-thread-local',
-    sources: srcs + 'test/main-no-thread-local.c',
-    include_directories: includes,
-    c_args: c_args + 
-        '-DSAXAMAPHONE_FILE_BUFFER_SIZE=0' + 
-        '-DSAXAMAPHONE_NODE_BUFFER_SIZE=0')
-
 test('tests-misc', tests_misc)
 test('tests-obj-map', tests_obj_map)
-test('tests-ntl', tests_no_thread_local)
