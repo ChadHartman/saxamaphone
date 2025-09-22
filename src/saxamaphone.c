@@ -257,7 +257,11 @@ static uint_fast8_t sax_long_to_code_pt(long value, char *out) {
   return 4;
 }
 
-static const char *sax_str_unescaped(const char *restrict src) {
+#ifndef SAXAMAPHONE_TEST
+static
+#endif
+    const char *
+    sax_str_unescape(const char *restrict src) {
 
   // 1-4 + NULL term
   static SAXAMAPHONE_THREAD_LOCAL char buf[5];
@@ -669,7 +673,7 @@ static sax_event_t sax_parser_state_in_escaped_char(sax_parser_t *restrict parse
     }
 
     sax_parser_state(parser, parser->prev_state);
-    const char *restrict unesc = sax_str_unescaped(parser->escaped);
+    const char *restrict unesc = sax_str_unescape(parser->escaped);
     sax_event_t ev = sax_parser_append(parser, &parser->data, unesc);
     parser->escaped = NULL;
     return ev;
