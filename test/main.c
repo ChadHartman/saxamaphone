@@ -5,7 +5,6 @@
 #include <stdlib.h> // EXIT_SUCCESS
 #include <string.h> // strrchr
 
-#include "arena.h"
 #include "test.h"
 #include <saxamaphone.h>
 
@@ -19,15 +18,13 @@ char *sax_str_trim(char *str);
 
 // === utilities === //
 
-static const char *xml_parse_content(arena_t *restrict arena, const char *restrict content) {
+static const char *xml_parse_content(const char *restrict content) {
 
   char xml[1024];
   snprintf(xml, sizeof(xml), "<content>%s</content>", content);
 
   sax_parser_t *parser = sax_parser(&(sax_config_t){
       .string = xml,
-      .buf = arena_alloc(arena, 2048),
-      .buf_size = 2048,
   });
 
   // <content>
@@ -37,7 +34,25 @@ static const char *xml_parse_content(arena_t *restrict arena, const char *restri
   return sax_content(parser);
 }
 
+static const char *xml_parse_attr_val(const char *restrict attr_val) {
+
+  char xml[1024];
+  snprintf(xml, sizeof(xml), "<content name=\"%s\"/>", attr_val);
+
+  sax_parser_t *parser = sax_parser(&(sax_config_t){
+      .string = xml,
+  });
+
+  // <content>
+  ASSERT_EQ(SAX_EVENT_START_ELEMENT, sax_next(parser));
+  return sax_attr(parser, "name");
+}
+
 // === test cases === //
+
+static void TEST_DECL(attr_val) {
+  ASSERT_STR_EQ("foo", xml_parse_attr_val("foo"));
+}
 
 static void TEST_DECL(unescape) {
 
@@ -93,24 +108,11 @@ static void TEST_DECL(unescape16) {
 }
 
 static void TEST_DECL(content) {
-
-  arena_t *restrict arena = arena_create();
-
-  ASSERT_STR_EQ("Foo Bar", xml_parse_content(arena, "   Foo Bar   \n"));
-
-  arena_reset(arena);
-  ASSERT_STR_EQ("😀", xml_parse_content(arena, "&#x1f600;"));
-
-  arena_reset(arena);
-  ASSERT_STR_EQ("🌸", xml_parse_content(arena, "    \t  &#x1f338;"));
-
-  arena_reset(arena);
-  ASSERT_STR_EQ("🎵", xml_parse_content(arena, "&#x1f3b5;    \t  \n"));
-
-  arena_reset(arena);
-  ASSERT_STR_EQ("🚀", xml_parse_content(arena, "\t   \r\n   &#x1f680;  \t  \n"));
-
-  arena_free(arena);
+  ASSERT_STR_EQ("Foo Bar", xml_parse_content("   Foo Bar   \n"));
+  ASSERT_STR_EQ("😀", xml_parse_content("&#x1f600;"));
+  ASSERT_STR_EQ("🌸", xml_parse_content("    \t  &#x1f338;"));
+  ASSERT_STR_EQ("🎵", xml_parse_content("&#x1f3b5;    \t  \n"));
+  ASSERT_STR_EQ("🚀", xml_parse_content("\t   \r\n   &#x1f680;  \t  \n"));
 }
 
 static void TEST_DECL(trim) {
@@ -143,6 +145,7 @@ int main(int argc, char **args) {
   } test_t;
 
   const test_t tests[] = {
+      TEST_REG(attr_val),
       TEST_REG(content),
       TEST_REG(trim),
       TEST_REG(unescape),

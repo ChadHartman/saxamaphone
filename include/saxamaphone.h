@@ -118,6 +118,7 @@ const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict n
 
 // TODO: test attrvalue  startswith `&`
 // TODO: CDATA
+// TODO: memory leaks
 
 // #define SAXAMAPHONE_DEBUG
 
