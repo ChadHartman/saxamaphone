@@ -836,7 +836,7 @@ static sax_event_t sax_parser_state_in_tag(sax_parser_t *restrict parser, const 
       return sax_parser_error_unexpected_glyph(parser, glyph);
     }
 
-    parser->data = sax_alloc(&parser->arena, strlen(glyph) + 1);
+    parser->data = sax_arena_alloc(&parser->arena, strlen(glyph) + 1);
     strcpy(parser->data, glyph);
     sax_parser_state(parser, SAX_STATE_IN_START_TAG);
     break;
