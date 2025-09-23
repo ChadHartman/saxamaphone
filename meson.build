@@ -17,8 +17,7 @@ srcs = [
 
 tests_misc = executable('saxamaphone-tests',
     sources: srcs 
-        + 'test/arena.c' 
-        + 'test/main.c',
+        + 'test/main-misc.c',
     include_directories: includes,
     c_args: c_args
         + '-DSAXAMAPHONE_TEST')
