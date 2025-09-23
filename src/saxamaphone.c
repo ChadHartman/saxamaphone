@@ -29,6 +29,7 @@ typedef enum {
   SAX_STATE_IN_ATTR_VALUE,
   SAX_STATE_IN_COMMENT,
   SAX_STATE_IN_PROC_INST,
+  SAX_STATE_END_OF_DOC,
   SAX_STATE_ERROR,
 } sax_state_t;
 
@@ -445,28 +446,6 @@ static
 
 // --- private sax_iter_t methods --- //
 
-/// @brief Release any lingering resources
-/// @param iter instance
-static void sax_iter_close(sax_iter_t *restrict iter) {
-
-  switch (iter->type) {
-
-  case SAX_ITER_FILE:
-    if (iter->impl.file.fp) {
-      fclose(iter->impl.file.fp);
-      iter->impl.file.fp = NULL;
-    }
-
-    break;
-
-  case SAX_ITER_STR:
-    iter->impl.str.value = NULL;
-    break;
-  }
-
-  memset(iter, 0, sizeof(sax_iter_t));
-}
-
 /// @brief Retrieve the next byte value or 0 if iteration is complete (or malformed utf-8)
 /// @param iter iterator
 /// @return next byte value or 0 if completed
@@ -487,6 +466,8 @@ static uint8_t sax_iter_next_byte(sax_iter_t *restrict iter) {
       if (0 < fiter->bytes_read &&
           fiter->bytes_read < fiter->file_buffer_size) {
         // Hit eof
+        fclose(fiter->fp);
+        fiter->fp = NULL;
         return 0;
       }
 
@@ -498,6 +479,8 @@ static uint8_t sax_iter_next_byte(sax_iter_t *restrict iter) {
           fiter->fp);
 
       if (fiter->bytes_read == 0) {
+        fclose(fiter->fp);
+        fiter->fp = NULL;
         return 0;
       }
     }
@@ -532,7 +515,6 @@ static const char *sax_iter_next_glyph(sax_iter_t *restrict iter) {
 
   uint8_t byte = sax_iter_next_byte(iter);
   if (byte == 0) {
-    sax_iter_close(iter);
     return "";
   }
 
@@ -1230,10 +1212,12 @@ void sax_free(sax_parser_t *restrict parser) {
   void *alloc_ctx = parser->arena.alloc_ctx;
 
   if (parser->iter.type == SAX_ITER_FILE) {
+    if (parser->iter.impl.file.fp != NULL) {
+      fclose(parser->iter.impl.file.fp);
+    }
     alloc(alloc_ctx, parser->iter.impl.file.file_buffer, 0);
   }
 
-  sax_iter_close(&parser->iter);
   alloc(alloc_ctx, parser->arena.bytes, 0);
   memset(&parser->arena, 0, sizeof(sax_arena_t));
   alloc(alloc_ctx, parser, 0);

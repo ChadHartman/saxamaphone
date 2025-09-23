@@ -30,6 +30,10 @@ static void allocator_set(
     size_t size,
     bool live) {
 
+  if (ptr == NULL) {
+    return;
+  }
+
   allocator_item_t item = {
       .address = (uintptr_t)ptr,
       .live = live,
