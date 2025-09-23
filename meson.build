@@ -30,5 +30,13 @@ tests_obj_map = executable('saxamaphone-tests-obj-map',
     include_directories: includes,
     c_args: c_args)
 
+tests_alloc = executable('saxamaphone-tests-alloc',
+    sources: srcs 
+        + 'test/main-alloc.c',
+    include_directories: includes,
+    c_args: c_args)
+
+
+test('tests-alloc', tests_alloc)
 test('tests-misc', tests_misc)
 test('tests-obj-map', tests_obj_map)
