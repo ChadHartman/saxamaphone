@@ -5,7 +5,6 @@
 #include <stdlib.h> // EXIT_SUCCESS
 #include <string.h> // strrchr
 
-#include "arena.h"
 #include "test.h"
 #include <saxamaphone.h>
 
@@ -63,7 +62,6 @@ static int32_t sax_attr_d32(sax_parser_t *restrict parser, const char *restrict 
 }
 
 static char *map_string_node(
-    arena_t *restrict arena,
     sax_parser_t *restrict parser,
     const char *restrict tag) {
 
