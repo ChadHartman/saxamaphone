@@ -105,6 +105,10 @@ const sax_attr_t *sax_attrs(const sax_parser_t *restrict parser);
 /// @return paired value or NULL if not found
 const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict name);
 
+/// @brief Use to close out and free any resourced
+/// @param parser instance
+void sax_free(sax_parser_t *restrict parser);
+
 #ifdef SAXAMAPHONE_IMPLEMENTATION
 
 #include <ctype.h>    // isspace
@@ -1288,6 +1292,26 @@ const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict n
   }
 
   return NULL;
+}
+
+void sax_free(sax_parser_t *restrict parser) {
+
+  if (!parser) {
+    return;
+  }
+
+  if (parser->arena.alloc == NULL) {
+    // Used sax_config_t::buf
+    return;
+  }
+
+  void (*alloc)(void *, void *, size_t) = parser->arena.alloc;
+  void *alloc_ctx = parser->arena.alloc_ctx;
+
+  sax_iter_close(&parser->iter);
+  alloc(alloc_ctx, parser->arena.bytes, 0);
+  memset(&parser->arena, 0, sizeof(sax_arena_t));
+  alloc(alloc_ctx, parser, 0);
 }
 
 #endif // SAXAMAPHONE_IMPLEMENTATION
