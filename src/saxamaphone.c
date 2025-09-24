@@ -9,7 +9,6 @@
 
 // TODO: test attrvalue  startswith `&`
 // TODO: CDATA
-// TODO: memory leaks
 
 #define SAXAMAPHONE_DEBUG
 
@@ -1170,7 +1169,11 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
     }
 
   default:
-    parser->data = "Unexpected termination";
+    sax_parser_error(
+        parser,
+        "Unexpected termination at line %" PRIuFAST32 " column %" PRIuFAST32,
+        parser->line,
+        parser->column);
     return SAX_EVENT_ERROR;
   }
 }
