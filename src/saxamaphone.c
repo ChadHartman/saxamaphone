@@ -1161,7 +1161,18 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
     }
   }
 
-  return SAX_EVENT_END_DOCUMENT;
+  switch (parser->state) {
+
+  case SAX_STATE_INIT:
+  case SAX_STATE_IN_CONTENT:
+    if (sax_str_empty(parser->data)) {
+      return SAX_EVENT_END_DOCUMENT;
+    }
+
+  default:
+    parser->data = "Unexpected termination";
+    return SAX_EVENT_ERROR;
+  }
 }
 
 const char *sax_error(const sax_parser_t *restrict parser) {
