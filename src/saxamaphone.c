@@ -534,11 +534,18 @@ static const char *sax_iter_next_glyph(sax_iter_t *restrict iter) {
 /// @brief Reset parser to parse a new XML tag
 /// @param parser instance
 static void sax_parser_reset(sax_parser_t *restrict parser) {
-  parser->data = NULL;
+
+  // SAX_STATE_CLOSING_START_TAG is a special case: "<foo/" - sends a start
+  //   tag event and the '>' sends an end tag event with the same tag name;
+  //   so we don't want to reset in this case
+  if (parser->state != SAX_STATE_CLOSING_START_TAG) {
+    parser->data = NULL;
+    parser->arena.offset = 0;
+  }
+
   parser->attrs = NULL;
   parser->current_attr = NULL;
   parser->escaped = NULL;
-  parser->arena.offset = 0;
 }
 
 /// @brief Set the parser's new state
@@ -1076,7 +1083,7 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
 
   sax_event_t ev = 0;
 
-  // Reset state
+  // Reset state for next node
   sax_parser_reset(parser);
 
   for (const char *restrict glyph = sax_iter_next_glyph(&parser->iter);
