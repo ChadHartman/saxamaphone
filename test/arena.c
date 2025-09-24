@@ -22,9 +22,11 @@ void *arena_alloc(arena_t *restrict arena, size_t bytes) {
   assert(arena);
   assert(bytes > 0);
 
-  if (arena->offset + bytes <= arena->size) {
-    void *restrict ptr = arena->bytes + arena->offset;
-    arena->offset += bytes;
+  if (arena->offset + bytes + sizeof(size_t) <= arena->size) {
+    uint8_t *restrict ptr = arena->bytes + arena->offset;
+    memcpy(ptr, &bytes, sizeof(size_t));
+    ptr += sizeof(size_t);
+    arena->offset += bytes + sizeof(size_t);
     memset(ptr, 0, bytes);
     return ptr;
   }
@@ -83,4 +85,26 @@ void arena_free(arena_t *restrict arena) {
 
   arena_free(arena->upstream);
   free(arena->bytes);
+}
+
+void *arena_custom_alloc(void *ctx, void *ptr, size_t size) {
+
+  if (size == 0) {
+    return NULL;
+  }
+
+  if (ptr == NULL) {
+    return arena_alloc(ctx, size);
+  }
+
+  const uint8_t *block = ptr;
+  const size_t *block_size = (const void *)(block - sizeof(size_t));
+
+  if (*block_size >= size) {
+    return ptr;
+  }
+
+  void *new_ptr = arena_alloc(ctx, size);
+  memcpy(new_ptr, ptr, *block_size);
+  return new_ptr;
 }

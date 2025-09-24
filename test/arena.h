@@ -18,4 +18,6 @@ void arena_reset(arena_t *restrict arena);
 
 void arena_free(arena_t *restrict arena);
 
+void *arena_custom_alloc(void *ctx, void *ptr, size_t size);
+
 #endif

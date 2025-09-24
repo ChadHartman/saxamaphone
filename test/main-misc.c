@@ -9,7 +9,7 @@
 #include "test.h"
 #include <saxamaphone.h>
 
-#define TEST_DECL(test_name) test_##test_name(void)
+#define TEST_DECL(test_name) test_##test_name(arena_t *restrict arena)
 #define TEST_REG(test_name) {.name = #test_name, .func = test_##test_name}
 
 // === forward declares === //
@@ -19,12 +19,16 @@ char *sax_str_trim(char *str);
 
 // === utilities === //
 
-static const char *xml_parse_content(const char *restrict content) {
+static const char *xml_parse_content(
+    arena_t *restrict arena,
+    const char *restrict content) {
 
   char xml[1024];
   snprintf(xml, sizeof(xml), "<content>%s</content>", content);
 
   sax_parser_t *parser = sax_parser(&(sax_config_t){
+      .alloc = arena_custom_alloc,
+      .alloc_ctx = arena,
       .string = xml,
   });
 
@@ -35,12 +39,16 @@ static const char *xml_parse_content(const char *restrict content) {
   return sax_content(parser);
 }
 
-static const char *xml_parse_attr_val(const char *restrict attr_val) {
+static const char *xml_parse_attr_val(
+    arena_t *restrict arena,
+    const char *restrict attr_val) {
 
   char xml[1024];
   snprintf(xml, sizeof(xml), "<content name=\"%s\"/>", attr_val);
 
   sax_parser_t *parser = sax_parser(&(sax_config_t){
+      .alloc = arena_custom_alloc,
+      .alloc_ctx = arena,
       .string = xml,
   });
 
@@ -52,31 +60,34 @@ static const char *xml_parse_attr_val(const char *restrict attr_val) {
 
   ASSERT_EQ(SAX_EVENT_START_TAG, ev);
   ASSERT_STR_EQ("content", sax_tag(parser));
-  return sax_attr(parser, "name");
+
+  const char *restrict attr = arena_strdup(arena, sax_attr(parser, "name"));
+  sax_free(parser);
+  return attr;
 }
 
 // === test cases === //
 
 static void TEST_DECL(attr_val) {
-  ASSERT_STR_EQ("foo", xml_parse_attr_val("foo"));
-  ASSERT_STR_EQ("\tfoo", xml_parse_attr_val("\tfoo"));
-  ASSERT_STR_EQ("foo\n", xml_parse_attr_val("foo\n"));
-  ASSERT_STR_EQ("\t foo \n", xml_parse_attr_val("\t foo \n"));
-
-  ASSERT_STR_EQ("中", xml_parse_attr_val("中"));
-  ASSERT_STR_EQ("\t中", xml_parse_attr_val("\t中"));
-  ASSERT_STR_EQ("中\n", xml_parse_attr_val("中\n"));
-  ASSERT_STR_EQ("\t 中 \n", xml_parse_attr_val("\t 中 \n"));
-
-  ASSERT_STR_EQ("😀", xml_parse_attr_val("&#128512;"));
-  ASSERT_STR_EQ("\t😀", xml_parse_attr_val("\t&#128512;"));
-  ASSERT_STR_EQ("😀\n", xml_parse_attr_val("&#128512;\n"));
-  ASSERT_STR_EQ("\t 😀 \n", xml_parse_attr_val("\t &#128512; \n"));
+  ASSERT_STR_EQ("foo", xml_parse_attr_val(arena, "foo"));
+  ASSERT_STR_EQ("\tfoo", xml_parse_attr_val(arena, "\tfoo"));
+  ASSERT_STR_EQ("foo\n", xml_parse_attr_val(arena, "foo\n"));
+  ASSERT_STR_EQ("\t foo \n", xml_parse_attr_val(arena, "\t foo \n"));
+  ASSERT_STR_EQ("中", xml_parse_attr_val(arena, "中"));
+  ASSERT_STR_EQ("\t中", xml_parse_attr_val(arena, "\t中"));
+  ASSERT_STR_EQ("中\n", xml_parse_attr_val(arena, "中\n"));
+  ASSERT_STR_EQ("\t 中 \n", xml_parse_attr_val(arena, "\t 中 \n"));
+  ASSERT_STR_EQ("😀", xml_parse_attr_val(arena, "&#128512;"));
+  ASSERT_STR_EQ("\t😀", xml_parse_attr_val(arena, "\t&#128512;"));
+  ASSERT_STR_EQ("😀\n", xml_parse_attr_val(arena, "&#128512;\n"));
+  ASSERT_STR_EQ("\t 😀 \n", xml_parse_attr_val(arena, "\t &#128512; \n"));
 }
 
 static void TEST_DECL(comment) {
 
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .alloc = arena_custom_alloc,
+      .alloc_ctx = arena,
       .string = "<!-- <hello, world!> -->",
   });
 
@@ -88,6 +99,8 @@ static void TEST_DECL(comment) {
 static void TEST_DECL(empty_element_tag) {
 
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .alloc = arena_custom_alloc,
+      .alloc_ctx = arena,
       .string = "<foo/>",
   });
 
@@ -104,6 +117,8 @@ static void TEST_DECL(empty_element_tag) {
 
 static void TEST_DECL(unescape) {
 
+  (void)arena;
+
   char buf[5];
   ASSERT_STR_EQ("foo", sax_str_unescape("foo", buf));
   ASSERT_STR_EQ("<", sax_str_unescape("&lt;", buf));
@@ -114,6 +129,8 @@ static void TEST_DECL(unescape) {
 }
 
 static void TEST_DECL(unescape10) {
+
+  (void)arena;
 
   char buf[5];
   ASSERT_STR_EQ("A", sax_str_unescape("&#65;", buf));
@@ -136,6 +153,8 @@ static void TEST_DECL(unescape10) {
 
 static void TEST_DECL(unescape16) {
 
+  (void)arena;
+
   char buf[5];
   ASSERT_STR_EQ("A", sax_str_unescape("&#x41;", buf));
   ASSERT_STR_EQ("a", sax_str_unescape("&#x61;", buf));
@@ -156,14 +175,16 @@ static void TEST_DECL(unescape16) {
 }
 
 static void TEST_DECL(content) {
-  ASSERT_STR_EQ("Foo Bar", xml_parse_content("   Foo Bar   \n"));
-  ASSERT_STR_EQ("😀", xml_parse_content("&#x1f600;"));
-  ASSERT_STR_EQ("🌸", xml_parse_content("    \t  &#x1f338;"));
-  ASSERT_STR_EQ("🎵", xml_parse_content("&#x1f3b5;    \t  \n"));
-  ASSERT_STR_EQ("🚀", xml_parse_content("\t   \r\n   &#x1f680;  \t  \n"));
+  ASSERT_STR_EQ("Foo Bar", xml_parse_content(arena, "   Foo Bar   \n"));
+  ASSERT_STR_EQ("😀", xml_parse_content(arena, "&#x1f600;"));
+  ASSERT_STR_EQ("🌸", xml_parse_content(arena, "    \t  &#x1f338;"));
+  ASSERT_STR_EQ("🎵", xml_parse_content(arena, "&#x1f3b5;    \t  \n"));
+  ASSERT_STR_EQ("🚀", xml_parse_content(arena, "\t   \r\n   &#x1f680;  \t  \n"));
 }
 
 static void TEST_DECL(trim) {
+
+  (void)arena;
 
   char buf[1024];
 
@@ -189,7 +210,7 @@ int main(int argc, char **args) {
 
   typedef struct test_t {
     const char *name;
-    void (*func)(void);
+    void (*func)(arena_t *restrict);
   } test_t;
 
   const test_t tests[] = {
@@ -205,19 +226,28 @@ int main(int argc, char **args) {
   };
   const size_t count = sizeof(tests) / sizeof(test_t);
 
+  // Run all tests
   if (argc == 1) {
+
+    arena_t *arena = arena_create();
+
     for (size_t i = 0; i < count; ++i) {
       TEST(tests[i].name);
-      tests[i].func();
+      tests[i].func(arena);
+      arena_reset(arena);
     }
+
+    arena_free(arena);
     return EXIT_SUCCESS;
   }
 
+  // Help
   if (strcmp("-h", args[1]) == 0) {
     printf("Usage: %s [-h] [-l] [<test-name>]\n", args[0]);
     return EXIT_SUCCESS;
   }
 
+  // List tests
   if (strcmp("-l", args[1]) == 0) {
 
     for (size_t i = 0; i < count; ++i) {
@@ -226,10 +256,13 @@ int main(int argc, char **args) {
     return EXIT_SUCCESS;
   }
 
+  // Run specific test
   for (size_t i = 0; i < count; ++i) {
     if (strcmp(tests[i].name, args[1]) == 0) {
       TEST(tests[i].name);
-      tests[i].func();
+      arena_t *restrict arena = arena_create();
+      tests[i].func(arena);
+      arena_free(arena);
       return EXIT_SUCCESS;
     }
   }
