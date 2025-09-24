@@ -73,7 +73,7 @@ static char *map_string_node(
     return NULL;
   }
 
-  char *restrict value = arena_strdup(arena, sax_content(parser));
+  char *restrict value = arena_copy(arena, sax_content(parser));
   LOG("Mapped \"%s\" value \"%s\"\n", tag, value);
 
   if (sax_next_is(parser, SAX_EVENT_END_TAG, tag)) {
@@ -122,7 +122,7 @@ static bool map_prog_lang(
     prog_lang_t *restrict out) {
 
   // In <language>
-  out->name = arena_strdup(arena, sax_attr(parser, "name"));
+  out->name = arena_copy(arena, sax_attr(parser, "name"));
   out->first_appeared = sax_attr_d32(parser, "first-appeared");
 
   for (sax_event_t ev = sax_next(parser);

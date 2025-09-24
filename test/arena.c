@@ -11,6 +11,16 @@ struct arena_t {
   struct arena_t *upstream;
 };
 
+static size_t arena_allocation_size(const void *restrict ptr) {
+  if (ptr == NULL) {
+    return 0;
+  }
+
+  const uint8_t *block = ptr;
+  const size_t *block_size = (const void *)(block - sizeof(size_t));
+  return *block_size;
+}
+
 arena_t *arena_create() {
   arena_t *restrict arena = calloc(1, sizeof(arena_t));
   assert(arena);
@@ -45,26 +55,18 @@ void *arena_alloc(arena_t *restrict arena, size_t bytes) {
   return arena_alloc(arena->upstream, bytes);
 }
 
-void *arena_copy(arena_t *restrict arena, const void *restrict src, size_t bytes) {
-
-  if (src == NULL || bytes == 0) {
-    return NULL;
-  }
+void *arena_copy(arena_t *restrict arena, const void *restrict src) {
 
   assert(arena);
-  void *restrict copy = arena_alloc(arena, bytes);
-  memcpy(copy, src, bytes);
-  return copy;
-}
 
-void *arena_strdup(arena_t *restrict arena, const char *restrict src) {
-
-  if (src == NULL) {
+  const size_t block_size = arena_allocation_size(src);
+  if (block_size == 0) {
     return NULL;
   }
 
-  const size_t bytes = strlen(src) + 1;
-  return arena_copy(arena, src, bytes);
+  void *restrict copy = arena_alloc(arena, block_size);
+  memcpy(copy, src, block_size);
+  return copy;
 }
 
 void arena_reset(arena_t *restrict arena) {
@@ -97,14 +99,12 @@ void *arena_custom_alloc(void *ctx, void *ptr, size_t size) {
     return arena_alloc(ctx, size);
   }
 
-  const uint8_t *block = ptr;
-  const size_t *block_size = (const void *)(block - sizeof(size_t));
-
-  if (*block_size >= size) {
+  const size_t block_size = arena_allocation_size(ptr);
+  if (block_size >= size) {
     return ptr;
   }
 
   void *new_ptr = arena_alloc(ctx, size);
-  memcpy(new_ptr, ptr, *block_size);
+  memcpy(new_ptr, ptr, block_size);
   return new_ptr;
 }

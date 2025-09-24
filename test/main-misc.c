@@ -61,7 +61,7 @@ static const char *xml_parse_attr_val(
   ASSERT_EQ(SAX_EVENT_START_TAG, ev);
   ASSERT_STR_EQ("content", sax_tag(parser));
 
-  const char *restrict attr = arena_strdup(arena, sax_attr(parser, "name"));
+  const char *restrict attr = arena_copy(arena, sax_attr(parser, "name"));
   sax_free(parser);
   return attr;
 }
