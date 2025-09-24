@@ -57,6 +57,19 @@ static const char *xml_parse_attr_val(const char *restrict attr_val) {
 
 static void TEST_DECL(attr_val) {
   ASSERT_STR_EQ("foo", xml_parse_attr_val("foo"));
+  ASSERT_STR_EQ("\tfoo", xml_parse_attr_val("\tfoo"));
+  ASSERT_STR_EQ("foo\n", xml_parse_attr_val("foo\n"));
+  ASSERT_STR_EQ("\t foo \n", xml_parse_attr_val("\t foo \n"));
+
+  ASSERT_STR_EQ("中", xml_parse_attr_val("中"));
+  ASSERT_STR_EQ("\t中", xml_parse_attr_val("\t中"));
+  ASSERT_STR_EQ("中\n", xml_parse_attr_val("中\n"));
+  ASSERT_STR_EQ("\t 中 \n", xml_parse_attr_val("\t 中 \n"));
+
+  ASSERT_STR_EQ("😀", xml_parse_attr_val("&#128512;"));
+  ASSERT_STR_EQ("\t😀", xml_parse_attr_val("\t&#128512;"));
+  ASSERT_STR_EQ("😀\n", xml_parse_attr_val("&#128512;\n"));
+  ASSERT_STR_EQ("\t 😀 \n", xml_parse_attr_val("\t &#128512; \n"));
 }
 
 static void TEST_DECL(unescape) {
