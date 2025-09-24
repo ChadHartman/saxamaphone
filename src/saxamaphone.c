@@ -776,7 +776,7 @@ static sax_event_t sax_parser_state_start_tag_space(sax_parser_t *restrict parse
 static sax_event_t sax_parser_state_closing_start_tag(sax_parser_t *restrict parser, const char *glyph) {
 
   if (glyph[0] == '>') {
-    // TODO: tag name
+    sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     return SAX_EVENT_END_ELEMENT;
   }
 
