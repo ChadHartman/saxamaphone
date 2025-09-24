@@ -111,9 +111,14 @@
 
 #define ASSERT_STRN_EQ(expected, computed, len)                           \
   {                                                                       \
+    bool passed = false;                                                  \
     const char *lhs = expected;                                           \
     const char *rhs = computed;                                           \
-    const bool passed = strncmp(lhs, rhs, len) == 0;                      \
+    if (lhs == NULL || rhs == NULL) {                                     \
+      passed = lhs == rhs;                                                \
+    } else {                                                              \
+      passed = strcmp(lhs, rhs) == 0;                                     \
+    }                                                                     \
     printf("%s:%d: %s" COLOR_RESET "\n",                                  \
            (strrchr(__FILE__, '/') + 1),                                  \
            __LINE__,                                                      \
