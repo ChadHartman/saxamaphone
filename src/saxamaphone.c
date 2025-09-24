@@ -552,6 +552,24 @@ static void sax_parser_reset(sax_parser_t *restrict parser) {
 /// @param parser instance
 /// @param state new
 static void sax_parser_state(sax_parser_t *restrict parser, sax_state_t state) {
+  static const char *states[] = {
+      "SAX_STATE_INIT",
+      "SAX_STATE_IN_TAG",
+      "SAX_STATE_IN_START_TAG",
+      "SAX_STATE_CLOSING_START_TAG",
+      "SAX_STATE_ASSIGNING_ATTR_VALUE",
+      "SAX_STATE_IN_ESC_CHAR",
+      "SAX_STATE_IN_CONTENT",
+      "SAX_STATE_IN_END_TAG",
+      "SAX_STATE_START_TAG_SPACE",
+      "SAX_STATE_IN_ATTR_NAME",
+      "SAX_STATE_IN_ATTR_VALUE",
+      "SAX_STATE_IN_COMMENT",
+      "SAX_STATE_IN_PROC_INST",
+      "SAX_STATE_END_OF_DOC",
+      "SAX_STATE_ERROR",
+  };
+  SAXAMAPHONE_LOG("Transitioning state %s -> %s\n", states[parser->state], states[state]);
   parser->prev_state = parser->state;
   parser->state = state;
 }
@@ -688,10 +706,21 @@ static sax_event_t sax_parser_state_in_escaped_char(sax_parser_t *restrict parse
 
     sax_parser_state(parser, parser->prev_state);
     char unesc[5];
-    sax_event_t ev = sax_parser_append(
-        parser,
-        &parser->data,
-        sax_str_unescape(parser->escaped, unesc));
+    sax_event_t ev;
+    if (parser->state == SAX_STATE_IN_CONTENT) {
+      ev = sax_parser_append(
+          parser,
+          &parser->data,
+          sax_str_unescape(parser->escaped, unesc));
+    } else if (parser->state == SAX_STATE_IN_ATTR_VALUE) {
+      ev = sax_parser_append(
+          parser,
+          &parser->current_attr->value,
+          sax_str_unescape(parser->escaped, unesc));
+    } else {
+      sax_parser_error(parser, "Unreachable section reached");
+      ev = SAX_EVENT_ERROR;
+    }
     parser->escaped = NULL;
     return ev;
 
