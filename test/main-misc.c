@@ -5,6 +5,7 @@
 #include <stdlib.h> // EXIT_SUCCESS
 #include <string.h> // strrchr
 
+#include "arena.h"
 #include "test.h"
 #include <saxamaphone.h>
 

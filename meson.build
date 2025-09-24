@@ -8,33 +8,30 @@ else
     c_args = ['-Wall', '-Wextra', '-Werror']
 endif
 
-includes =  include_directories(['include', 'src'])
-srcs = [
-    'src/saxamaphone.c'
-]
-
-# === Tests === #
-
 tests_misc = executable('saxamaphone-tests',
-    sources: srcs 
-        + 'test/main-misc.c',
-    include_directories: includes,
+    sources: [
+        'src/saxamaphone.c',
+        'test/arena.c', 
+        'test/main-misc.c'],
+    include_directories: include_directories(['include', 'src']),
     c_args: c_args
         + '-DSAXAMAPHONE_TEST'
         # + '-DSAXAMAPHONE_DEBUG'
     )
 
 tests_obj_map = executable('saxamaphone-tests-obj-map',
-    sources: srcs 
-        + 'test/arena.c' 
-        + 'test/main-obj-map.c',
-    include_directories: includes,
+    sources: [
+        'src/saxamaphone.c',
+        'test/arena.c',
+        'test/main-obj-map.c'],
+    include_directories: include_directories(['include', 'src']),
     c_args: c_args)
 
 tests_alloc = executable('saxamaphone-tests-alloc',
-    sources: srcs 
-        + 'test/main-alloc.c',
-    include_directories: includes,
+    sources: [
+        'src/saxamaphone.c',
+        'test/main-alloc.c'],
+    include_directories: include_directories(['include', 'src']),
     c_args: c_args)
 
 
