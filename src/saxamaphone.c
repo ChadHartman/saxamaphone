@@ -707,12 +707,12 @@ static sax_event_t sax_parser_state_in_start_tag(sax_parser_t *restrict parser, 
   case '/':
     SAXAMAPHONE_LOG("Parsed tag \"%s\"\n", parser->data);
     sax_parser_state(parser, SAX_STATE_CLOSING_START_TAG);
-    return SAX_EVENT_START_ELEMENT;
+    return SAX_EVENT_START_TAG;
 
   case '>':
     SAXAMAPHONE_LOG("Parsed tag \"%s\"\n", parser->data);
     sax_parser_state(parser, SAX_STATE_IN_CONTENT);
-    return SAX_EVENT_START_ELEMENT;
+    return SAX_EVENT_START_TAG;
 
   case SAXAMAPHONE_SPACE:
     if (parser->data == NULL || strlen(parser->data) == 0) {
@@ -738,11 +738,11 @@ static sax_event_t sax_parser_state_start_tag_space(sax_parser_t *restrict parse
 
   case '>':
     sax_parser_state(parser, SAX_STATE_IN_CONTENT);
-    return SAX_EVENT_START_ELEMENT;
+    return SAX_EVENT_START_TAG;
 
   case '/':
     sax_parser_state(parser, SAX_STATE_CLOSING_START_TAG);
-    return SAX_EVENT_START_ELEMENT;
+    return SAX_EVENT_START_TAG;
 
   case SAXAMAPHONE_SPACE:
     // noop
@@ -777,7 +777,7 @@ static sax_event_t sax_parser_state_closing_start_tag(sax_parser_t *restrict par
 
   if (glyph[0] == '>') {
     sax_parser_state(parser, SAX_STATE_IN_CONTENT);
-    return SAX_EVENT_END_ELEMENT;
+    return SAX_EVENT_END_TAG;
   }
 
   return sax_parser_error_unexpected_glyph(parser, glyph);
@@ -837,7 +837,7 @@ static sax_event_t sax_parser_state_in_end_tag(sax_parser_t *restrict parser, co
       return SAX_EVENT_ERROR;
     }
     sax_parser_state(parser, SAX_STATE_IN_CONTENT);
-    return SAX_EVENT_END_ELEMENT;
+    return SAX_EVENT_END_TAG;
 
   case SAXAMAPHONE_SPACE:
     sax_parser_error_unexpected_glyph(parser, glyph);
@@ -861,7 +861,7 @@ static sax_event_t sax_parser_state_in_attr_name(sax_parser_t *restrict parser, 
     SAXAMAPHONE_LOG("Parsed attr name \"%s\"\n", parser->current_attr->name);
     parser->current_attr = NULL;
     sax_parser_state(parser, SAX_STATE_IN_CONTENT);
-    return SAX_EVENT_START_ELEMENT;
+    return SAX_EVENT_START_TAG;
 
   case SAXAMAPHONE_SPACE:
     SAXAMAPHONE_LOG("Parsed attr name \"%s\"\n", parser->current_attr->name);

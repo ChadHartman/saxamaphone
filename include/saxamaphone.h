@@ -7,9 +7,9 @@
 
 /// @brief Possible Saxamaphone event types
 typedef enum {
-  SAX_EVENT_START_ELEMENT = 1,
+  SAX_EVENT_START_TAG = 1,
   SAX_EVENT_CONTENT,
-  SAX_EVENT_END_ELEMENT,
+  SAX_EVENT_END_TAG,
   SAX_EVENT_END_DOCUMENT,
   SAX_EVENT_ERROR,
 } sax_event_t;
@@ -82,8 +82,8 @@ sax_event_t sax_next(sax_parser_t *restrict parser);
 /// @return non-NULL the error string message or "" if not in error state
 const char *sax_error(const sax_parser_t *restrict parser);
 
-/// @brief Retrieve the tag for events @see SAX_EVENT_START_ELEMENT or
-///   @see SAX_EVENT_END_ELEMENT
+/// @brief Retrieve the tag for events @see SAX_EVENT_START_TAG or
+///   @see SAX_EVENT_END_TAG
 /// @param parser instance
 /// @return  non-NULL tag name or "" if incorrect event
 const char *sax_tag(const sax_parser_t *restrict parser);
@@ -93,7 +93,7 @@ const char *sax_tag(const sax_parser_t *restrict parser);
 /// @return non-NULL content or "" if incorrect event
 const char *sax_content(const sax_parser_t *restrict parser);
 
-/// @brief Retrieve the XML attributes for the @see SAX_EVENT_START_ELEMENT
+/// @brief Retrieve the XML attributes for the @see SAX_EVENT_START_TAG
 ///   event
 /// @param parser instance
 /// @return NULLable attribute linked list

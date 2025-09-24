@@ -76,7 +76,7 @@ static char *map_string_node(
   char *restrict value = arena_strdup(arena, sax_content(parser));
   LOG("Mapped \"%s\" value \"%s\"\n", tag, value);
 
-  if (sax_next_is(parser, SAX_EVENT_END_ELEMENT, tag)) {
+  if (sax_next_is(parser, SAX_EVENT_END_TAG, tag)) {
     return value;
   }
 
@@ -97,13 +97,13 @@ static bool map_string_nodes(
        ev != SAX_EVENT_END_DOCUMENT && ev != SAX_EVENT_ERROR;
        ev = sax_next(parser)) {
 
-    if (ev == SAX_EVENT_START_ELEMENT && sax_tag_is(parser, tag)) {
+    if (ev == SAX_EVENT_START_TAG && sax_tag_is(parser, tag)) {
       nodes[node_offset++] = map_string_node(arena, parser, tag);
       if (!nodes[node_offset - 1]) {
         return false;
       }
 
-    } else if (ev == SAX_EVENT_END_ELEMENT && sax_tag_is(parser, collection_tag)) {
+    } else if (ev == SAX_EVENT_END_TAG && sax_tag_is(parser, collection_tag)) {
       return true;
 
     } else {
@@ -129,7 +129,7 @@ static bool map_prog_lang(
        ev != SAX_EVENT_END_DOCUMENT && ev != SAX_EVENT_ERROR;
        ev = sax_next(parser)) {
 
-    if (ev == SAX_EVENT_END_ELEMENT && sax_tag_is(parser, "language")) {
+    if (ev == SAX_EVENT_END_TAG && sax_tag_is(parser, "language")) {
       return true;
     }
 
@@ -168,7 +168,7 @@ int main() {
   sax_parser_t *parser = sax_parser(&(sax_config_t){
       .path = "../test/files/programming-languages.xml",
   });
-  ASSERT_EQ(SAX_EVENT_START_ELEMENT, sax_next(parser));
+  ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
   ASSERT_STR_EQ("programming-languages", sax_tag(parser));
 
   prog_lang_t langs[8] = {0};
@@ -178,12 +178,12 @@ int main() {
        ev != SAX_EVENT_END_DOCUMENT && ev != SAX_EVENT_ERROR;
        ev = sax_next(parser)) {
 
-    if (ev == SAX_EVENT_START_ELEMENT && sax_tag_is(parser, "language")) {
+    if (ev == SAX_EVENT_START_TAG && sax_tag_is(parser, "language")) {
       if (!map_prog_lang(arena, parser, &langs[lang_offset++])) {
         FAIL("Failed to map language");
       }
 
-    } else if (ev == SAX_EVENT_END_ELEMENT && sax_tag_is(parser, "programming-languages")) {
+    } else if (ev == SAX_EVENT_END_TAG && sax_tag_is(parser, "programming-languages")) {
       break;
     } else {
       FAIL("Unexpected tag \"%s\"", sax_tag(parser));

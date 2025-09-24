@@ -28,7 +28,7 @@ static const char *xml_parse_content(const char *restrict content) {
   });
 
   // <content>
-  ASSERT_EQ(SAX_EVENT_START_ELEMENT, sax_next(parser));
+  ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
   // ...
   ASSERT_EQ(SAX_EVENT_CONTENT, sax_next(parser));
   return sax_content(parser);
@@ -49,7 +49,7 @@ static const char *xml_parse_attr_val(const char *restrict attr_val) {
     return NULL;
   }
 
-  ASSERT_EQ(SAX_EVENT_START_ELEMENT, ev);
+  ASSERT_EQ(SAX_EVENT_START_TAG, ev);
   ASSERT_STR_EQ("content", sax_tag(parser));
   return sax_attr(parser, "name");
 }
@@ -79,10 +79,10 @@ static void TEST_DECL(empty_element_tag) {
       .string = "<foo/>",
   });
 
-  ASSERT_EQ(SAX_EVENT_START_ELEMENT, sax_next(parser));
+  ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
   ASSERT_STR_EQ("foo", sax_tag(parser));
   ASSERT_NULL(sax_attrs(parser));
-  ASSERT_EQ(SAX_EVENT_END_ELEMENT, sax_next(parser));
+  ASSERT_EQ(SAX_EVENT_END_TAG, sax_next(parser));
   ASSERT_STR_EQ("foo", sax_tag(parser));
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
