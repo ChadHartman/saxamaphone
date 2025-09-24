@@ -62,7 +62,7 @@ char *arena_strdup(arena_t *restrict arena, const char *restrict src) {
     return NULL;
   }
 
-  const size_t size = strlen(src + 1);
+  const size_t size = strlen(src) + 1;
   char *restrict copy = arena_alloc(arena, size);
   memcpy(copy, src, size);
   return copy;
