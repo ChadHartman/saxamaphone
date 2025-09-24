@@ -7,27 +7,85 @@
 
 #include <saxamaphone.h>
 
+// TODO: parse proc inst
 // TODO: CDATA
 
 // === typedefs === //
 
 typedef enum {
+  /// @brief Initial position
   SAX_STATE_INIT,
+
+  /// @brief '<' found
   SAX_STATE_IN_TAG,
+
+  /// @brief '<' + non-control character
   SAX_STATE_IN_START_TAG,
+
+  /// @brief '/' found within start tag
   SAX_STATE_CLOSING_START_TAG,
+
+  /// @brief '=' found after parsing attr name
   SAX_STATE_ASSIGNING_ATTR_VALUE,
+
+  /// @brief '&' found in attr_value and content
   SAX_STATE_IN_ESC_CHAR,
+
+  /// @brief Characters found between '>' and '<'
   SAX_STATE_IN_CONTENT,
+
+  /// @brief '<' + '/'
   SAX_STATE_IN_END_TAG,
+
+  /// @brief Space after `<foo `, `<foo attr `, or `<foo attr="value"`
   SAX_STATE_START_TAG_SPACE,
+
+  /// @brief `<foo ` + non-control character
   SAX_STATE_IN_ATTR_NAME,
+
+  /// @brief `<foo name="`
   SAX_STATE_IN_ATTR_VALUE,
+
+  /// @brief '<' followed by '!'
+  SAX_STATE_CDATA_OR_COMMENT,
+
+  /// @brief `<` followed by `!`
   SAX_STATE_IN_COMMENT,
+
+  /// @brief `<[CDATA[`
+  SAX_STATE_IN_CDATA,
+
+  /// @brief '<' followed by '?'
   SAX_STATE_IN_PROC_INST,
+
+  /// @brief Iterator returns 0 for character
   SAX_STATE_END_OF_DOC,
+
+  /// @brief Fallback state for unexpected input
   SAX_STATE_ERROR,
 } sax_state_t;
+
+#ifdef SAXAMAPHONE_DEBUG
+static const char *SAXAMAPHONE_STATES[] = {
+    "SAX_STATE_INIT",
+    "SAX_STATE_IN_TAG",
+    "SAX_STATE_IN_START_TAG",
+    "SAX_STATE_CLOSING_START_TAG",
+    "SAX_STATE_ASSIGNING_ATTR_VALUE",
+    "SAX_STATE_IN_ESC_CHAR",
+    "SAX_STATE_IN_CONTENT",
+    "SAX_STATE_IN_END_TAG",
+    "SAX_STATE_START_TAG_SPACE",
+    "SAX_STATE_IN_ATTR_NAME",
+    "SAX_STATE_IN_ATTR_VALUE",
+    "SAX_STATE_CDATA_OR_COMMENT",
+    "SAX_STATE_IN_COMMENT",
+    "SAX_STATE_IN_CDATA",
+    "SAX_STATE_IN_PROC_INST",
+    "SAX_STATE_END_OF_DOC",
+    "SAX_STATE_ERROR",
+};
+#endif
 
 typedef enum {
   SAX_ITER_FILE,
@@ -208,6 +266,22 @@ static const char *sax_long_to_code_pt(long value, char *restrict buf) {
   }
 
   return buf;
+}
+
+/// @brief NULL-safe string comparison
+/// @return true if the strings are equal
+static bool sax_str_eq(const char *restrict lhs, const char *restrict rhs) {
+  if (lhs == NULL || rhs == NULL) {
+    return lhs == rhs;
+  }
+  return strcmp(lhs, rhs) == 0;
+}
+
+/// @brief NULL-safe string length testing utility
+/// @param s string to test
+/// @return -1 if s is NULL, the length in bytes (excluding NULL-term) otherwise
+static int_fast32_t sax_strlen(const char *restrict s) {
+  return s == NULL ? -1 : strlen(s);
 }
 
 /// @brief Test whether a string starts with another string
@@ -550,26 +624,10 @@ static void sax_parser_reset(sax_parser_t *restrict parser) {
 /// @param state new
 static void sax_parser_state(sax_parser_t *restrict parser, sax_state_t state) {
 
-#ifdef SAXAMAPHONE_DEBUG
-  static const char *states[] = {
-      "SAX_STATE_INIT",
-      "SAX_STATE_IN_TAG",
-      "SAX_STATE_IN_START_TAG",
-      "SAX_STATE_CLOSING_START_TAG",
-      "SAX_STATE_ASSIGNING_ATTR_VALUE",
-      "SAX_STATE_IN_ESC_CHAR",
-      "SAX_STATE_IN_CONTENT",
-      "SAX_STATE_IN_END_TAG",
-      "SAX_STATE_START_TAG_SPACE",
-      "SAX_STATE_IN_ATTR_NAME",
-      "SAX_STATE_IN_ATTR_VALUE",
-      "SAX_STATE_IN_COMMENT",
-      "SAX_STATE_IN_PROC_INST",
-      "SAX_STATE_END_OF_DOC",
-      "SAX_STATE_ERROR",
-  };
-  SAXAMAPHONE_LOG("Transitioning state %s -> %s\n", states[parser->state], states[state]);
-#endif
+  SAXAMAPHONE_LOG("Transitioning state %s -> %s\n",
+                  SAXAMAPHONE_STATES[parser->state],
+                  SAXAMAPHONE_STATES[state]);
+
   parser->prev_state = parser->state;
   parser->state = state;
 }
@@ -677,8 +735,7 @@ static sax_event_t sax_parser_state_in_tag(sax_parser_t *restrict parser, const 
     break;
 
   case '!':
-    // TODO: CDATA
-    sax_parser_state(parser, SAX_STATE_IN_COMMENT);
+    sax_parser_state(parser, SAX_STATE_CDATA_OR_COMMENT);
     break;
 
   default:
@@ -693,6 +750,38 @@ static sax_event_t sax_parser_state_in_tag(sax_parser_t *restrict parser, const 
   }
 
   return 0;
+}
+
+static sax_event_t sax_parser_state_cdata_or_comment(sax_parser_t *restrict parser, const char *glyph) {
+
+  switch (glyph[0]) {
+  case '-':
+    if (sax_str_eq("-", parser->data)) {
+      sax_parser_state(parser, SAX_STATE_IN_COMMENT);
+      return 0;
+    }
+
+    return sax_parser_append(parser, &parser->data, glyph);
+
+  case '[':
+    if (sax_str_eq("[CDATA", parser->data)) {
+      sax_parser_state(parser, SAX_STATE_IN_CDATA);
+      return 0;
+    }
+  case 'C':
+  case 'D':
+  case 'A':
+  case 'T':
+    if (sax_strlen(parser->data) >= 6) {
+      // [CDATA was scrambled somehow
+      return sax_parser_error_unexpected_glyph(parser, glyph);
+    }
+
+    return sax_parser_append(parser, &parser->data, glyph);
+
+  default:
+    return sax_parser_error_unexpected_glyph(parser, glyph);
+  }
 }
 
 static sax_event_t sax_parser_state_in_escaped_char(sax_parser_t *restrict parser, const char *glyph) {
@@ -1135,6 +1224,10 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
 
     case SAX_STATE_IN_START_TAG:
       ev = sax_parser_state_in_start_tag(parser, glyph);
+      break;
+
+    case SAX_STATE_CDATA_OR_COMMENT:
+      ev = sax_parser_state_cdata_or_comment(parser, glyph);
       break;
 
     case SAX_STATE_CLOSING_START_TAG:

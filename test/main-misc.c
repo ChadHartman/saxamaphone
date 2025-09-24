@@ -73,6 +73,17 @@ static void TEST_DECL(attr_val) {
   ASSERT_STR_EQ("\t 😀 \n", xml_parse_attr_val("\t &#128512; \n"));
 }
 
+static void TEST_DECL(comment) {
+
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .string = "<!-- <hello, world!> -->",
+  });
+
+  ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
+
+  sax_free(parser);
+}
+
 static void TEST_DECL(empty_element_tag) {
 
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
@@ -182,6 +193,7 @@ int main(int argc, char **args) {
 
   const test_t tests[] = {
       TEST_REG(attr_val),
+      TEST_REG(comment),
       TEST_REG(content),
       TEST_REG(empty_element_tag),
       TEST_REG(trim),
