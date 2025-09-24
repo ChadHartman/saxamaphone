@@ -86,6 +86,8 @@ static void TEST_DECL(empty_element_tag) {
   ASSERT_STR_EQ("foo", sax_tag(parser));
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
+
+  sax_free(parser);
 }
 
 static void TEST_DECL(unescape) {
