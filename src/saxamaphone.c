@@ -7,9 +7,6 @@
 
 #include <saxamaphone.h>
 
-// TODO: parse proc inst
-// TODO: CDATA
-
 // === typedefs === //
 
 typedef enum {

@@ -119,6 +119,27 @@ static void TEST_DECL(cdata) {
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 }
 
+static void TEST_DECL(cdata_malformed) {
+  sax_parser_t *restrict parser = xml_parser(
+      arena,
+      "<content>"
+      "  Sample content: "
+      "  <![CDATA["
+      "    <?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+      "    <body>Hello, world!</body>"
+      "  ] ]> (xml)"
+      "</content>");
+
+  ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
+  ASSERT_STR_EQ("content", sax_tag(parser));
+
+  ASSERT_EQ(SAX_EVENT_CONTENT, sax_next(parser));
+  ASSERT_STR_EQ("Sample content:", sax_content(parser));
+
+  ASSERT_EQ(SAX_EVENT_ERROR, sax_next(parser));
+  ASSERT_STR_EQ("Unexpected termination at line 1 column 133", sax_error(parser));
+}
+
 static void TEST_DECL(comment) {
   sax_parser_t *restrict parser = xml_parser(arena, "<!-- <hello, world!> -->");
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
@@ -240,6 +261,7 @@ int main(int argc, char **args) {
   const test_t tests[] = {
       TEST_REG(attr_val),
       TEST_REG(cdata),
+      TEST_REG(cdata_malformed),
       TEST_REG(comment),
       TEST_REG(content),
       TEST_REG(empty_element_tag),
