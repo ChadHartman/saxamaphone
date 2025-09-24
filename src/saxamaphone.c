@@ -700,7 +700,7 @@ static sax_event_t sax_parser_state_in_start_tag(sax_parser_t *restrict parser, 
   case '/':
     SAXAMAPHONE_LOG("Parsed tag \"%s\"\n", parser->data);
     sax_parser_state(parser, SAX_STATE_CLOSING_START_TAG);
-    return 0;
+    return SAX_EVENT_START_ELEMENT;
 
   case '>':
     SAXAMAPHONE_LOG("Parsed tag \"%s\"\n", parser->data);
@@ -770,7 +770,7 @@ static sax_event_t sax_parser_state_closing_start_tag(sax_parser_t *restrict par
 
   if (glyph[0] == '>') {
     // TODO: tag name
-    return SAX_EVENT_START_ELEMENT;
+    return SAX_EVENT_END_ELEMENT;
   }
 
   return sax_parser_error_unexpected_glyph(parser, glyph);
