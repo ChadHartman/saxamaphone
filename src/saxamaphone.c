@@ -7,10 +7,7 @@
 
 #include <saxamaphone.h>
 
-// TODO: test attrvalue  startswith `&`
 // TODO: CDATA
-
-#define SAXAMAPHONE_DEBUG
 
 // === typedefs === //
 
@@ -552,6 +549,8 @@ static void sax_parser_reset(sax_parser_t *restrict parser) {
 /// @param parser instance
 /// @param state new
 static void sax_parser_state(sax_parser_t *restrict parser, sax_state_t state) {
+
+#ifdef SAXAMAPHONE_DEBUG
   static const char *states[] = {
       "SAX_STATE_INIT",
       "SAX_STATE_IN_TAG",
@@ -570,6 +569,7 @@ static void sax_parser_state(sax_parser_t *restrict parser, sax_state_t state) {
       "SAX_STATE_ERROR",
   };
   SAXAMAPHONE_LOG("Transitioning state %s -> %s\n", states[parser->state], states[state]);
+#endif
   parser->prev_state = parser->state;
   parser->state = state;
 }

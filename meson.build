@@ -20,7 +20,9 @@ tests_misc = executable('saxamaphone-tests',
         + 'test/main-misc.c',
     include_directories: includes,
     c_args: c_args
-        + '-DSAXAMAPHONE_TEST')
+        + '-DSAXAMAPHONE_TEST'
+        # + '-DSAXAMAPHONE_DEBUG'
+    )
 
 tests_obj_map = executable('saxamaphone-tests-obj-map',
     sources: srcs 
