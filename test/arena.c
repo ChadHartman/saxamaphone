@@ -78,6 +78,15 @@ void arena_reset(arena_t *restrict arena) {
   arena_reset(arena->upstream);
 }
 
+size_t arena_size(const arena_t *restrict arena) {
+
+  if (arena == NULL) {
+    return 0;
+  }
+
+  return arena->size + arena_size(arena->upstream);
+}
+
 void arena_free(arena_t *restrict arena) {
 
   if (!arena) {

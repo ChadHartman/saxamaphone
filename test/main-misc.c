@@ -11,6 +11,10 @@
 
 #define TEST_DECL(test_name) test_##test_name(arena_t *restrict arena)
 #define TEST_REG(test_name) {.name = #test_name, .func = test_##test_name}
+#define LOG(...)                                        \
+  printf("%s:%d - ", strrchr(__FILE__, '/'), __LINE__); \
+  printf(__VA_ARGS__);                                  \
+  printf("\n");
 
 // === forward declares === //
 
@@ -237,6 +241,7 @@ int main(int argc, char **args) {
       arena_reset(arena);
     }
 
+    LOG("Arena managed %zu bytes", arena_size(arena));
     arena_free(arena);
     return EXIT_SUCCESS;
   }
@@ -262,6 +267,7 @@ int main(int argc, char **args) {
       TEST(tests[i].name);
       arena_t *restrict arena = arena_create();
       tests[i].func(arena);
+      LOG("Arena managed %zu bytes", arena_size(arena));
       arena_free(arena);
       return EXIT_SUCCESS;
     }
