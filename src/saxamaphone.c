@@ -1024,7 +1024,7 @@ static sax_event_t sax_parser_state_in_comment(sax_parser_t *restrict parser, co
   switch (glyph[0]) {
 
   case '>': {
-    if (sax_str_endswith(parser->data, "-->")) {
+    if (sax_str_endswith(parser->data, "--")) {
       parser->data = NULL;
       sax_parser_reset(parser);
       sax_parser_state(parser, SAX_STATE_IN_CONTENT);
