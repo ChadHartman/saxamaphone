@@ -12,6 +12,7 @@ struct arena_t {
 };
 
 static size_t arena_allocation_size(const void *restrict ptr) {
+
   if (ptr == NULL) {
     return 0;
   }
@@ -55,17 +56,15 @@ void *arena_alloc(arena_t *restrict arena, size_t bytes) {
   return arena_alloc(arena->upstream, bytes);
 }
 
-void *arena_copy(arena_t *restrict arena, const void *restrict src) {
+char *arena_strdup(arena_t *restrict arena, const char *restrict src) {
 
-  assert(arena);
-
-  const size_t block_size = arena_allocation_size(src);
-  if (block_size == 0) {
+  if (src == NULL) {
     return NULL;
   }
 
-  void *restrict copy = arena_alloc(arena, block_size);
-  memcpy(copy, src, block_size);
+  const size_t size = strlen(src + 1);
+  char *restrict copy = arena_alloc(arena, size);
+  memcpy(copy, src, size);
   return copy;
 }
 

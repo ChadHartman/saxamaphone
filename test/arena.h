@@ -17,11 +17,11 @@ arena_t *arena_create();
 /// @return non-NULL allocation
 void *arena_alloc(arena_t *restrict arena, size_t bytes);
 
-/// @brief Copy the provided pointer to a new allocation
+/// @brief Copy the provided string to a new allocation
 /// @param arena instance
-/// @param src pointer to copy
-/// @return copied block of memory
-void *arena_copy(arena_t *restrict arena, const void *restrict src);
+/// @param src string to copy
+/// @return copied string or NULL if src was NULL
+char *arena_strdup(arena_t *restrict arena, const char *restrict src);
 
 /// @brief Invalidate all previously allocated pointers
 /// @param arena instance
