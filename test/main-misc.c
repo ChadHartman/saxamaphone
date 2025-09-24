@@ -23,6 +23,14 @@ char *sax_str_trim(char *str);
 
 // === utilities === //
 
+static sax_parser_t *xml_parser(arena_t *restrict arena, const char *restrict xml) {
+  return sax_parser(&(sax_config_t){
+      .alloc = arena_custom_alloc,
+      .alloc_ctx = arena,
+      .string = xml,
+  });
+}
+
 static const char *xml_parse_content(
     arena_t *restrict arena,
     const char *restrict content) {
@@ -30,11 +38,7 @@ static const char *xml_parse_content(
   char xml[1024];
   snprintf(xml, sizeof(xml), "<content>%s</content>", content);
 
-  sax_parser_t *parser = sax_parser(&(sax_config_t){
-      .alloc = arena_custom_alloc,
-      .alloc_ctx = arena,
-      .string = xml,
-  });
+  sax_parser_t *parser = xml_parser(arena, xml);
 
   // <content>
   ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
@@ -50,13 +54,9 @@ static const char *xml_parse_attr_val(
   char xml[1024];
   snprintf(xml, sizeof(xml), "<content name=\"%s\"/>", attr_val);
 
-  sax_parser_t *parser = sax_parser(&(sax_config_t){
-      .alloc = arena_custom_alloc,
-      .alloc_ctx = arena,
-      .string = xml,
-  });
-
+  sax_parser_t *parser = xml_parser(arena, xml);
   sax_event_t ev = sax_next(parser);
+
   if (ev == SAX_EVENT_ERROR) {
     printf("%s\n", sax_error(parser));
     return NULL;
@@ -87,26 +87,46 @@ static void TEST_DECL(attr_val) {
   ASSERT_STR_EQ("\t 😀 \n", xml_parse_attr_val(arena, "\t &#128512; \n"));
 }
 
-static void TEST_DECL(comment) {
+static void TEST_DECL(cdata) {
 
-  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
-      .alloc = arena_custom_alloc,
-      .alloc_ctx = arena,
-      .string = "<!-- <hello, world!> -->",
-  });
+  sax_parser_t *restrict parser = xml_parser(
+      arena,
+      "<content>"
+      "  Sample content: "
+      "  <![CDATA["
+      "    <?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+      "    <body>Hello, world!</body>"
+      "  ]]> (xml)"
+      "</content>");
+
+  ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
+  ASSERT_STR_EQ("content", sax_tag(parser));
+
+  ASSERT_EQ(SAX_EVENT_CONTENT, sax_next(parser));
+  ASSERT_STR_EQ("Sample content:", sax_content(parser));
+
+  ASSERT_EQ(SAX_EVENT_CONTENT, sax_next(parser));
+  ASSERT_STR_EQ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+                "    <body>Hello, world!</body>",
+                sax_content(parser));
+
+  ASSERT_EQ(SAX_EVENT_CONTENT, sax_next(parser));
+  ASSERT_STR_EQ("(xml)", sax_content(parser));
+
+  ASSERT_EQ(SAX_EVENT_END_TAG, sax_next(parser));
+  ASSERT_STR_EQ("content", sax_tag(parser));
 
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
+}
 
-  sax_free(parser);
+static void TEST_DECL(comment) {
+  sax_parser_t *restrict parser = xml_parser(arena, "<!-- <hello, world!> -->");
+  ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 }
 
 static void TEST_DECL(empty_element_tag) {
 
-  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
-      .alloc = arena_custom_alloc,
-      .alloc_ctx = arena,
-      .string = "<foo/>",
-  });
+  sax_parser_t *restrict parser = xml_parser(arena, "<foo/>");
 
   ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
   ASSERT_STR_EQ("foo", sax_tag(parser));
@@ -219,6 +239,7 @@ int main(int argc, char **args) {
 
   const test_t tests[] = {
       TEST_REG(attr_val),
+      TEST_REG(cdata),
       TEST_REG(comment),
       TEST_REG(content),
       TEST_REG(empty_element_tag),

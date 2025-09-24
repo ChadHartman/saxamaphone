@@ -758,6 +758,8 @@ static uint_fast8_t sax_parser_state_cdata_or_comment(sax_parser_t *restrict par
 
   case '[':
     if (sax_str_eq("[CDATA", parser->data)) {
+      parser->data[0] = '\0';
+      parser->arena.offset = 0;
       sax_parser_state(parser, SAX_STATE_IN_CDATA);
       return 0;
     }
@@ -765,7 +767,7 @@ static uint_fast8_t sax_parser_state_cdata_or_comment(sax_parser_t *restrict par
   case 'D':
   case 'A':
   case 'T':
-    if (sax_str_startswith("[CDATA", parser->data)) {
+    if (parser->data == NULL || sax_str_startswith("[CDATA", parser->data)) {
       return sax_parser_append(parser, &parser->data, glyph);
     }
     return sax_parser_error_unexpected_glyph(parser, glyph);
@@ -1037,6 +1039,11 @@ static uint_fast8_t sax_parser_state_in_cdata(sax_parser_t *restrict parser, con
   if (sax_str_endswith(parser->data, "]]>")) {
     const size_t len = strlen(parser->data);
     parser->data[len - 3] = '\0';
+    if (!parser->untrimmed_content) {
+      parser->data = sax_str_trim(parser->data);
+    }
+
+    sax_parser_state(parser, SAX_STATE_IN_CONTENT);
     return SAX_EVENT_CONTENT;
   }
 
