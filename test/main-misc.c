@@ -23,6 +23,21 @@ char *sax_str_trim(char *str);
 
 // === utilities === //
 
+static bool sax_attr_present(
+    const sax_parser_t *restrict parser,
+    const char *restrict name) {
+
+  for (const sax_attr_t *restrict attr = sax_attrs(parser);
+       attr != NULL;
+       attr = attr->next) {
+    if (strcmp(name, attr->name) == 0) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 static sax_parser_t *xml_parser(arena_t *restrict arena, const char *restrict xml) {
   return sax_parser(&(sax_config_t){
       .alloc = arena_custom_alloc,
@@ -160,6 +175,29 @@ static void TEST_DECL(empty_element_tag) {
   sax_free(parser);
 }
 
+static void TEST_DECL(start_tag) {
+
+  sax_parser_t *restrict parser = xml_parser(
+      arena,
+      "<content \n"
+      "  alpha \n"
+      "  beta=\"1\"\n"
+      "  gamma=\"2\"\n"
+      "  delta\n"
+      "/>");
+
+  ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
+  ASSERT_STR_EQ("content", sax_tag(parser));
+  ASSERT_NON_NULL(sax_attrs(parser));
+  ASSERT(sax_attr_present(parser, "alpha"));
+  ASSERT_STR_EQ("1", sax_attr(parser, "beta"));
+  ASSERT_STR_EQ("2", sax_attr(parser, "gamma"));
+  ASSERT(sax_attr_present(parser, "delta"));
+  ASSERT_EQ(SAX_EVENT_END_TAG, sax_next(parser));
+  ASSERT_STR_EQ("content", sax_tag(parser));
+  ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
+}
+
 static void TEST_DECL(unescape) {
 
   (void)arena;
@@ -265,6 +303,7 @@ int main(int argc, char **args) {
       TEST_REG(comment),
       TEST_REG(content),
       TEST_REG(empty_element_tag),
+      TEST_REG(start_tag),
       TEST_REG(trim),
       TEST_REG(unescape),
       TEST_REG(unescape10),
