@@ -770,7 +770,7 @@ static sax_event_t sax_parser_state_closing_start_tag(sax_parser_t *restrict par
 
   if (glyph[0] == '>') {
     // TODO: tag name
-    return SAX_EVENT_END_ELEMENT;
+    return SAX_EVENT_START_ELEMENT;
   }
 
   return sax_parser_error_unexpected_glyph(parser, glyph);

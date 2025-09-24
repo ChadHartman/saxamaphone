@@ -50,6 +50,7 @@ static const char *xml_parse_attr_val(const char *restrict attr_val) {
   }
 
   ASSERT_EQ(SAX_EVENT_START_ELEMENT, ev);
+  ASSERT_STR_EQ("content", sax_tag(parser));
   return sax_attr(parser, "name");
 }
 
@@ -70,6 +71,21 @@ static void TEST_DECL(attr_val) {
   ASSERT_STR_EQ("\t😀", xml_parse_attr_val("\t&#128512;"));
   ASSERT_STR_EQ("😀\n", xml_parse_attr_val("&#128512;\n"));
   ASSERT_STR_EQ("\t 😀 \n", xml_parse_attr_val("\t &#128512; \n"));
+}
+
+static void TEST_DECL(empty_element_tag) {
+
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .string = "<foo/>",
+  });
+
+  ASSERT_EQ(SAX_EVENT_START_ELEMENT, sax_next(parser));
+  ASSERT_STR_EQ("foo", sax_tag(parser));
+  ASSERT_NULL(sax_attrs(parser));
+  ASSERT_EQ(SAX_EVENT_END_ELEMENT, sax_next(parser));
+  ASSERT_STR_EQ("foo", sax_tag(parser));
+  ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
+  ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 }
 
 static void TEST_DECL(unescape) {
@@ -165,6 +181,7 @@ int main(int argc, char **args) {
   const test_t tests[] = {
       TEST_REG(attr_val),
       TEST_REG(content),
+      TEST_REG(empty_element_tag),
       TEST_REG(trim),
       TEST_REG(unescape),
       TEST_REG(unescape10),
