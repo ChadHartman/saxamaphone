@@ -9,10 +9,11 @@
 #include "test.h"
 #include <saxamaphone.h>
 
-#if 0
+#if 1
 #define LOG(...)                                                                   \
   printf(COLOR_CYAN "%s:%d " COLOR_RESET, (strrchr(__FILE__, '/') + 1), __LINE__); \
-  printf(__VA_ARGS__)
+  printf(__VA_ARGS__);                                                             \
+  printf("\n")
 #else
 #define LOG(...) ((void)0)
 #endif
@@ -169,6 +170,16 @@ int main() {
       .path = "../test/files/programming-languages.xml",
       .publish_processing_instructions = true,
   });
+
+  sax_event_t ev = sax_next(parser);
+  if (ev == SAX_EVENT_ERROR) {
+    LOG("error: \"%s\"", sax_error(parser));
+  }
+  ASSERT_EQ(SAX_EVENT_PROCESSING_INSTRUCTION, ev);
+  ASSERT_STR_EQ("xml", sax_tag(parser));
+  ASSERT_STR_EQ("1.0", sax_attr(parser, "version"));
+  ASSERT_STR_EQ("UTF-8", sax_attr(parser, "encoding"));
+
   ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
   ASSERT_STR_EQ("programming-languages", sax_tag(parser));
 

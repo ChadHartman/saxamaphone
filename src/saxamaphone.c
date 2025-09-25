@@ -1227,7 +1227,7 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
        glyph[0] != '\0';
        glyph = sax_iter_next_glyph(&parser->iter, buf)) {
 
-    switch (parser->primary_state & parser->secondary_state) {
+    switch (parser->primary_state | parser->secondary_state) {
 
     case SAX_STATE_ERROR:
       ev = SAX_EVENT_ERROR;
