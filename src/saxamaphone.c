@@ -1302,66 +1302,82 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
       break;
 
     case SAX_STATE_PROC_INST | SAX_STATE_ATTR_NAME:
+      parser->data = "not implemented";
       ev = SAX_EVENT_ERROR; // TODO
       break;
 
     case SAX_STATE_PROC_INST | SAX_STATE_ATTR_ASSIGN:
+      parser->data = "not implemented";
       ev = SAX_EVENT_ERROR; // TODO
       break;
 
     case SAX_STATE_PROC_INST | SAX_STATE_ATTR_VALUE:
+      parser->data = "not implemented";
       ev = SAX_EVENT_ERROR; // TODO
       break;
 
     case SAX_STATE_PROC_INST | SAX_STATE_ESC_CHAR:
+      parser->data = "not implemented";
       ev = SAX_EVENT_ERROR; // TODO
       break;
 
     case SAX_STATE_TAG_START:
+      parser->data = "not implemented";
       ev = SAX_EVENT_ERROR; // TODO
       break;
 
     case SAX_STATE_TAG_START | SAX_STATE_TAG_START_CLOSE:
+      parser->data = "not implemented";
       ev = SAX_EVENT_ERROR; // TODO
       break;
 
     case SAX_STATE_TAG_START | SAX_STATE_SPACE:
+      parser->data = "not implemented";
       ev = SAX_EVENT_ERROR; // TODO
       break;
 
     case SAX_STATE_TAG_START | SAX_STATE_ATTR_NAME:
+      parser->data = "not implemented";
       ev = SAX_EVENT_ERROR; // TODO
       break;
 
     case SAX_STATE_TAG_START | SAX_STATE_ATTR_ASSIGN:
+      parser->data = "not implemented";
       ev = SAX_EVENT_ERROR; // TODO
       break;
 
     case SAX_STATE_TAG_START | SAX_STATE_ATTR_VALUE:
+      parser->data = "not implemented";
       ev = SAX_EVENT_ERROR; // TODO
       break;
 
     case SAX_STATE_TAG_START | SAX_STATE_ESC_CHAR:
+      parser->data = "not implemented";
       ev = SAX_EVENT_ERROR; // TODO
       break;
 
     case SAX_STATE_CONTENT:
+      parser->data = "not implemented";
       ev = SAX_EVENT_ERROR; // TODO
       break;
 
     case SAX_STATE_CONTENT | SAX_STATE_IN_COMMENT:
+      parser->data = "not implemented";
       ev = SAX_EVENT_ERROR; // TODO
       break;
 
     case SAX_STATE_CONTENT | SAX_STATE_IN_CDATA:
+      parser->data = "not implemented";
       ev = SAX_EVENT_ERROR; // TODO
       break;
 
     case SAX_STATE_CONTENT | SAX_STATE_ESC_CHAR:
+      parser->data = "not implemented";
       ev = SAX_EVENT_ERROR; // TODO
       break;
 
     case SAX_STATE_TAG_END:
+      parser->data = "not implemented";
       ev = SAX_EVENT_ERROR; // TODO
       break;
 
