@@ -30,6 +30,9 @@ typedef struct sax_config_t {
   /// @brief Leave content leading and trailing spaces
   bool untrimmed_content;
 
+  /// @brief Produce @see SAX_EVENT_PROCESSING_INSTRUCTION events
+  bool publish_processing_instructions;
+
   /// @brief When specified; neither alloc nor will the default allocator will be used. Buffer sized 4096 is recommended.
   uint8_t *buf;
 

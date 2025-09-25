@@ -1082,6 +1082,7 @@ static sax_parser_t *sax_parser_create(
           .alloc_ctx = alloc_ctx,
       },
       .untrimmed_content = config->untrimmed_content,
+      .publish_processing_instructions = config->publish_processing_instructions,
       .line = 1,
       .column = 1,
   };
