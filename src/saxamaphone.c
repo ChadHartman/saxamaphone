@@ -849,7 +849,7 @@ static uint_fast8_t sax_parser_state_tag_start(sax_parser_t *restrict parser, co
 
   case '/':
     parser->secondary_state = SAX_STATE_TAG_START_CLOSE;
-    return 0;
+    return SAX_EVENT_START_TAG;
 
   case SAXAMAPHONE_SPACE:
     parser->secondary_state = SAX_STATE_SPACE;
@@ -860,6 +860,16 @@ static uint_fast8_t sax_parser_state_tag_start(sax_parser_t *restrict parser, co
       return sax_parser_error_unexpected_glyph(parser, glyph);
     }
     return sax_parser_append(parser, &parser->data, glyph);
+  }
+}
+
+static uint_fast8_t sax_parser_state_tag_start_close(sax_parser_t *restrict parser, const char *glyph) {
+  switch (glyph[0]) {
+  case '>':
+    return SAX_EVENT_END_TAG;
+
+  default:
+    return sax_parser_error_unexpected_glyph(parser, glyph);
   }
 }
 
@@ -1065,8 +1075,7 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
       break;
 
     case SAX_STATE_TAG_START | SAX_STATE_TAG_START_CLOSE:
-      parser->data = "not implemented";
-      ev = SAX_EVENT_ERROR; // TODO
+      ev = sax_parser_state_tag_start_close(parser, glyph);
       break;
 
     case SAX_STATE_TAG_START | SAX_STATE_SPACE:
