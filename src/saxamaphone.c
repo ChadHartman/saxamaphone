@@ -663,6 +663,9 @@ sax_event_t sax_parser_state_init(sax_parser_t *restrict parser, const char *gly
 
   switch (glyph[0]) {
 
+  case SAXAMAPHONE_SPACE:
+    return 0;
+
   case '<':
     return sax_parser_append(parser, &parser->stage, glyph);
 
