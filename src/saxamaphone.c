@@ -105,6 +105,7 @@ struct sax_parser_t {
 
   // Configuration
   bool untrimmed_content;
+  bool publish_processing_instructions;
 
   // Resources
   sax_arena_t arena;
@@ -119,8 +120,9 @@ struct sax_parser_t {
   // Workspace fields
   /// @brief Used for error (SAX_EVENT_ERROR), tag (SAX_EVENT_START_TAG), or content (SAX_EVENT_CONTENT)
   char *data;
-  /// @brief Used to build the escaped glyph (for the content or attr value)
-  char *escaped;
+  /// @brief Used to build intermediate data (such as comments, cdata, and
+  ///   ampersand-escapes)
+  char *stage;
   sax_attr_t *attrs;
   sax_attr_t *current_attr;
 };
@@ -577,7 +579,7 @@ static void sax_parser_reset(sax_parser_t *restrict parser) {
 
   parser->attrs = NULL;
   parser->current_attr = NULL;
-  parser->escaped = NULL;
+  parser->stage = NULL;
 }
 
 /// @brief Append a glyph to the current token (tag, content, attr name, attr value, or escaped)
@@ -737,7 +739,7 @@ static uint_fast8_t sax_parser_state_in_escaped_char(sax_parser_t *restrict pars
   switch (glyph[0]) {
   case ';':
 
-    if (SAX_EVENT_ERROR == sax_parser_append(parser, &parser->escaped, glyph)) {
+    if (SAX_EVENT_ERROR == sax_parser_append(parser, &parser->stage, glyph)) {
       return SAX_EVENT_ERROR;
     }
 
@@ -748,21 +750,21 @@ static uint_fast8_t sax_parser_state_in_escaped_char(sax_parser_t *restrict pars
       ev = sax_parser_append(
           parser,
           &parser->data,
-          sax_str_unescape(parser->escaped, unesc));
+          sax_str_unescape(parser->stage, unesc));
     } else if (parser->primary_state == SAX_STATE_TAG_SPACE) {
       ev = sax_parser_append(
           parser,
           &parser->current_attr->value,
-          sax_str_unescape(parser->escaped, unesc));
+          sax_str_unescape(parser->stage, unesc));
     } else {
       sax_parser_error(parser, "Unreachable section reached");
       ev = SAX_EVENT_ERROR;
     }
-    parser->escaped = NULL;
+    parser->stage = NULL;
     return ev;
 
   default:
-    return sax_parser_append(parser, &parser->escaped, glyph);
+    return sax_parser_append(parser, &parser->stage, glyph);
   }
 }
 
@@ -866,7 +868,7 @@ static uint_fast8_t sax_parser_state_in_content(sax_parser_t *restrict parser, c
   switch (glyph[0]) {
 
   case '&':
-    if (SAX_EVENT_ERROR == sax_parser_append(parser, &parser->escaped, glyph)) {
+    if (SAX_EVENT_ERROR == sax_parser_append(parser, &parser->stage, glyph)) {
       return SAX_EVENT_ERROR;
     }
     parser->secondary_state = SAX_STATE_ESC_CHAR;
@@ -960,7 +962,7 @@ static uint_fast8_t sax_parser_state_in_attr_value(sax_parser_t *restrict parser
 
   case '&':
     sax_parser_state(parser, SAX_STATE_ESC_CHAR);
-    return sax_parser_append(parser, &parser->escaped, glyph);
+    return sax_parser_append(parser, &parser->stage, glyph);
 
   default:
     return sax_parser_append(parser, &parser->current_attr->value, glyph);
@@ -1179,7 +1181,7 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
        glyph[0] != '\0';
        glyph = sax_iter_next_glyph(&parser->iter, buf)) {
 
-    switch (parser->primary_state) {
+    switch (parser->primary_state & parser->secondary_state) {
 
     case SAX_STATE_ERROR:
       ev = SAX_EVENT_ERROR;
@@ -1189,61 +1191,76 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
       ev = sax_parser_state_init(parser, glyph);
       break;
 
-    case SAX_STATE_TAG:
-      ev = sax_parser_state_in_tag(parser, glyph);
+    case SAX_STATE_PROC_INST:
+      ev = SAX_EVENT_ERROR; // TODO
+      break;
+
+    case SAX_STATE_PROC_INST | SAX_STATE_TAG_SPACE:
+      ev = SAX_EVENT_ERROR; // TODO
+      break;
+
+    case SAX_STATE_PROC_INST | SAX_STATE_ATTR_NAME:
+      ev = SAX_EVENT_ERROR; // TODO
+      break;
+
+    case SAX_STATE_PROC_INST | SAX_STATE_ATTR_ASSIGN:
+      ev = SAX_EVENT_ERROR; // TODO
+      break;
+
+    case SAX_STATE_PROC_INST | SAX_STATE_ATTR_VALUE:
+      ev = SAX_EVENT_ERROR; // TODO
+      break;
+
+    case SAX_STATE_PROC_INST | SAX_STATE_ESC_CHAR:
+      ev = SAX_EVENT_ERROR; // TODO
       break;
 
     case SAX_STATE_TAG_START:
-      ev = sax_parser_state_in_start_tag(parser, glyph);
+      ev = SAX_EVENT_ERROR; // TODO
       break;
 
-    case SAX_STATE_CDATA_OR_COMMENT:
-      ev = sax_parser_state_cdata_or_comment(parser, glyph);
-      break;
-    ß
-
-        case SAX_STATE_TAG_START_CLOSE:
-      ev = sax_parser_state_closing_start_tag(parser, glyph);
+    case SAX_STATE_TAG_START | SAX_STATE_TAG_START_CLOSE:
+      ev = SAX_EVENT_ERROR; // TODO
       break;
 
-    case SAX_STATE_START_TAG_SPACE:
-      ev = sax_parser_state_start_tag_space(parser, glyph);
+    case SAX_STATE_TAG_START | SAX_STATE_TAG_SPACE:
+      ev = SAX_EVENT_ERROR; // TODO
       break;
 
-    case SAX_STATE_ATTR_ASSIGN:
-      ev = sax_parser_state_assigning_attr_value(parser, glyph);
+    case SAX_STATE_TAG_START | SAX_STATE_ATTR_NAME:
+      ev = SAX_EVENT_ERROR; // TODO
       break;
 
-    case SAX_STATE_ESC_CHAR:
-      ev = sax_parser_state_in_escaped_char(parser, glyph);
+    case SAX_STATE_TAG_START | SAX_STATE_ATTR_ASSIGN:
+      ev = SAX_EVENT_ERROR; // TODO
+      break;
+
+    case SAX_STATE_TAG_START | SAX_STATE_ATTR_VALUE:
+      ev = SAX_EVENT_ERROR; // TODO
+      break;
+
+    case SAX_STATE_TAG_START | SAX_STATE_ESC_CHAR:
+      ev = SAX_EVENT_ERROR; // TODO
       break;
 
     case SAX_STATE_CONTENT:
-      ev = sax_parser_state_in_content(parser, glyph);
+      ev = SAX_EVENT_ERROR; // TODO
+      break;
+
+    case SAX_STATE_CONTENT | SAX_STATE_IN_COMMENT:
+      ev = SAX_EVENT_ERROR; // TODO
+      break;
+
+    case SAX_STATE_CONTENT | SAX_STATE_IN_CDATA:
+      ev = SAX_EVENT_ERROR; // TODO
+      break;
+
+    case SAX_STATE_CONTENT | SAX_STATE_ESC_CHAR:
+      ev = SAX_EVENT_ERROR; // TODO
       break;
 
     case SAX_STATE_TAG_END:
-      ev = sax_parser_state_in_end_tag(parser, glyph);
-      break;
-
-    case SAX_STATE_ATTR_NAME:
-      ev = sax_parser_state_in_attr_name(parser, glyph);
-      break;
-
-    case SAX_STATE_ATTR_VALUE:
-      ev = sax_parser_state_in_attr_value(parser, glyph);
-      break;
-
-    case SAX_STATE_IN_COMMENT:
-      ev = sax_parser_state_in_comment(parser, glyph);
-      break;
-
-    case SAX_STATE_IN_CDATA:
-      ev = sax_parser_state_in_cdata(parser, glyph);
-      break;
-
-    case SAX_STATE_PROC_INST:
-      ev = sax_parser_state_in_proc_inst(parser, glyph);
+      ev = SAX_EVENT_ERROR; // TODO
       break;
 
     default:
