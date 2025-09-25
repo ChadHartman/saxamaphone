@@ -13,14 +13,11 @@ typedef enum {
   /// @brief Initial position
   SAX_STATE_INIT = 0,
 
-  /// @brief '<' found
-  SAX_STATE_TAG = 1,
+  /// @brief '<' followed by '?'
+  SAX_STATE_PROC_INST = 1 << 1,
 
   /// @brief '<' + non-control character
-  SAX_STATE_TAG_START = 1 << 1,
-
-  /// @brief '/' found within start tag
-  SAX_STATE_TAG_START_CLOSE = 1 << 2,
+  SAX_STATE_TAG_START = 1 << 2,
 
   /// @brief Characters found between '>' and '<'
   SAX_STATE_CONTENT = 1 << 3,
@@ -28,19 +25,19 @@ typedef enum {
   /// @brief '<' + '/'
   SAX_STATE_TAG_END = 1 << 4,
 
-  /// @brief '<' followed by '?'
-  SAX_STATE_PROC_INST = 1 << 5,
-
   /// @brief Iterator returns 0 for character
-  SAX_STATE_COMPLETE = 1 << 6,
+  SAX_STATE_COMPLETE = 1 << 5,
 
   /// @brief Fallback state for unexpected input
-  SAX_STATE_ERROR = 1 << 7,
+  SAX_STATE_ERROR = 1 << 6,
 } sax_primary_state_t;
 
 typedef enum {
 
   SAX_STATE_NONE = 0,
+
+  /// @brief '/' found within start tag
+  SAX_STATE_TAG_START_CLOSE = 1 << 7,
 
   /// @brief Space after `<foo `, `<foo attr `, `<foo attr="value"`
   ///   `<?foo `, `<?foo attr `, or `<?foo attr="value"`
@@ -54,9 +51,6 @@ typedef enum {
 
   /// @brief `<foo name="` or `<?foo name="`
   SAX_STATE_ATTR_VALUE = 1 << 11,
-
-  /// @brief '<' followed by '!'
-  SAX_STATE_CDATA_OR_COMMENT = 1 << 12,
 
   /// @brief `<` followed by `!--`
   SAX_STATE_IN_COMMENT = 1 << 13,
@@ -73,12 +67,6 @@ typedef enum {
   SAX_ITER_FILE,
   SAX_ITER_STR,
 } sax_iter_type_t;
-
-typedef struct sax_allocator_t {
-  uint8_t *bytes;
-  size_t offset;
-  size_t bytes_size;
-} sax_allocator_t;
 
 typedef struct sax_file_iter_t {
   FILE *fp;
@@ -97,8 +85,6 @@ typedef struct sax_str_iter_t {
 typedef struct sax_iter_t {
 
   sax_iter_type_t type;
-  /// @brief Largest code pt == 4; +1 null term
-  char glyph[5];
 
   union {
     sax_file_iter_t file;
@@ -390,8 +376,6 @@ static
   return src;
 }
 
-// --- private sax_allocator_t methods --- //
-
 /// @brief Perform an object allocation
 /// @param alloc instance
 /// @param size in bytes of the allocation
@@ -556,24 +540,25 @@ static uint8_t sax_iter_next_byte(sax_iter_t *restrict iter) {
 /// @brief Retrieve the next glyph to process (0-4 sized string); when UTF-8 is
 ///   malformed or reached the end of file; an empty string is returned
 /// @param iter instance
+/// @param glyph the file buffer to populate; must be at least 5 chars (4 for max utf-8 + NULL term)
 /// @return non-NULL glyph string sized 0-4 bytes
-static const char *sax_iter_next_glyph(sax_iter_t *restrict iter) {
+static const char *sax_iter_next_glyph(sax_iter_t *restrict iter, char *restrict glyph) {
 
   uint8_t byte = sax_iter_next_byte(iter);
   if (byte == 0) {
     return "";
   }
 
-  iter->glyph[0] = (char)byte;
+  glyph[0] = (char)byte;
   const uint_fast8_t pt_size = sax_code_pt_size(byte);
 
   uint_fast8_t i = 1;
   for (; i < pt_size && byte != 0; ++i) {
     byte = sax_iter_next_byte(iter);
-    iter->glyph[i] = (char)byte;
+    glyph[i] = (char)byte;
   }
-  iter->glyph[i] = '\0';
-  return iter->glyph;
+  glyph[i] = '\0';
+  return glyph;
 }
 
 // --- private parser methods --- //
@@ -1184,12 +1169,15 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
 
   uint_fast8_t ev = 0;
 
+  /// @brief Largest code pt == 4; +1 null term
+  char buf[5];
+
   // Reset state for next node
   sax_parser_reset(parser);
 
-  for (const char *restrict glyph = sax_iter_next_glyph(&parser->iter);
+  for (const char *restrict glyph = sax_iter_next_glyph(&parser->iter, buf);
        glyph[0] != '\0';
-       glyph = sax_iter_next_glyph(&parser->iter)) {
+       glyph = sax_iter_next_glyph(&parser->iter, buf)) {
 
     switch (parser->primary_state) {
 
@@ -1211,9 +1199,10 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
 
     case SAX_STATE_CDATA_OR_COMMENT:
       ev = sax_parser_state_cdata_or_comment(parser, glyph);
-      break;ß
+      break;
+    ß
 
-    case SAX_STATE_TAG_START_CLOSE:
+        case SAX_STATE_TAG_START_CLOSE:
       ev = sax_parser_state_closing_start_tag(parser, glyph);
       break;
 
