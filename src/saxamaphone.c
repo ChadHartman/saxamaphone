@@ -105,7 +105,6 @@ struct sax_parser_t {
 
   // Configuration
   bool untrimmed_content;
-  bool publish_processing_instructions;
 
   // Resources
   sax_arena_t arena;
@@ -250,6 +249,15 @@ static uint_fast8_t sax_code_pt_size(uint8_t byte) {
 
 static int_fast32_t sax_strlen(const char *restrict str) {
   return str == NULL ? -1 : strlen(str);
+}
+
+static bool sax_str_eq(const char *restrict lhs, const char *restrict rhs) {
+
+  if (lhs == NULL || rhs == NULL) {
+    return lhs == rhs;
+  }
+
+  return strcmp(lhs, rhs) == 0;
 }
 
 /// @brief Test whether a string starts with another string
@@ -700,17 +708,14 @@ static uint_fast8_t sax_parser_state_proc_inst(sax_parser_t *restrict parser, co
     return sax_parser_append(parser, &parser->stage, glyph);
 
   case '>':
-    if (sax_startswith(parser->stage, "?")) {
-      // TODO: consider header vs body
-      parser->primary_state = SAX_STATE_CONTENT;
-
-      if (parser->publish_processing_instructions) {
-        return SAX_EVENT_PROCESSING_INSTRUCTION;
-      }
-
-      sax_parser_reset(parser);
-      return 0;
+    if (sax_str_eq(parser->stage, "?")) {
+      parser->primary_state = sax_str_eq("xml", parser->data)
+                                  ? SAX_STATE_INIT
+                                  : SAX_STATE_CONTENT;
+      parser->secondary_state = SAX_STATE_NONE;
+      return SAX_EVENT_PROCESSING_INSTRUCTION;
     }
+    return sax_parser_error_unexpected_glyph(parser, glyph);
 
   default:
     if (sax_strlen(parser->data) > 0) {
@@ -722,6 +727,58 @@ static uint_fast8_t sax_parser_state_proc_inst(sax_parser_t *restrict parser, co
     }
 
     return sax_parser_append(parser, &parser->data, glyph);
+  }
+}
+
+static uint_fast8_t sax_parser_state_proc_inst_space(sax_parser_t *restrict parser, const char *glyph) {
+  switch (glyph[0]) {
+
+  case SAXAMAPHONE_SPACE:
+    // noop
+    return 0;
+
+  case '?':
+    return sax_parser_append(parser, &parser->stage, glyph);
+
+  case '>':
+    if (sax_str_eq("?", parser->stage)) {
+      parser->primary_state = sax_str_eq("xml", parser->data)
+                                  ? SAX_STATE_INIT
+                                  : SAX_STATE_CONTENT;
+      parser->secondary_state = SAX_STATE_NONE;
+
+      return SAX_EVENT_PROCESSING_INSTRUCTION;
+    }
+    return sax_parser_error_unexpected_glyph(parser, glyph);
+
+  default:
+
+    parser->secondary_state = SAX_STATE_ATTR_NAME;
+
+    // Starting attr
+    if (strchr(SAXAMAPHONE_EXCLUDE_TAG_PREFIX, glyph[0]) != NULL) {
+      return sax_parser_error_unexpected_glyph(parser, glyph);
+    }
+
+    // Create attribute
+    parser->current_attr = sax_arena_alloc(&parser->arena, sizeof(sax_attr_t));
+    if (parser->current_attr == NULL) {
+      sax_parser_error(parser, "Out of memory");
+      return SAX_EVENT_ERROR;
+    }
+
+    // Link
+    if (parser->attrs == NULL) {
+      parser->attrs = parser->current_attr;
+    } else {
+      sax_attr_t *restrict attr = parser->attrs;
+      for (; attr->next != NULL; attr = attr->next) {
+      }
+      attr->next = parser->current_attr;
+    }
+
+    // Populate
+    return sax_parser_append(parser, &parser->current_attr->name, glyph);
   }
 }
 
@@ -1082,7 +1139,6 @@ static sax_parser_t *sax_parser_create(
           .alloc_ctx = alloc_ctx,
       },
       .untrimmed_content = config->untrimmed_content,
-      .publish_processing_instructions = config->publish_processing_instructions,
       .line = 1,
       .column = 1,
   };
@@ -1242,7 +1298,7 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
       break;
 
     case SAX_STATE_PROC_INST | SAX_STATE_SPACE:
-      ev = SAX_EVENT_ERROR; // TODO
+      ev = sax_parser_state_proc_inst_space(parser, glyph);
       break;
 
     case SAX_STATE_PROC_INST | SAX_STATE_ATTR_NAME:

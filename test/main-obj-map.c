@@ -168,7 +168,6 @@ int main() {
   arena_t *restrict arena = arena_create();
   sax_parser_t *parser = sax_parser(&(sax_config_t){
       .path = "../test/files/programming-languages.xml",
-      .publish_processing_instructions = true,
   });
 
   sax_event_t ev = sax_next(parser);
