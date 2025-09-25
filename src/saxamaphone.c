@@ -22,35 +22,11 @@ typedef enum {
   /// @brief '/' found within start tag
   SAX_STATE_CLOSING_START_TAG,
 
-  /// @brief '=' found after parsing attr name
-  SAX_STATE_ASSIGNING_ATTR_VALUE,
-
-  /// @brief '&' found in attr_value and content
-  SAX_STATE_IN_ESC_CHAR,
-
   /// @brief Characters found between '>' and '<'
   SAX_STATE_IN_CONTENT,
 
   /// @brief '<' + '/'
   SAX_STATE_IN_END_TAG,
-
-  /// @brief Space after `<foo `, `<foo attr `, or `<foo attr="value"`
-  SAX_STATE_START_TAG_SPACE,
-
-  /// @brief `<foo ` + non-control character
-  SAX_STATE_IN_ATTR_NAME,
-
-  /// @brief `<foo name="`
-  SAX_STATE_IN_ATTR_VALUE,
-
-  /// @brief '<' followed by '!'
-  SAX_STATE_CDATA_OR_COMMENT,
-
-  /// @brief `<` followed by `!`
-  SAX_STATE_IN_COMMENT,
-
-  /// @brief `<[CDATA[`
-  SAX_STATE_IN_CDATA,
 
   /// @brief '<' followed by '?'
   SAX_STATE_IN_PROC_INST,
@@ -60,7 +36,32 @@ typedef enum {
 
   /// @brief Fallback state for unexpected input
   SAX_STATE_ERROR,
-} sax_state_t;
+} sax_primary_state_t;
+
+typedef enum {
+
+  SAX_SEC_STATE_NONE,
+
+  /// @brief Space after `<foo `, `<foo attr `, `<foo attr="value"`
+  ///   `<?foo `, `<?foo attr `, or `<?foo attr="value"`
+  SAX_STATE_TAG_SPACE,
+
+  /// @brief `<?foo ` `<foo ` + non-control character
+  SAX_STATE_IN_ATTR_NAME,
+
+  /// @brief `<foo name="` or `<?foo name="`
+  SAX_STATE_IN_ATTR_VALUE,
+
+  /// @brief '<' followed by '!'
+  SAX_STATE_CDATA_OR_COMMENT,
+
+  /// @brief `<` followed by `!--`
+  SAX_STATE_IN_COMMENT,
+
+  /// @brief `<[CDATA[`
+  SAX_STATE_IN_CDATA,
+
+} sax_secondary_state_t;
 
 #ifdef SAXAMAPHONE_DEBUG
 static const char *SAXAMAPHONE_STATES[] = {
@@ -140,8 +141,8 @@ struct sax_parser_t {
   sax_iter_t iter;
 
   // Metadatas
-  sax_state_t state;
-  sax_state_t prev_state;
+  sax_primary_state_t primary_state;
+  sax_secondary_state_t secondary_state;
   uint_fast32_t line;
   uint_fast32_t column;
 
