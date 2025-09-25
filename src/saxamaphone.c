@@ -965,6 +965,52 @@ static uint_fast8_t sax_parser_state_tag_start_attr_name(sax_parser_t *restrict 
   }
 }
 
+static uint_fast8_t sax_parser_state_content(sax_parser_t *restrict parser, const char *glyph) {
+  switch (glyph[0]) {
+
+  case '<':
+    return sax_parser_append(parser, &parser->stage, glyph);
+
+  case '&':
+    parser->secondary_state = SAX_STATE_ESC_CHAR;
+    return sax_parser_append(parser, &parser->stage, glyph);
+
+  case '?':
+    if (sax_str_eq("<", parser->stage)) {
+      parser->primary_state = SAX_STATE_PROC_INST;
+      return SAX_EVENT_CONTENT;
+    }
+    return sax_parser_append(parser, &parser->data, glyph);
+
+  case '/':
+    if (sax_str_eq("<", parser->stage)) {
+      parser->primary_state = SAX_STATE_TAG_END;
+      return SAX_EVENT_CONTENT;
+    }
+    return sax_parser_append(parser, &parser->data, glyph);
+
+  case '!':
+    if (sax_str_eq("<", parser->stage)) {
+      return sax_parser_append(parser, &parser->stage, glyph);
+    }
+    return sax_parser_append(parser, &parser->data, glyph);
+
+  default:
+    if (sax_str_eq("<", parser->stage)) {
+      // TODO: content event
+      return sax_parser_append(parser, &parser->data, glyph);
+    }
+
+
+
+
+      // TODO: Comment,
+      // TODO: CDATA,
+
+    return sax_parser_append(parser, &parser->stage, glyph);
+  }
+}
+
 static sax_parser_t *sax_parser_create(
     sax_parser_t *parser,
     const sax_config_t *restrict config,
@@ -1192,8 +1238,7 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
       break;
 
     case SAX_STATE_CONTENT:
-      parser->data = "not implemented";
-      ev = SAX_EVENT_ERROR; // TODO
+      ev = sax_parser_state_content(parser, glyph);
       break;
 
     case SAX_STATE_CONTENT | SAX_STATE_IN_COMMENT:

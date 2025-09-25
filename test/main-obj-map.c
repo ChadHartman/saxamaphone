@@ -189,7 +189,7 @@ int main() {
   prog_lang_t langs[8] = {0};
   size_t lang_offset = 0;
 
-  for (sax_event_t ev = sax_next(parser);
+  for (ev = sax_next(parser);
        ev != SAX_EVENT_END_DOCUMENT && ev != SAX_EVENT_ERROR;
        ev = sax_next(parser)) {
 
@@ -203,6 +203,10 @@ int main() {
     } else {
       FAIL("Unexpected tag \"%s\"", sax_tag(parser));
     }
+  }
+
+  if (ev == SAX_EVENT_ERROR) {
+    LOG("ERROR: %s", sax_error(parser));
   }
 
   ASSERT_STR_EQ("Python", langs[0].name);
