@@ -782,6 +782,30 @@ static uint_fast8_t sax_parser_state_proc_inst_space(sax_parser_t *restrict pars
   }
 }
 
+static uint_fast8_t sax_parser_state_proc_inst_attr_name(sax_parser_t *restrict parser, const char *glyph) {
+
+  switch (glyph[0]) {
+
+  case '?':
+    parser->secondary_state = SAX_STATE_SPACE;
+    return sax_parser_append(parser, &parser->stage, glyph);
+
+  case '=':
+    parser->secondary_state = SAX_STATE_ATTR_ASSIGN;
+    break;
+
+  case SAXAMAPHONE_SPACE:
+    parser->secondary_state = SAX_STATE_SPACE;
+    break;
+
+  default:
+    if (strchr(SAXAMAPHONE_EXCLUDE_TAG, glyph[0]) != NULL) {
+      return sax_parser_error_unexpected_glyph(parser, glyph);
+    }
+    return sax_parser_append(parser, &parser->current_attr->name, glyph);
+  }
+}
+
 // /// @brief Handle the glyph when in the SAX_STATE_TAG state
 // /// @param parser instance
 // /// @param glyph glyph to process
@@ -1302,8 +1326,7 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
       break;
 
     case SAX_STATE_PROC_INST | SAX_STATE_ATTR_NAME:
-      parser->data = "not implemented";
-      ev = SAX_EVENT_ERROR; // TODO
+      ev = sax_parser_state_proc_inst_attr_name(parser, glyph);
       break;
 
     case SAX_STATE_PROC_INST | SAX_STATE_ATTR_ASSIGN:
