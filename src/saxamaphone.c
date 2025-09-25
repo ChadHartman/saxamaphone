@@ -792,17 +792,50 @@ static uint_fast8_t sax_parser_state_proc_inst_attr_name(sax_parser_t *restrict 
 
   case '=':
     parser->secondary_state = SAX_STATE_ATTR_ASSIGN;
-    break;
+    return 0;
 
   case SAXAMAPHONE_SPACE:
     parser->secondary_state = SAX_STATE_SPACE;
-    break;
+    return 0;
 
   default:
     if (strchr(SAXAMAPHONE_EXCLUDE_TAG, glyph[0]) != NULL) {
       return sax_parser_error_unexpected_glyph(parser, glyph);
     }
     return sax_parser_append(parser, &parser->current_attr->name, glyph);
+  }
+}
+
+// TODO: may be multipurpos
+static uint_fast8_t sax_parser_state_proc_inst_attr_assign(sax_parser_t *restrict parser, const char *glyph) {
+
+  switch (glyph[0]) {
+
+  case '"':
+    parser->secondary_state = SAX_STATE_ATTR_VALUE;
+    return 0;
+
+  default:
+    return sax_parser_error_unexpected_glyph(parser, glyph);
+  }
+}
+
+// TODO: may be multipurpos
+static uint_fast8_t sax_parser_state_proc_inst_attr_value(sax_parser_t *restrict parser, const char *glyph) {
+
+  switch (glyph[0]) {
+
+  case '"':
+    parser->current_attr = NULL;
+    parser->secondary_state = SAX_STATE_SPACE;
+    return 0;
+
+  case '&':
+    parser->secondary_state = SAX_STATE_ESC_CHAR;
+    return sax_parser_append(parser, &parser->stage, glyph);
+
+  default:
+    return sax_parser_append(parser, &parser->current_attr->value, glyph);
   }
 }
 
@@ -1330,13 +1363,11 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
       break;
 
     case SAX_STATE_PROC_INST | SAX_STATE_ATTR_ASSIGN:
-      parser->data = "not implemented";
-      ev = SAX_EVENT_ERROR; // TODO
+      ev = sax_parser_state_proc_inst_attr_assign(parser, glyph);
       break;
 
     case SAX_STATE_PROC_INST | SAX_STATE_ATTR_VALUE:
-      parser->data = "not implemented";
-      ev = SAX_EVENT_ERROR; // TODO
+      ev = sax_parser_state_proc_inst_attr_value(parser, glyph);
       break;
 
     case SAX_STATE_PROC_INST | SAX_STATE_ESC_CHAR:
