@@ -84,22 +84,22 @@
     }                                                           \
   }
 
-#define ASSERT_EQ(expected, computed)                                             \
-  {                                                                               \
-    const int64_t lhs = (int64_t)expected;                                        \
-    const int64_t rhs = (int64_t)(computed);                                      \
-    const bool passed = lhs == rhs;                                               \
-    printf("%s:%d: %s" COLOR_RESET "\n",                                          \
-           (strrchr(__FILE__, '/') + 1),                                          \
-           __LINE__,                                                              \
-           passed ? COLOR_GREEN "PASSED" : COLOR_RED "FAILED");                   \
-    printf(COLOR_CYAN "  ASSERT_EQ(" #expected ", " #computed ")\n");             \
-    printf(COLOR_YELLOW "    \"%" PRId64 "\" == \"%" PRId64 "\"\n\n" COLOR_RESET, \
-           lhs,                                                                   \
-           rhs);                                                                  \
-    if (!passed) {                                                                \
-      exit(EXIT_FAILURE);                                                         \
-    }                                                                             \
+#define ASSERT_EQ(expected, computed)                                     \
+  {                                                                       \
+    const int64_t lhs = (int64_t)expected;                                \
+    const int64_t rhs = (int64_t)(computed);                              \
+    const bool passed = lhs == rhs;                                       \
+    printf("%s:%d: %s" COLOR_RESET "\n",                                  \
+           (strrchr(__FILE__, '/') + 1),                                  \
+           __LINE__,                                                      \
+           passed ? COLOR_GREEN "PASSED" : COLOR_RED "FAILED");           \
+    printf(COLOR_CYAN "  ASSERT_EQ(" #expected ", " #computed ")\n");     \
+    printf(COLOR_YELLOW "    %" PRId64 " == %" PRId64 "\n\n" COLOR_RESET, \
+           lhs,                                                           \
+           rhs);                                                          \
+    if (!passed) {                                                        \
+      exit(EXIT_FAILURE);                                                 \
+    }                                                                     \
   }
 
 #define ASSERT_STR_EQ(expected, computed)                                  \
