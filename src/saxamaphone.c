@@ -212,41 +212,41 @@ static uint_fast8_t sax_code_pt_size(uint8_t byte) {
 /// @param value to convert
 /// @param buf buffer to populate and return; must be at least sized 5
 /// @return buf
-static const char *sax_long_to_code_pt(long value, char *restrict buf) {
+// static const char *sax_long_to_code_pt(long value, char *restrict buf) {
 
-  if (value < 0 || value > 0x10FFFF || (value >= 0xD800 && value <= 0xDFFF)) {
-    buf[0] = '\0';
-  } else if (value <= 0x7F) {
-    buf[0] = (char)value;
-    buf[1] = '\0';
-  } else if (value <= 0x7FF) {
-    buf[0] = (char)(0xC0 | ((value >> 6) & 0x1F));
-    buf[1] = (char)(0x80 | (value & 0x3F));
-    buf[2] = '\0';
-  } else if (value <= 0xFFFF) {
-    buf[0] = (char)(0xE0 | ((value >> 12) & 0x0F));
-    buf[1] = (char)(0x80 | ((value >> 6) & 0x3F));
-    buf[2] = (char)(0x80 | (value & 0x3F));
-    buf[3] = '\0';
-  } else {
-    buf[0] = (char)(0xF0 | ((value >> 18) & 0x07));
-    buf[1] = (char)(0x80 | ((value >> 12) & 0x3F));
-    buf[2] = (char)(0x80 | ((value >> 6) & 0x3F));
-    buf[3] = (char)(0x80 | (value & 0x3F));
-    buf[4] = '\0';
-  }
+//   if (value < 0 || value > 0x10FFFF || (value >= 0xD800 && value <= 0xDFFF)) {
+//     buf[0] = '\0';
+//   } else if (value <= 0x7F) {
+//     buf[0] = (char)value;
+//     buf[1] = '\0';
+//   } else if (value <= 0x7FF) {
+//     buf[0] = (char)(0xC0 | ((value >> 6) & 0x1F));
+//     buf[1] = (char)(0x80 | (value & 0x3F));
+//     buf[2] = '\0';
+//   } else if (value <= 0xFFFF) {
+//     buf[0] = (char)(0xE0 | ((value >> 12) & 0x0F));
+//     buf[1] = (char)(0x80 | ((value >> 6) & 0x3F));
+//     buf[2] = (char)(0x80 | (value & 0x3F));
+//     buf[3] = '\0';
+//   } else {
+//     buf[0] = (char)(0xF0 | ((value >> 18) & 0x07));
+//     buf[1] = (char)(0x80 | ((value >> 12) & 0x3F));
+//     buf[2] = (char)(0x80 | ((value >> 6) & 0x3F));
+//     buf[3] = (char)(0x80 | (value & 0x3F));
+//     buf[4] = '\0';
+//   }
 
-  return buf;
-}
+//   return buf;
+// }
 
-/// @brief NULL-safe string comparison
-/// @return true if the strings are equal
-static bool sax_str_eq(const char *restrict lhs, const char *restrict rhs) {
-  if (lhs == NULL || rhs == NULL) {
-    return lhs == rhs;
-  }
-  return strcmp(lhs, rhs) == 0;
-}
+// /// @brief NULL-safe string comparison
+// /// @return true if the strings are equal
+// static bool sax_str_eq(const char *restrict lhs, const char *restrict rhs) {
+//   if (lhs == NULL || rhs == NULL) {
+//     return lhs == rhs;
+//   }
+//   return strcmp(lhs, rhs) == 0;
+// }
 
 static int_fast32_t sax_strlen(const char *restrict str) {
   return str == NULL ? -1 : strlen(str);
@@ -280,107 +280,107 @@ static bool sax_startswith(const char *restrict subject, const char *restrict pr
 /// @param subject the string to test
 /// @param suffix the suffix to match
 /// @return true if subject endswith the suffix
-static bool sax_str_endswith(const char *restrict subject, const char *restrict suffix) {
+// static bool sax_endswith(const char *restrict subject, const char *restrict suffix) {
 
-  if (subject == NULL) {
-    return suffix == NULL ? true : false;
-  }
+//   if (subject == NULL) {
+//     return suffix == NULL ? true : false;
+//   }
 
-  if (suffix == NULL) {
-    return true;
-  }
+//   if (suffix == NULL) {
+//     return true;
+//   }
 
-  const size_t subj_size = strlen(subject);
-  const size_t suffix_size = strlen(suffix);
+//   const size_t subj_size = strlen(subject);
+//   const size_t suffix_size = strlen(suffix);
 
-  if (suffix_size == 0) {
-    return true;
-  }
+//   if (suffix_size == 0) {
+//     return true;
+//   }
 
-  if (suffix_size > subj_size) {
-    return false;
-  }
+//   if (suffix_size > subj_size) {
+//     return false;
+//   }
 
-  const size_t offset = subj_size - suffix_size;
-  return strcmp(subject + offset, suffix) == 0;
-}
+//   const size_t offset = subj_size - suffix_size;
+//   return strcmp(subject + offset, suffix) == 0;
+// }
 
-/// @brief Test whether the provided string is all spaces
-/// @param str string to test
-/// @return true if all spaces
-static bool sax_str_is_space(const char *restrict str) {
+// /// @brief Test whether the provided string is all spaces
+// /// @param str string to test
+// /// @return true if all spaces
+// static bool sax_str_is_space(const char *restrict str) {
 
-  for (uint_fast64_t i = 0;
-       str[i] != 0;
-       i += sax_code_pt_size(str[i])) {
+//   for (uint_fast64_t i = 0;
+//        str[i] != 0;
+//        i += sax_code_pt_size(str[i])) {
 
-    if (!isspace(str[i])) {
-      return false;
-    }
-  }
+//     if (!isspace(str[i])) {
+//       return false;
+//     }
+//   }
 
-  return true;
-}
+//   return true;
+// }
 
 /// @brief Unescape the provided string and populate the buffer with the
 ///   resulting utf-8 character
 /// @param src string to convert
 /// @param buf at least sized 5; must be populated
 /// @return string literal or populated buf depending on the encoding
-#ifndef SAXAMAPHONE_TEST
-static
-#endif
-    const char *
-    sax_str_unescape(const char *restrict src, char *restrict buf) {
+// #ifndef SAXAMAPHONE_TEST
+// static
+// #endif
+//     const char *
+//     sax_str_unescape(const char *restrict src, char *restrict buf) {
 
-  if (strcmp("&lt;", src) == 0) {
-    return "<";
-  }
+//   if (strcmp("&lt;", src) == 0) {
+//     return "<";
+//   }
 
-  if (strcmp("&gt;", src) == 0) {
-    return ">";
-  }
+//   if (strcmp("&gt;", src) == 0) {
+//     return ">";
+//   }
 
-  if (strcmp("&amp;", src) == 0) {
-    return "&";
-  }
+//   if (strcmp("&amp;", src) == 0) {
+//     return "&";
+//   }
 
-  if (strcmp("&apos;", src) == 0) {
-    return "'";
-  }
+//   if (strcmp("&apos;", src) == 0) {
+//     return "'";
+//   }
 
-  if (strcmp("&quot;", src) == 0) {
-    return "\"";
-  }
+//   if (strcmp("&quot;", src) == 0) {
+//     return "\"";
+//   }
 
-  // Longest is &#1114111; (10 chars)
-  char num[16];
+//   // Longest is &#1114111; (10 chars)
+//   char num[16];
 
-  if (sax_startswith(src, "&#x") && sax_str_endswith(src, ";")) {
-    // -3 for "&#x" + ";"
-    snprintf(num, sizeof(num), "%.*s", (int)(strlen(src) - 4), src + 3);
-    long code_pt = strtol(num, NULL, 16);
-    if (code_pt == 0) {
-      return src;
-    }
+//   if (sax_startswith(src, "&#x") && sax_str_endswith(src, ";")) {
+//     // -3 for "&#x" + ";"
+//     snprintf(num, sizeof(num), "%.*s", (int)(strlen(src) - 4), src + 3);
+//     long code_pt = strtol(num, NULL, 16);
+//     if (code_pt == 0) {
+//       return src;
+//     }
 
-    return sax_long_to_code_pt(code_pt, buf);
-  }
+//     return sax_long_to_code_pt(code_pt, buf);
+//   }
 
-  if (sax_startswith(src, "&#") && sax_str_endswith(src, ";")) {
+//   if (sax_startswith(src, "&#") && sax_str_endswith(src, ";")) {
 
-    // -3 for "&#" + ";"
-    snprintf(num, sizeof(num), "%.*s", (int)(strlen(src) - 3), src + 2);
-    long code_pt = strtol(num, NULL, 10);
-    if (code_pt == 0) {
-      return src;
-    }
+//     // -3 for "&#" + ";"
+//     snprintf(num, sizeof(num), "%.*s", (int)(strlen(src) - 3), src + 2);
+//     long code_pt = strtol(num, NULL, 10);
+//     if (code_pt == 0) {
+//       return src;
+//     }
 
-    return sax_long_to_code_pt(code_pt, buf);
-  }
+//     return sax_long_to_code_pt(code_pt, buf);
+//   }
 
-  return src;
-}
+//   return src;
+// }
 
 /// @brief Perform an object allocation
 /// @param alloc instance
@@ -420,65 +420,65 @@ static bool sax_str_empty(const char *restrict str) {
 /// @brief Remove spaces (' ', '\t', '\n', etc) to the left of the first non-space character
 /// @param src string to ltrim
 /// @return left-trimmed string (pointer arithmatically produced)
-static char *sax_str_ltrim(char *src) {
+// static char *sax_str_ltrim(char *src) {
 
-  if (src == NULL) {
-    return NULL;
-  }
+//   if (src == NULL) {
+//     return NULL;
+//   }
 
-  const size_t src_size = strlen(src);
+//   const size_t src_size = strlen(src);
 
-  for (uint_fast64_t i = 0;
-       i < src_size;
-       i += sax_code_pt_size(src[i])) {
+//   for (uint_fast64_t i = 0;
+//        i < src_size;
+//        i += sax_code_pt_size(src[i])) {
 
-    if (!isspace(src[i])) {
-      src += i;
-      break;
-    }
-  }
+//     if (!isspace(src[i])) {
+//       src += i;
+//       break;
+//     }
+//   }
 
-  return src;
-}
+//   return src;
+// }
 
 /// @brief Remove spaces (' ', '\t', '\n', etc) to the right of the first non-space character
 /// @param src string to rtrim
 /// @return src mutated to be NULL-termed
-static char *sax_str_rtrim(char *src) {
+// static char *sax_str_rtrim(char *src) {
 
-  if (sax_str_empty(src)) {
-    return src;
-  }
+//   if (sax_str_empty(src)) {
+//     return src;
+//   }
 
-  uint_fast64_t last_non_space = 0;
-  const size_t src_size = strlen(src);
-  uint_fast64_t i = 0;
+//   uint_fast64_t last_non_space = 0;
+//   const size_t src_size = strlen(src);
+//   uint_fast64_t i = 0;
 
-  // Can't tell utf-8 from top to bottom; have to start from bottom
-  for (;
-       i < src_size;
-       i += sax_code_pt_size(src[i])) {
+//   // Can't tell utf-8 from top to bottom; have to start from bottom
+//   for (;
+//        i < src_size;
+//        i += sax_code_pt_size(src[i])) {
 
-    if (!isspace(src[i])) {
-      last_non_space = i;
-    }
-  }
+//     if (!isspace(src[i])) {
+//       last_non_space = i;
+//     }
+//   }
 
-  const uint_fast64_t end = last_non_space + sax_code_pt_size(src[last_non_space]);
-  src[end] = '\0';
-  return src;
-}
+//   const uint_fast64_t end = last_non_space + sax_code_pt_size(src[last_non_space]);
+//   src[end] = '\0';
+//   return src;
+// }
 
 /// @brief Perform both an ltrim & rtrim
 /// @param str to trim
 /// @return trimmed string
-#ifndef SAXAMAPHONE_TEST
-static
-#endif
-    char *
-    sax_str_trim(char *str) {
-  return sax_str_ltrim(sax_str_rtrim(str));
-}
+// #ifndef SAXAMAPHONE_TEST
+// static
+// #endif
+//     char *
+//     sax_str_trim(char *str) {
+//   return sax_str_ltrim(sax_str_rtrim(str));
+// }
 
 // --- private sax_iter_t methods --- //
 
@@ -572,18 +572,28 @@ static const char *sax_iter_next_glyph(sax_iter_t *restrict iter, char *restrict
 /// @brief Reset parser to parse a new XML tag
 /// @param parser instance
 static void sax_parser_reset(sax_parser_t *restrict parser) {
-
-  // SAX_STATE_TAG_START_CLOSE is a special case: "<foo/" - sends a start
-  //   tag event and the '>' sends an end tag event with the same tag name;
-  //   so we don't want to reset in this case
-  if (parser->primary_state != SAX_STATE_TAG_START_CLOSE) {
-    parser->data = NULL;
-    parser->arena.offset = 0;
-  }
-
+  parser->data = NULL;
+  parser->arena.offset = 0;
   parser->attrs = NULL;
   parser->current_attr = NULL;
   parser->stage = NULL;
+}
+
+/// @brief Set the parser to the error state
+/// @param parser instance
+/// @param format message format
+/// @param  ... message args
+static void sax_parser_error(sax_parser_t *restrict parser, const char *restrict format, ...) {
+
+  va_list args;
+  va_start(args, format);
+
+  parser->primary_state = SAX_STATE_ERROR;
+  parser->secondary_state = SAX_STATE_NONE;
+  parser->data = (char *)parser->arena.bytes;
+  vsnprintf(parser->data, parser->arena.bytes_size, format, args);
+
+  va_end(args);
 }
 
 /// @brief Append a glyph to the current token (tag, content, attr name, attr value, or escaped)
@@ -611,31 +621,13 @@ static uint_fast8_t sax_parser_append(
   const size_t token_len = strlen(*token);
 
   if ((uint8_t *)(*token + token_len + glyph_size) > end) {
-    parser->data = "Out of memory";
-    sax_parser_state(parser, SAX_STATE_ERROR);
+    sax_parser_error(parser, "Out of memory");
     return SAX_EVENT_ERROR;
   }
 
   strcpy(*token + token_len, glyph);
   parser->arena.offset += glyph_size + alignment;
   return 0;
-}
-
-/// @brief Set the parser to the error state
-/// @param parser instance
-/// @param format message format
-/// @param  ... message args
-static void sax_parser_error(sax_parser_t *restrict parser, const char *restrict format, ...) {
-
-  va_list args;
-  va_start(args, format);
-
-  parser->primary_state = SAX_STATE_ERROR;
-  parser->secondary_state = SAX_STATE_NONE;
-  parser->data = (char *)parser->arena.bytes;
-  vsnprintf(parser->data, parser->arena.bytes_size, format, args);
-
-  va_end(args);
 }
 
 /// @brief Throw the parser into an error state
@@ -686,7 +678,7 @@ sax_event_t sax_parser_state_init(sax_parser_t *restrict parser, const char *gly
   return 0;
 }
 
-static uint_fast8_t sax_parser_state_in_proc_inst(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_proc_inst(sax_parser_t *restrict parser, const char *glyph) {
 
   switch (glyph[0]) {
 
@@ -701,7 +693,7 @@ static uint_fast8_t sax_parser_state_in_proc_inst(sax_parser_t *restrict parser,
 
     // `<?xml `
     parser->secondary_state = SAX_STATE_SPACE;
-    break;
+    return 0;
 
     // <?xml?>
   case '?':
@@ -1072,60 +1064,60 @@ static uint_fast8_t sax_parser_state_in_proc_inst(sax_parser_t *restrict parser,
 //   return 0;
 // }
 
-// static sax_parser_t *sax_parser_create(
-//     sax_parser_t *parser,
-//     const sax_config_t *restrict config,
-//     uint8_t *restrict arena_bytes,
-//     size_t arena_bytes_size,
-//     uint8_t *restrict file_buffer,
-//     size_t file_buffer_size,
-//     void *(*alloc)(void *, void *, size_t),
-//     void *alloc_ctx) {
+static sax_parser_t *sax_parser_create(
+    sax_parser_t *parser,
+    const sax_config_t *restrict config,
+    uint8_t *restrict arena_bytes,
+    size_t arena_bytes_size,
+    uint8_t *restrict file_buffer,
+    size_t file_buffer_size,
+    void *(*alloc)(void *, void *, size_t),
+    void *alloc_ctx) {
 
-//   *parser = (sax_parser_t){
-//       .arena = {
-//           .bytes = arena_bytes,
-//           .bytes_size = arena_bytes_size,
-//           .alloc = alloc,
-//           .alloc_ctx = alloc_ctx,
-//       },
-//       .untrimmed_content = config->untrimmed_content,
-//       .line = 1,
-//       .column = 1,
-//   };
+  *parser = (sax_parser_t){
+      .arena = {
+          .bytes = arena_bytes,
+          .bytes_size = arena_bytes_size,
+          .alloc = alloc,
+          .alloc_ctx = alloc_ctx,
+      },
+      .untrimmed_content = config->untrimmed_content,
+      .line = 1,
+      .column = 1,
+  };
 
-//   if (config->path != NULL) {
+  if (config->path != NULL) {
 
-//     FILE *fp = fopen(config->path, "r");
+    FILE *fp = fopen(config->path, "r");
 
-//     if (!fp) {
-//       sax_parser_error(parser, "Failed to open \"%s\"", config->path);
-//       return parser;
-//     }
+    if (!fp) {
+      sax_parser_error(parser, "Failed to open \"%s\"", config->path);
+      return parser;
+    }
 
-//     parser->iter = (sax_iter_t){
-//         .type = SAX_ITER_FILE,
-//         .impl = {
-//             .file = {
-//                 .fp = fp,
-//                 .file_buffer = file_buffer,
-//                 .file_buffer_size = file_buffer_size,
-//             },
-//         },
-//     };
-//   } else if (config->string != NULL) {
-//     parser->iter = (sax_iter_t){
-//         .type = SAX_ITER_STR,
-//         .impl.str = {
-//             .value = config->string,
-//         },
-//     };
-//   } else {
-//     sax_parser_error(parser, "No XML source provided");
-//   }
+    parser->iter = (sax_iter_t){
+        .type = SAX_ITER_FILE,
+        .impl = {
+            .file = {
+                .fp = fp,
+                .file_buffer = file_buffer,
+                .file_buffer_size = file_buffer_size,
+            },
+        },
+    };
+  } else if (config->string != NULL) {
+    parser->iter = (sax_iter_t){
+        .type = SAX_ITER_STR,
+        .impl.str = {
+            .value = config->string,
+        },
+    };
+  } else {
+    sax_parser_error(parser, "No XML source provided");
+  }
 
-//   return parser;
-// }
+  return parser;
+}
 
 static sax_parser_t *sax_parser_create_alloc(const sax_config_t *restrict config) {
 
