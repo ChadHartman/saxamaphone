@@ -940,15 +940,20 @@ static uint_fast8_t sax_parser_state_tag_start_attr_name(sax_parser_t *restrict 
   switch (glyph[0]) {
 
   case '/':
-    parser->secondary_state = SAX_STATE_TAG_START_CLOSE;
+    SAXAMAPHONE_LOG("Parsed start tag attribute name \"%s\"", parser->current_attr->name);
     SAXAMAPHONE_LOG("Parsed start tag \"%s\"", parser->data);
+    parser->current_attr = NULL;
+    parser->secondary_state = SAX_STATE_TAG_START_CLOSE;
     return SAX_EVENT_START_TAG;
 
   case '=':
+    SAXAMAPHONE_LOG("Parsed start tag attribute name \"%s\"", parser->current_attr->name);
     parser->secondary_state = SAX_STATE_ATTR_ASSIGN;
     return 0;
 
   case SAXAMAPHONE_SPACE:
+    SAXAMAPHONE_LOG("Parsed start tag attribute name \"%s\"", parser->current_attr->name);
+    parser->current_attr = NULL;
     parser->secondary_state = SAX_STATE_SPACE;
     return 0;
 
