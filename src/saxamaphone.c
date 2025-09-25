@@ -716,6 +716,7 @@ static uint_fast8_t sax_parser_state_proc_inst(sax_parser_t *restrict parser, co
                                   ? SAX_STATE_INIT
                                   : SAX_STATE_CONTENT;
       parser->secondary_state = SAX_STATE_NONE;
+      SAXAMAPHONE_LOG("Parsed processing instruction \"%s\"", parser->data);
       return SAX_EVENT_PROCESSING_INSTRUCTION;
     }
     return sax_parser_error_unexpected_glyph(parser, glyph);
@@ -750,7 +751,7 @@ static uint_fast8_t sax_parser_state_proc_inst_space(sax_parser_t *restrict pars
                                   ? SAX_STATE_INIT
                                   : SAX_STATE_CONTENT;
       parser->secondary_state = SAX_STATE_NONE;
-
+      SAXAMAPHONE_LOG("Parsed processing instruction \"%s\"", parser->data);
       return SAX_EVENT_PROCESSING_INSTRUCTION;
     }
     return sax_parser_error_unexpected_glyph(parser, glyph);
@@ -791,14 +792,19 @@ static uint_fast8_t sax_parser_state_proc_inst_attr_name(sax_parser_t *restrict 
   switch (glyph[0]) {
 
   case '?':
+    SAXAMAPHONE_LOG("Parsed processing instructing attribute name \"%s\"", parser->current_attr->name);
+    parser->current_attr = NULL;
     parser->secondary_state = SAX_STATE_SPACE;
     return sax_parser_append(parser, &parser->stage, glyph);
 
   case '=':
+    SAXAMAPHONE_LOG("Parsed processing instructing attribute name \"%s\"", parser->current_attr->name);
     parser->secondary_state = SAX_STATE_ATTR_ASSIGN;
     return 0;
 
   case SAXAMAPHONE_SPACE:
+    SAXAMAPHONE_LOG("Parsed processing instructing attribute name \"%s\"", parser->current_attr->name);
+    parser->current_attr = NULL;
     parser->secondary_state = SAX_STATE_SPACE;
     return 0;
 
@@ -830,6 +836,7 @@ static uint_fast8_t sax_parser_state_attr_value(sax_parser_t *restrict parser, c
   switch (glyph[0]) {
 
   case '"':
+    SAXAMAPHONE_LOG("Parsed attribute value \"%s\"", parser->current_attr->value);
     parser->current_attr = NULL;
     parser->secondary_state = SAX_STATE_SPACE;
     return 0;
@@ -849,10 +856,12 @@ static uint_fast8_t sax_parser_state_tag_start(sax_parser_t *restrict parser, co
 
   case '>':
     parser->primary_state = SAX_STATE_CONTENT;
+    SAXAMAPHONE_LOG("Parsed start tag \"%s\"", parser->data);
     return SAX_EVENT_START_TAG;
 
   case '/':
     parser->secondary_state = SAX_STATE_TAG_START_CLOSE;
+    SAXAMAPHONE_LOG("Parsed start tag \"%s\"", parser->data);
     return SAX_EVENT_START_TAG;
 
   case SAXAMAPHONE_SPACE:
@@ -886,11 +895,13 @@ static uint_fast8_t sax_parser_state_tag_start_space(sax_parser_t *restrict pars
 
   case '/':
     parser->secondary_state = SAX_STATE_TAG_START_CLOSE;
+    SAXAMAPHONE_LOG("Parsed start tag \"%s\"", parser->data);
     return SAX_EVENT_START_TAG;
 
   case '>':
     parser->primary_state = SAX_STATE_CONTENT;
     parser->secondary_state = SAX_STATE_NONE;
+    SAXAMAPHONE_LOG("Parsed start tag \"%s\"", parser->data);
     return SAX_EVENT_START_TAG;
 
   default:
@@ -930,6 +941,7 @@ static uint_fast8_t sax_parser_state_tag_start_attr_name(sax_parser_t *restrict 
 
   case '/':
     parser->secondary_state = SAX_STATE_TAG_START_CLOSE;
+    SAXAMAPHONE_LOG("Parsed start tag \"%s\"", parser->data);
     return SAX_EVENT_START_TAG;
 
   case '=':
