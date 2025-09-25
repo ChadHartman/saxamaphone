@@ -179,7 +179,11 @@ int main() {
   ASSERT_STR_EQ("1.0", sax_attr(parser, "version"));
   ASSERT_STR_EQ("UTF-8", sax_attr(parser, "encoding"));
 
-  ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
+  ev = sax_next(parser);
+  if (ev == SAX_EVENT_ERROR) {
+    LOG("error: \"%s\"", sax_error(parser));
+  }
+  ASSERT_EQ(SAX_EVENT_START_TAG, ev);
   ASSERT_STR_EQ("programming-languages", sax_tag(parser));
 
   prog_lang_t langs[8] = {0};
