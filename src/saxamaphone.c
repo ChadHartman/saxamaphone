@@ -808,7 +808,7 @@ static uint_fast8_t sax_parser_state_proc_inst_attr_name(sax_parser_t *restrict 
 }
 
 // TODO: may be multipurpos
-static uint_fast8_t sax_parser_state_proc_inst_attr_assign(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_attr_assign(sax_parser_t *restrict parser, const char *glyph) {
 
   switch (glyph[0]) {
 
@@ -822,7 +822,7 @@ static uint_fast8_t sax_parser_state_proc_inst_attr_assign(sax_parser_t *restric
 }
 
 // TODO: may be multipurpos
-static uint_fast8_t sax_parser_state_proc_inst_attr_value(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_attr_value(sax_parser_t *restrict parser, const char *glyph) {
 
   switch (glyph[0]) {
 
@@ -1130,11 +1130,11 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
       break;
 
     case SAX_STATE_PROC_INST | SAX_STATE_ATTR_ASSIGN:
-      ev = sax_parser_state_proc_inst_attr_assign(parser, glyph);
+      ev = sax_parser_state_attr_assign(parser, glyph);
       break;
 
     case SAX_STATE_PROC_INST | SAX_STATE_ATTR_VALUE:
-      ev = sax_parser_state_proc_inst_attr_value(parser, glyph);
+      ev = sax_parser_state_attr_value(parser, glyph);
       break;
 
     case SAX_STATE_PROC_INST | SAX_STATE_ESC_CHAR:
@@ -1159,13 +1159,11 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
       break;
 
     case SAX_STATE_TAG_START | SAX_STATE_ATTR_ASSIGN:
-      parser->data = "not implemented";
-      ev = SAX_EVENT_ERROR; // TODO
+      ev = sax_parser_state_attr_assign(parser, glyph);
       break;
 
     case SAX_STATE_TAG_START | SAX_STATE_ATTR_VALUE:
-      parser->data = "not implemented";
-      ev = SAX_EVENT_ERROR; // TODO
+      ev = sax_parser_state_attr_value(parser, glyph);
       break;
 
     case SAX_STATE_TAG_START | SAX_STATE_ESC_CHAR:
