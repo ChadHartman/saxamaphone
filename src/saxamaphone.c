@@ -1052,18 +1052,29 @@ static uint_fast8_t sax_parser_state_content(sax_parser_t *restrict parser, cons
   }
 }
 
-static uint_fast8_t sax_parser_state_content_esc_char(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_esc_char(sax_parser_t *restrict parser, const char *glyph) {
 
   switch (glyph[0]) {
   case ';':
     if (SAX_EVENT_ERROR == sax_parser_append(parser, &parser->stage, glyph)) {
       return SAX_EVENT_ERROR;
     } else {
-      parser->secondary_state = SAX_STATE_NONE;
+
       char buf[5];
       const char *unesc = sax_unescape(parser->stage, buf);
-      return sax_parser_append(parser, &parser->data, unesc);
+
+      if (parser->primary_state == SAX_STATE_CONTENT) {
+        parser->secondary_state = SAX_STATE_NONE;
+        return sax_parser_append(parser, &parser->data, unesc);
+      }
+
+      if (parser->primary_state == SAX_STATE_TAG_START) {
+        parser->secondary_state = SAX_STATE_ATTR_VALUE;
+        return sax_parser_append(parser, &parser->current_attr->value, unesc);
+      }
     }
+    parser->data = "Unreachable section";
+    return SAX_EVENT_ERROR;
 
   default:
     return sax_parser_append(parser, &parser->stage, glyph);
@@ -1312,26 +1323,15 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
       break;
 
     case SAX_STATE_TAG_START | SAX_STATE_ESC_CHAR:
-      parser->data = "not implemented";
-      ev = SAX_EVENT_ERROR; // TODO
+      ev = sax_parser_state_esc_char(parser, glyph);
       break;
 
     case SAX_STATE_CONTENT:
       ev = sax_parser_state_content(parser, glyph);
       break;
 
-    case SAX_STATE_CONTENT | SAX_STATE_COMMENT:
-      parser->data = "not implemented";
-      ev = SAX_EVENT_ERROR; // TODO
-      break;
-
-    case SAX_STATE_CONTENT | SAX_STATE_IN_CDATA:
-      parser->data = "not implemented";
-      ev = SAX_EVENT_ERROR; // TODO
-      break;
-
     case SAX_STATE_CONTENT | SAX_STATE_ESC_CHAR:
-      ev = sax_parser_state_content_esc_char(parser, glyph);
+      ev = sax_parser_state_esc_char(parser, glyph);
       break;
 
     case SAX_STATE_TAG_END:
