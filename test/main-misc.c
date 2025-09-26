@@ -108,10 +108,8 @@ static void TEST_DECL(cdata) {
       arena,
       "<content>"
       "  Sample content: "
-      "  <![CDATA["
-      "    <?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-      "    <body>Hello, world!</body>"
-      "  ]]> (xml)"
+      "  <![CDATA[<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+      "    <body>Hello, world!</body>]]> (xml)"
       "</content>");
 
   ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
