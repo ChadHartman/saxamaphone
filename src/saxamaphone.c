@@ -430,65 +430,65 @@ static bool sax_str_empty(const char *restrict str) {
 /// @brief Remove spaces (' ', '\t', '\n', etc) to the left of the first non-space character
 /// @param src string to ltrim
 /// @return left-trimmed string (pointer arithmatically produced)
-// static char *sax_str_ltrim(char *src) {
+static char *sax_ltrim(char *src) {
 
-//   if (src == NULL) {
-//     return NULL;
-//   }
+  if (src == NULL) {
+    return NULL;
+  }
 
-//   const size_t src_size = strlen(src);
+  const size_t src_size = strlen(src);
 
-//   for (uint_fast64_t i = 0;
-//        i < src_size;
-//        i += sax_code_pt_size(src[i])) {
+  for (uint_fast64_t i = 0;
+       i < src_size;
+       i += sax_code_pt_size(src[i])) {
 
-//     if (!isspace(src[i])) {
-//       src += i;
-//       break;
-//     }
-//   }
+    if (!isspace(src[i])) {
+      src += i;
+      break;
+    }
+  }
 
-//   return src;
-// }
+  return src;
+}
 
 /// @brief Remove spaces (' ', '\t', '\n', etc) to the right of the first non-space character
 /// @param src string to rtrim
 /// @return src mutated to be NULL-termed
-// static char *sax_str_rtrim(char *src) {
+static char *sax_rtrim(char *src) {
 
-//   if (sax_str_empty(src)) {
-//     return src;
-//   }
+  if (sax_str_empty(src)) {
+    return src;
+  }
 
-//   uint_fast64_t last_non_space = 0;
-//   const size_t src_size = strlen(src);
-//   uint_fast64_t i = 0;
+  uint_fast64_t last_non_space = 0;
+  const size_t src_size = strlen(src);
+  uint_fast64_t i = 0;
 
-//   // Can't tell utf-8 from top to bottom; have to start from bottom
-//   for (;
-//        i < src_size;
-//        i += sax_code_pt_size(src[i])) {
+  // Can't tell utf-8 from top to bottom; have to start from bottom
+  for (;
+       i < src_size;
+       i += sax_code_pt_size(src[i])) {
 
-//     if (!isspace(src[i])) {
-//       last_non_space = i;
-//     }
-//   }
+    if (!isspace(src[i])) {
+      last_non_space = i;
+    }
+  }
 
-//   const uint_fast64_t end = last_non_space + sax_code_pt_size(src[last_non_space]);
-//   src[end] = '\0';
-//   return src;
-// }
+  const uint_fast64_t end = last_non_space + sax_code_pt_size(src[last_non_space]);
+  src[end] = '\0';
+  return src;
+}
 
 /// @brief Perform both an ltrim & rtrim
 /// @param str to trim
 /// @return trimmed string
-// #ifndef SAXAMAPHONE_TEST
-// static
-// #endif
-//     char *
-//     sax_str_trim(char *str) {
-//   return sax_str_ltrim(sax_str_rtrim(str));
-// }
+#ifndef SAXAMAPHONE_TEST
+static
+#endif
+    char *
+    sax_trim(char *str) {
+  return sax_ltrim(sax_rtrim(str));
+}
 
 // --- private sax_iter_t methods --- //
 
@@ -1035,6 +1035,11 @@ static uint_fast8_t sax_parser_state_content(sax_parser_t *restrict parser, cons
       sax_parser_reset(parser);
       return 0;
     }
+
+    if (!parser->untrimmed_content) {
+      parser->data = sax_trim(parser->data);
+    }
+
     SAXAMAPHONE_LOG("Parsed content \"%s\"", parser->data);
     return SAX_EVENT_CONTENT;
 
