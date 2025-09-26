@@ -958,6 +958,8 @@ static uint_fast8_t sax_parser_state_tag_start(sax_parser_t *restrict parser, co
 static uint_fast8_t sax_parser_state_tag_start_close(sax_parser_t *restrict parser, const char *glyph) {
   switch (glyph[0]) {
   case '>':
+    parser->primary_state = SAX_STATE_CONTENT;
+    parser->secondary_state = SAX_STATE_NONE;
     return SAX_EVENT_END_TAG;
 
   default:
