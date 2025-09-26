@@ -18,6 +18,8 @@
 
 // === forward declares === //
 
+size_t sax_file_buf_size(size_t capacity);
+void *sax_default_alloc(void *ctx, void *ptr, size_t size);
 const char *sax_unescape(const char *restrict src, char *restrict buf);
 char *sax_trim(char *str);
 
@@ -181,6 +183,18 @@ static void TEST_DECL(comment) {
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 }
 
+static void TEST_DECL(default_alloc) {
+
+  (void)arena;
+
+  size_t *size = sax_default_alloc(NULL, NULL, sizeof(size_t));
+  ASSERT_NON_NULL(size);
+  *size = 42;
+  size = sax_default_alloc(NULL, size, 2 * sizeof(size_t));
+  ASSERT_EQ(42, *size);
+  ASSERT_NULL(sax_default_alloc(NULL, size, 0));
+}
+
 static void TEST_DECL(empty_element_tag) {
 
   sax_parser_t *restrict parser = xml_parser(arena, "<foo/>");
@@ -194,6 +208,15 @@ static void TEST_DECL(empty_element_tag) {
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 
   sax_free(parser);
+}
+
+static void TEST_DECL(file_buf_size) {
+
+  (void)arena;
+  ASSERT_EQ(32, sax_file_buf_size(0));
+  ASSERT_EQ(32, sax_file_buf_size(31));
+  ASSERT_EQ(256, sax_file_buf_size(512));
+  ASSERT_EQ(1024, sax_file_buf_size(4095));
 }
 
 static void TEST_DECL(proc_inst) {
@@ -339,7 +362,9 @@ int main(int argc, char **args) {
       TEST_REG(cdata_malformed),
       TEST_REG(comment),
       TEST_REG(content),
+      TEST_REG(default_alloc),
       TEST_REG(empty_element_tag),
+      TEST_REG(file_buf_size),
       TEST_REG(proc_inst),
       TEST_REG(start_tag),
       TEST_REG(trim),

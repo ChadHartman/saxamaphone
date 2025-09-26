@@ -132,9 +132,9 @@ struct sax_parser_t {
 // === constants === //
 
 #ifdef SAXAMAPHONE_TEST
-#define SAX_API
+#define SAX_TEST_API
 #else
-#define SAX_API static
+#define SAX_TEST_API static
 #endif
 
 #define SAXAMAPHONE_EXCLUDE_TAG "!\"#$%&'()*+,/;<=>?@[\\]^`{|}~"
@@ -161,7 +161,7 @@ struct sax_parser_t {
 #define SAXAMAPHONE_LOG(...) ((void)0)
 #endif
 
-static void *sax_default_alloc(void *ctx, void *ptr, size_t size) {
+SAX_TEST_API void *sax_default_alloc(void *ctx, void *ptr, size_t size) {
 
   (void)ctx;
 
@@ -180,12 +180,12 @@ static void *sax_default_alloc(void *ctx, void *ptr, size_t size) {
 /// @brief Compute the file buffer size; it should be half the capacity and a power of 2
 /// @param capacity total number of available bytes
 /// @return the computed file buffer size
-static size_t sax_file_buf_size(size_t capacity) {
+SAX_TEST_API size_t sax_file_buf_size(size_t capacity) {
 
   const size_t half = capacity / 2;
   // Min 32 arbitrarily chosen
   size_t buf_size = 32;
-  while (buf_size * 2 < half) {
+  while (buf_size * 2 <= half) {
     buf_size = buf_size * 2;
   }
   return buf_size;
@@ -335,7 +335,7 @@ static bool sax_str_is_space(const char *restrict str) {
 /// @param src string to convert
 /// @param buf at least sized 5; must be populated
 /// @return string literal or populated buf depending on the encoding
-SAX_API const char *sax_unescape(const char *restrict src, char *restrict buf) {
+SAX_TEST_API const char *sax_unescape(const char *restrict src, char *restrict buf) {
 
   if (src == NULL) {
     return NULL;
@@ -484,7 +484,7 @@ static char *sax_rtrim(char *src) {
 /// @brief Perform both an ltrim & rtrim
 /// @param str to trim
 /// @return trimmed string
-SAX_API char *sax_trim(char *str) {
+SAX_TEST_API char *sax_trim(char *str) {
   return sax_ltrim(sax_rtrim(str));
 }
 
