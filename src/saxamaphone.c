@@ -830,6 +830,7 @@ static uint_fast8_t sax_parser_state_proc_inst_space(sax_parser_t *restrict pars
       sax_parser_error(parser, "Out of memory");
       return SAX_EVENT_ERROR;
     }
+    memset(parser->current_attr, 0, sizeof(sax_attr_t));
 
     // Link
     if (parser->attrs == NULL) {
@@ -978,6 +979,7 @@ static uint_fast8_t sax_parser_state_tag_start_space(sax_parser_t *restrict pars
       sax_parser_error(parser, "Out of memory");
       return SAX_EVENT_ERROR;
     }
+    memset(parser->current_attr, 0, sizeof(sax_attr_t));
 
     // Link
     if (parser->attrs == NULL) {
