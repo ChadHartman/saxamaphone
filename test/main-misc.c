@@ -85,6 +85,29 @@ static const char *xml_parse_attr_val(
   return attr;
 }
 
+static const char *xml_parse_proc_inst_attr_val(
+    arena_t *restrict arena,
+    const char *restrict attr_val) {
+
+  char xml[1024];
+  snprintf(xml, sizeof(xml), "<?inst name=\"%s\" ?>", attr_val);
+
+  sax_parser_t *parser = xml_parser(arena, xml);
+  sax_event_t ev = sax_next(parser);
+
+  if (ev == SAX_EVENT_ERROR) {
+    printf("%s\n", sax_error(parser));
+    return NULL;
+  }
+
+  ASSERT_EQ(SAX_EVENT_PROCESSING_INSTRUCTION, ev);
+  ASSERT_STR_EQ("inst", sax_tag(parser));
+
+  const char *restrict attr = arena_strdup(arena, sax_attr(parser, "name"));
+  sax_free(parser);
+  return attr;
+}
+
 // === test cases === //
 
 static void TEST_DECL(attr_val) {
@@ -171,6 +194,22 @@ static void TEST_DECL(empty_element_tag) {
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 
   sax_free(parser);
+}
+
+static void TEST_DECL(proc_inst) {
+
+  ASSERT_STR_EQ("foo", xml_parse_proc_inst_attr_val(arena, "foo"));
+  ASSERT_STR_EQ("\tfoo", xml_parse_proc_inst_attr_val(arena, "\tfoo"));
+  ASSERT_STR_EQ("foo\n", xml_parse_proc_inst_attr_val(arena, "foo\n"));
+  ASSERT_STR_EQ("\t foo \n", xml_parse_proc_inst_attr_val(arena, "\t foo \n"));
+  ASSERT_STR_EQ("中", xml_parse_proc_inst_attr_val(arena, "中"));
+  ASSERT_STR_EQ("\t中", xml_parse_proc_inst_attr_val(arena, "\t中"));
+  ASSERT_STR_EQ("中\n", xml_parse_proc_inst_attr_val(arena, "中\n"));
+  ASSERT_STR_EQ("\t 中 \n", xml_parse_proc_inst_attr_val(arena, "\t 中 \n"));
+  ASSERT_STR_EQ("😀", xml_parse_proc_inst_attr_val(arena, "&#128512;"));
+  ASSERT_STR_EQ("\t😀", xml_parse_proc_inst_attr_val(arena, "\t&#128512;"));
+  ASSERT_STR_EQ("😀\n", xml_parse_proc_inst_attr_val(arena, "&#128512;\n"));
+  ASSERT_STR_EQ("\t 😀 \n", xml_parse_proc_inst_attr_val(arena, "\t &#128512; \n"));
 }
 
 static void TEST_DECL(start_tag) {
@@ -301,12 +340,12 @@ int main(int argc, char **args) {
       TEST_REG(comment),
       TEST_REG(content),
       TEST_REG(empty_element_tag),
+      TEST_REG(proc_inst),
       TEST_REG(start_tag),
       TEST_REG(trim),
       TEST_REG(unescape),
       TEST_REG(unescape10),
       TEST_REG(unescape16),
-
   };
   const size_t count = sizeof(tests) / sizeof(test_t);
 
