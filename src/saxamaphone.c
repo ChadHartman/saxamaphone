@@ -1047,6 +1047,22 @@ static uint_fast8_t sax_parser_state_content(sax_parser_t *restrict parser, cons
   }
 }
 
+static uint_fast8_t sax_parser_state_tag_end(sax_parser_t *restrict parser, const char *glyph) {
+  switch (glyph[0]) {
+  case '>':
+    parser->primary_state = SAX_STATE_CONTENT;
+    return SAX_EVENT_END_TAG;
+
+  default: {
+    const char *exclude = parser->data == NULL ? SAXAMAPHONE_EXCLUDE_TAG_PREFIX : SAXAMAPHONE_EXCLUDE_TAG;
+    if (strchr(exclude, glyph[0]) == NULL) {
+      return sax_parser_append(parser, &parser->data, glyph);
+    }
+    return sax_parser_error_unexpected_glyph(parser, glyph);
+  }
+  }
+}
+
 static sax_parser_t *sax_parser_create(
     sax_parser_t *parser,
     const sax_config_t *restrict config,
@@ -1297,8 +1313,7 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
       break;
 
     case SAX_STATE_TAG_END:
-      parser->data = "not implemented";
-      ev = SAX_EVENT_ERROR; // TODO
+      ev = sax_parser_state_tag_end(parser, glyph);
       break;
 
     default:
