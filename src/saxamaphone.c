@@ -214,41 +214,32 @@ static uint_fast8_t sax_code_pt_size(uint8_t byte) {
 /// @param value to convert
 /// @param buf buffer to populate and return; must be at least sized 5
 /// @return buf
-// static const char *sax_long_to_code_pt(long value, char *restrict buf) {
+static const char *sax_long_to_code_pt(long value, char *restrict buf) {
 
-//   if (value < 0 || value > 0x10FFFF || (value >= 0xD800 && value <= 0xDFFF)) {
-//     buf[0] = '\0';
-//   } else if (value <= 0x7F) {
-//     buf[0] = (char)value;
-//     buf[1] = '\0';
-//   } else if (value <= 0x7FF) {
-//     buf[0] = (char)(0xC0 | ((value >> 6) & 0x1F));
-//     buf[1] = (char)(0x80 | (value & 0x3F));
-//     buf[2] = '\0';
-//   } else if (value <= 0xFFFF) {
-//     buf[0] = (char)(0xE0 | ((value >> 12) & 0x0F));
-//     buf[1] = (char)(0x80 | ((value >> 6) & 0x3F));
-//     buf[2] = (char)(0x80 | (value & 0x3F));
-//     buf[3] = '\0';
-//   } else {
-//     buf[0] = (char)(0xF0 | ((value >> 18) & 0x07));
-//     buf[1] = (char)(0x80 | ((value >> 12) & 0x3F));
-//     buf[2] = (char)(0x80 | ((value >> 6) & 0x3F));
-//     buf[3] = (char)(0x80 | (value & 0x3F));
-//     buf[4] = '\0';
-//   }
+  if (value < 0 || value > 0x10FFFF || (value >= 0xD800 && value <= 0xDFFF)) {
+    buf[0] = '\0';
+  } else if (value <= 0x7F) {
+    buf[0] = (char)value;
+    buf[1] = '\0';
+  } else if (value <= 0x7FF) {
+    buf[0] = (char)(0xC0 | ((value >> 6) & 0x1F));
+    buf[1] = (char)(0x80 | (value & 0x3F));
+    buf[2] = '\0';
+  } else if (value <= 0xFFFF) {
+    buf[0] = (char)(0xE0 | ((value >> 12) & 0x0F));
+    buf[1] = (char)(0x80 | ((value >> 6) & 0x3F));
+    buf[2] = (char)(0x80 | (value & 0x3F));
+    buf[3] = '\0';
+  } else {
+    buf[0] = (char)(0xF0 | ((value >> 18) & 0x07));
+    buf[1] = (char)(0x80 | ((value >> 12) & 0x3F));
+    buf[2] = (char)(0x80 | ((value >> 6) & 0x3F));
+    buf[3] = (char)(0x80 | (value & 0x3F));
+    buf[4] = '\0';
+  }
 
-//   return buf;
-// }
-
-// /// @brief NULL-safe string comparison
-// /// @return true if the strings are equal
-// static bool sax_str_eq(const char *restrict lhs, const char *restrict rhs) {
-//   if (lhs == NULL || rhs == NULL) {
-//     return lhs == rhs;
-//   }
-//   return strcmp(lhs, rhs) == 0;
-// }
+  return buf;
+}
 
 static int_fast32_t sax_strlen(const char *restrict str) {
   return str == NULL ? -1 : strlen(str);
@@ -291,30 +282,30 @@ static bool sax_startswith(const char *restrict subject, const char *restrict pr
 /// @param subject the string to test
 /// @param suffix the suffix to match
 /// @return true if subject endswith the suffix
-// static bool sax_endswith(const char *restrict subject, const char *restrict suffix) {
+static bool sax_endswith(const char *restrict subject, const char *restrict suffix) {
 
-//   if (subject == NULL) {
-//     return suffix == NULL ? true : false;
-//   }
+  if (subject == NULL) {
+    return suffix == NULL ? true : false;
+  }
 
-//   if (suffix == NULL) {
-//     return true;
-//   }
+  if (suffix == NULL) {
+    return true;
+  }
 
-//   const size_t subj_size = strlen(subject);
-//   const size_t suffix_size = strlen(suffix);
+  const size_t subj_size = strlen(subject);
+  const size_t suffix_size = strlen(suffix);
 
-//   if (suffix_size == 0) {
-//     return true;
-//   }
+  if (suffix_size == 0) {
+    return true;
+  }
 
-//   if (suffix_size > subj_size) {
-//     return false;
-//   }
+  if (suffix_size > subj_size) {
+    return false;
+  }
 
-//   const size_t offset = subj_size - suffix_size;
-//   return strcmp(subject + offset, suffix) == 0;
-// }
+  const size_t offset = subj_size - suffix_size;
+  return strcmp(subject + offset, suffix) == 0;
+}
 
 /// @brief Test whether the provided string is all spaces
 /// @param str string to test
@@ -338,60 +329,68 @@ static bool sax_str_is_space(const char *restrict str) {
 /// @param src string to convert
 /// @param buf at least sized 5; must be populated
 /// @return string literal or populated buf depending on the encoding
-// #ifndef SAXAMAPHONE_TEST
-// static
-// #endif
-//     const char *
-//     sax_str_unescape(const char *restrict src, char *restrict buf) {
+#ifndef SAXAMAPHONE_TEST
+static
+#endif
+    const char *
+    sax_unescape(const char *restrict src, char *restrict buf) {
 
-//   if (strcmp("&lt;", src) == 0) {
-//     return "<";
-//   }
+  if (src == NULL) {
+    return NULL;
+  }
 
-//   if (strcmp("&gt;", src) == 0) {
-//     return ">";
-//   }
+  if (strcmp("&lt;", src) == 0) {
+    return "<";
+  }
 
-//   if (strcmp("&amp;", src) == 0) {
-//     return "&";
-//   }
+  if (strcmp("&gt;", src) == 0) {
+    return ">";
+  }
 
-//   if (strcmp("&apos;", src) == 0) {
-//     return "'";
-//   }
+  if (strcmp("&amp;", src) == 0) {
+    return "&";
+  }
 
-//   if (strcmp("&quot;", src) == 0) {
-//     return "\"";
-//   }
+  if (strcmp("&apos;", src) == 0) {
+    return "'";
+  }
 
-//   // Longest is &#1114111; (10 chars)
-//   char num[16];
+  if (strcmp("&quot;", src) == 0) {
+    return "\"";
+  }
 
-//   if (sax_startswith(src, "&#x") && sax_str_endswith(src, ";")) {
-//     // -3 for "&#x" + ";"
-//     snprintf(num, sizeof(num), "%.*s", (int)(strlen(src) - 4), src + 3);
-//     long code_pt = strtol(num, NULL, 16);
-//     if (code_pt == 0) {
-//       return src;
-//     }
+  if (buf == NULL) {
+    return NULL;
+  }
 
-//     return sax_long_to_code_pt(code_pt, buf);
-//   }
+  // Longest is &#1114111; (10 chars)
+  char num[16];
 
-//   if (sax_startswith(src, "&#") && sax_str_endswith(src, ";")) {
+  if (sax_startswith(src, "&#x") && sax_endswith(src, ";")) {
+    // -3 for "&#x" + ";"
+    snprintf(num, sizeof(num), "%.*s", (int)(strlen(src) - 4), src + 3);
+    long code_pt = strtol(num, NULL, 16);
+    if (code_pt == 0) {
+      return src;
+    }
 
-//     // -3 for "&#" + ";"
-//     snprintf(num, sizeof(num), "%.*s", (int)(strlen(src) - 3), src + 2);
-//     long code_pt = strtol(num, NULL, 10);
-//     if (code_pt == 0) {
-//       return src;
-//     }
+    return sax_long_to_code_pt(code_pt, buf);
+  }
 
-//     return sax_long_to_code_pt(code_pt, buf);
-//   }
+  if (sax_startswith(src, "&#") && sax_endswith(src, ";")) {
 
-//   return src;
-// }
+    // -3 for "&#" + ";"
+    snprintf(num, sizeof(num), "%.*s", (int)(strlen(src) - 3), src + 2);
+    long code_pt = strtol(num, NULL, 10);
+    if (code_pt == 0) {
+      return src;
+    }
+
+    return sax_long_to_code_pt(code_pt, buf);
+  }
+
+  return src;
+}
 
 /// @brief Perform an object allocation
 /// @param alloc instance
@@ -1036,6 +1035,7 @@ static uint_fast8_t sax_parser_state_content(sax_parser_t *restrict parser, cons
       sax_parser_reset(parser);
       return 0;
     }
+    SAXAMAPHONE_LOG("Parsed content \"%s\"", parser->data);
     return SAX_EVENT_CONTENT;
 
   case '&':
@@ -1044,6 +1044,24 @@ static uint_fast8_t sax_parser_state_content(sax_parser_t *restrict parser, cons
 
   default:
     return sax_parser_append(parser, &parser->data, glyph);
+  }
+}
+
+static uint_fast8_t sax_parser_state_content_esc_char(sax_parser_t *restrict parser, const char *glyph) {
+
+  switch (glyph[0]) {
+  case ';':
+    if (SAX_EVENT_ERROR == sax_parser_append(parser, &parser->stage, glyph)) {
+      return SAX_EVENT_ERROR;
+    } else {
+      parser->secondary_state = SAX_STATE_NONE;
+      char buf[5];
+      const char *unesc = sax_unescape(parser->stage, buf);
+      return sax_parser_append(parser, &parser->data, unesc);
+    }
+
+  default:
+    return sax_parser_append(parser, &parser->stage, glyph);
   }
 }
 
@@ -1308,8 +1326,7 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
       break;
 
     case SAX_STATE_CONTENT | SAX_STATE_ESC_CHAR:
-      parser->data = "not implemented";
-      ev = SAX_EVENT_ERROR; // TODO
+      ev = sax_parser_state_content_esc_char(parser, glyph);
       break;
 
     case SAX_STATE_TAG_END:

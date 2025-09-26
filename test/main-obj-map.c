@@ -69,8 +69,13 @@ static char *map_string_node(
     const char *restrict tag) {
 
   const sax_event_t ev = sax_next(parser);
+  if (ev == SAX_EVENT_ERROR) {
+    LOG("ERROR: %s", sax_error(parser));
+    return NULL;
+  }
+
   if (SAX_EVENT_CONTENT != ev) {
-    LOG("ERROR: missing content for \"%s\"\n", tag);
+    LOG("ERROR: missing content for \"%s\"; received event %d\n", tag, ev);
     return NULL;
   }
 
