@@ -1102,17 +1102,21 @@ static uint_fast8_t sax_parser_state_esc_char(sax_parser_t *restrict parser, con
 
   char buf[5];
   const char *unesc = sax_unescape(parser->stage, buf);
+  uint_fast8_t ev = 0;
 
   switch (parser->primary_state) {
   case SAX_STATE_CONTENT:
     parser->secondary_state = SAX_STATE_NONE;
-    return sax_parser_append(parser, &parser->data, unesc);
-    break;
+    ev = sax_parser_append(parser, &parser->data, unesc);
+    parser->stage = NULL;
+    return ev;
 
   case SAX_STATE_PROC_INST:
   case SAX_STATE_TAG_START:
     parser->secondary_state = SAX_STATE_ATTR_VALUE;
-    return sax_parser_append(parser, &parser->current_attr->value, unesc);
+    ev = sax_parser_append(parser, &parser->current_attr->value, unesc);
+    parser->stage = NULL;
+    return ev;
 
   default:
     parser->data = "Unreachable section";
