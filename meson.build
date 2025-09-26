@@ -28,7 +28,7 @@ tests_misc = executable('saxamaphone-tests',
     include_directories: includes,
     c_args: c_args
         + '-DSAXAMAPHONE_TEST'
-        # + '-DSAXAMAPHONE_DEBUG'
+        + '-DSAXAMAPHONE_DEBUG'
     )
 
 tests_obj_map = executable('saxamaphone-tests-obj-map',
@@ -37,7 +37,9 @@ tests_obj_map = executable('saxamaphone-tests-obj-map',
         'test/arena.c',
         'test/main-obj-map.c'],
     include_directories: includes,
-    c_args: c_args)
+    c_args: c_args
+        + '-DSAXAMAPHONE_DEBUG'
+    )
 
 tests_alloc = executable('saxamaphone-tests-alloc',
     sources: [

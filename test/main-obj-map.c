@@ -9,10 +9,11 @@
 #include "test.h"
 #include <saxamaphone.h>
 
-#if 0
+#if 1
 #define LOG(...)                                                                   \
   printf(COLOR_CYAN "%s:%d " COLOR_RESET, (strrchr(__FILE__, '/') + 1), __LINE__); \
-  printf(__VA_ARGS__)
+  printf(__VA_ARGS__);                                                             \
+  printf("\n")
 #else
 #define LOG(...) ((void)0)
 #endif
@@ -68,8 +69,13 @@ static char *map_string_node(
     const char *restrict tag) {
 
   const sax_event_t ev = sax_next(parser);
+  if (ev == SAX_EVENT_ERROR) {
+    LOG("ERROR: %s", sax_error(parser));
+    return NULL;
+  }
+
   if (SAX_EVENT_CONTENT != ev) {
-    LOG("ERROR: missing content for \"%s\"\n", tag);
+    LOG("ERROR: missing content for \"%s\"; received event %d\n", tag, ev);
     return NULL;
   }
 
@@ -168,13 +174,27 @@ int main() {
   sax_parser_t *parser = sax_parser(&(sax_config_t){
       .path = "../test/files/programming-languages.xml",
   });
-  ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
+
+  sax_event_t ev = sax_next(parser);
+  if (ev == SAX_EVENT_ERROR) {
+    LOG("error: \"%s\"", sax_error(parser));
+  }
+  ASSERT_EQ(SAX_EVENT_PROCESSING_INSTRUCTION, ev);
+  ASSERT_STR_EQ("xml", sax_tag(parser));
+  ASSERT_STR_EQ("1.0", sax_attr(parser, "version"));
+  ASSERT_STR_EQ("UTF-8", sax_attr(parser, "encoding"));
+
+  ev = sax_next(parser);
+  if (ev == SAX_EVENT_ERROR) {
+    LOG("error: \"%s\"", sax_error(parser));
+  }
+  ASSERT_EQ(SAX_EVENT_START_TAG, ev);
   ASSERT_STR_EQ("programming-languages", sax_tag(parser));
 
   prog_lang_t langs[8] = {0};
   size_t lang_offset = 0;
 
-  for (sax_event_t ev = sax_next(parser);
+  for (ev = sax_next(parser);
        ev != SAX_EVENT_END_DOCUMENT && ev != SAX_EVENT_ERROR;
        ev = sax_next(parser)) {
 
@@ -188,6 +208,10 @@ int main() {
     } else {
       FAIL("Unexpected tag \"%s\"", sax_tag(parser));
     }
+  }
+
+  if (ev == SAX_EVENT_ERROR) {
+    LOG("ERROR: %s", sax_error(parser));
   }
 
   ASSERT_STR_EQ("Python", langs[0].name);
