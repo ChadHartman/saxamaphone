@@ -1092,30 +1092,31 @@ static uint_fast8_t sax_parser_state_cdata(sax_parser_t *restrict parser, const 
 
 static uint_fast8_t sax_parser_state_esc_char(sax_parser_t *restrict parser, const char *glyph) {
 
-  switch (glyph[0]) {
-  case ';':
-    if (SAX_EVENT_ERROR == sax_parser_append(parser, &parser->stage, glyph)) {
-      return SAX_EVENT_ERROR;
-    } else {
+  if (glyph[0] != ';') {
+    return sax_parser_append(parser, &parser->stage, glyph);
+  }
 
-      char buf[5];
-      const char *unesc = sax_unescape(parser->stage, buf);
-
-      if (parser->primary_state == SAX_STATE_CONTENT) {
-        parser->secondary_state = SAX_STATE_NONE;
-        return sax_parser_append(parser, &parser->data, unesc);
-      }
-
-      if (parser->primary_state == SAX_STATE_TAG_START) {
-        parser->secondary_state = SAX_STATE_ATTR_VALUE;
-        return sax_parser_append(parser, &parser->current_attr->value, unesc);
-      }
-    }
-    parser->data = "Unreachable section";
+  if (SAX_EVENT_ERROR == sax_parser_append(parser, &parser->stage, glyph)) {
     return SAX_EVENT_ERROR;
+  }
+
+  char buf[5];
+  const char *unesc = sax_unescape(parser->stage, buf);
+
+  switch (parser->primary_state) {
+  case SAX_STATE_CONTENT:
+    parser->secondary_state = SAX_STATE_NONE;
+    return sax_parser_append(parser, &parser->data, unesc);
+    break;
+
+  case SAX_STATE_PROC_INST:
+  case SAX_STATE_TAG_START:
+    parser->secondary_state = SAX_STATE_ATTR_VALUE;
+    return sax_parser_append(parser, &parser->current_attr->value, unesc);
 
   default:
-    return sax_parser_append(parser, &parser->stage, glyph);
+    parser->data = "Unreachable section";
+    return SAX_EVENT_ERROR;
   }
 }
 
@@ -1336,8 +1337,7 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
       break;
 
     case SAX_STATE_PROC_INST | SAX_STATE_ESC_CHAR:
-      parser->data = "not implemented";
-      ev = SAX_EVENT_ERROR; // TODO
+      ev = sax_parser_state_esc_char(parser, glyph);
       break;
 
     case SAX_STATE_TAG_START:
