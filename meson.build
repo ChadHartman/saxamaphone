@@ -53,3 +53,5 @@ test('tests-arena', tests_arena)
 test('tests-alloc', tests_alloc)
 test('tests-misc', tests_misc)
 test('tests-obj-map', tests_obj_map)
+
+# `ninja coverage` to generate coverage reports

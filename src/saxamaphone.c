@@ -131,6 +131,12 @@ struct sax_parser_t {
 
 // === constants === //
 
+#ifdef SAXAMAPHONE_TEST
+#define SAX_API
+#else
+#define SAX_API static
+#endif
+
 #define SAXAMAPHONE_EXCLUDE_TAG "!\"#$%&'()*+,/;<=>?@[\\]^`{|}~"
 #define SAXAMAPHONE_EXCLUDE_TAG_PREFIX (SAXAMAPHONE_EXCLUDE_TAG ".-0123456789")
 
@@ -329,11 +335,7 @@ static bool sax_str_is_space(const char *restrict str) {
 /// @param src string to convert
 /// @param buf at least sized 5; must be populated
 /// @return string literal or populated buf depending on the encoding
-#ifndef SAXAMAPHONE_TEST
-static
-#endif
-    const char *
-    sax_unescape(const char *restrict src, char *restrict buf) {
+SAX_API const char *sax_unescape(const char *restrict src, char *restrict buf) {
 
   if (src == NULL) {
     return NULL;
@@ -482,11 +484,7 @@ static char *sax_rtrim(char *src) {
 /// @brief Perform both an ltrim & rtrim
 /// @param str to trim
 /// @return trimmed string
-#ifndef SAXAMAPHONE_TEST
-static
-#endif
-    char *
-    sax_trim(char *str) {
+SAX_API char *sax_trim(char *str) {
   return sax_ltrim(sax_rtrim(str));
 }
 
