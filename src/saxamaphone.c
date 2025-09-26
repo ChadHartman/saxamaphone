@@ -582,8 +582,14 @@ static const char *sax_iter_next_glyph(sax_iter_t *restrict iter, char *restrict
 /// @brief Reset parser to parse a new XML tag
 /// @param parser instance
 static void sax_parser_reset(sax_parser_t *restrict parser) {
-  parser->data = NULL;
-  parser->arena.offset = 0;
+
+  // Special case; <foo/> generates 2 events: START_TAG & END_TAG; both sharing
+  //   the same data (tag)
+  if (parser->secondary_state != SAX_STATE_TAG_START_CLOSE) {
+    parser->data = NULL;
+    parser->arena.offset = 0;
+  }
+
   parser->attrs = NULL;
   parser->current_attr = NULL;
   parser->stage = NULL;
