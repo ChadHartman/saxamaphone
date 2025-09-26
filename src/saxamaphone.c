@@ -28,14 +28,17 @@ typedef enum sax_primary_state_t {
   /// @brief Characters found between '>' and '<'
   SAX_STATE_CONTENT = 1 << 5,
 
+  /// @brief `<[CDATA[`
+  SAX_STATE_CDATA = 1 << 6,
+
   /// @brief '<' + '/'
-  SAX_STATE_TAG_END = 1 << 6,
+  SAX_STATE_TAG_END = 1 << 7,
 
   /// @brief Iterator returns 0 for character
-  SAX_STATE_COMPLETE = 1 << 7,
+  SAX_STATE_COMPLETE = 1 << 8,
 
   /// @brief Fallback state for unexpected input
-  SAX_STATE_ERROR = 1 << 8,
+  SAX_STATE_ERROR = 1 << 9,
 } sax_primary_state_t;
 
 typedef enum sax_secondary_state_t {
@@ -43,23 +46,20 @@ typedef enum sax_secondary_state_t {
   SAX_STATE_NONE = 0,
 
   /// @brief '/' found within start tag
-  SAX_STATE_TAG_START_CLOSE = 1 << 9,
+  SAX_STATE_TAG_START_CLOSE = 1 << 10,
 
   /// @brief Space after `<foo `, `<foo attr `, `<foo attr="value"`
   ///   `<?foo `, `<?foo attr `, or `<?foo attr="value"`
-  SAX_STATE_SPACE = 1 << 10,
+  SAX_STATE_SPACE = 1 << 11,
 
   /// @brief `<?foo ` `<foo ` + non-control character
-  SAX_STATE_ATTR_NAME = 1 << 11,
+  SAX_STATE_ATTR_NAME = 1 << 12,
 
   /// @brief '=' found after parsing attr name
-  SAX_STATE_ATTR_ASSIGN = 1 << 12,
+  SAX_STATE_ATTR_ASSIGN = 1 << 13,
 
   /// @brief `<foo name="` or `<?foo name="`
-  SAX_STATE_ATTR_VALUE = 1 << 13,
-
-  /// @brief `<[CDATA[`
-  SAX_STATE_IN_CDATA = 1 << 14,
+  SAX_STATE_ATTR_VALUE = 1 << 14,
 
   /// @brief '&' found in attr_value and content
   SAX_STATE_ESC_CHAR = 1 << 15,
@@ -726,15 +726,15 @@ static uint_fast8_t sax_parser_state_tag(sax_parser_t *restrict parser, const ch
       return SAX_EVENT_ERROR;
     }
 
-    if (sax_str_eq("<!--", parser->stage)) {
+    if (sax_str_eq("!--", parser->stage)) {
       sax_parser_reset(parser);
       parser->primary_state = SAX_STATE_COMMENT;
       return 0;
     }
 
-    if (sax_str_eq("<![CDATA[", parser->stage)) {
+    if (sax_str_eq("![CDATA[", parser->stage)) {
       sax_parser_reset(parser);
-      parser->primary_state = SAX_STATE_COMMENT;
+      parser->primary_state = SAX_STATE_CDATA;
       return 0;
     }
 
@@ -928,10 +928,10 @@ static uint_fast8_t sax_parser_state_tag_start(sax_parser_t *restrict parser, co
     return 0;
 
   default:
-    if (strchr(SAXAMAPHONE_EXCLUDE_TAG, glyph[0]) != NULL) {
-      return sax_parser_error_unexpected_glyph(parser, glyph);
+    if (strchr(SAXAMAPHONE_EXCLUDE_TAG, glyph[0]) == NULL) {
+      return sax_parser_append(parser, &parser->data, glyph);
     }
-    return sax_parser_append(parser, &parser->data, glyph);
+    return sax_parser_error_unexpected_glyph(parser, glyph);
   }
 }
 
@@ -1050,6 +1050,22 @@ static uint_fast8_t sax_parser_state_content(sax_parser_t *restrict parser, cons
   default:
     return sax_parser_append(parser, &parser->data, glyph);
   }
+}
+
+static uint_fast8_t sax_parser_state_cdata(sax_parser_t *restrict parser, const char *glyph) {
+
+  if (SAX_EVENT_ERROR == sax_parser_append(parser, &parser->data, glyph)) {
+    return SAX_EVENT_ERROR;
+  }
+
+  if (sax_endswith(parser->data, "]]>")) {
+    const size_t len = strlen(parser->data);
+    parser->data[len - 3] = '\0';
+    parser->primary_state = SAX_STATE_CONTENT;
+    return SAX_EVENT_CONTENT;
+  }
+
+  return 0;
 }
 
 static uint_fast8_t sax_parser_state_esc_char(sax_parser_t *restrict parser, const char *glyph) {
@@ -1328,6 +1344,10 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
 
     case SAX_STATE_CONTENT:
       ev = sax_parser_state_content(parser, glyph);
+      break;
+
+    case SAX_STATE_CDATA:
+      ev = sax_parser_state_cdata(parser, glyph);
       break;
 
     case SAX_STATE_CONTENT | SAX_STATE_ESC_CHAR:
