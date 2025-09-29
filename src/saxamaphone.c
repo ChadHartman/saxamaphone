@@ -653,7 +653,7 @@ static sax_event_t sax_parser_error_unexpected_glyph(
     const char *restrict glyph) {
 
   sax_parser_error(parser,
-                   "Unexpected character \"%s\" located on line %" PRIuFAST16 " column %" PRIuFAST16,
+                   "Unexpected character \'%s\' located on line %" PRIuFAST16 " column %" PRIuFAST16,
                    glyph,
                    parser->line,
                    parser->column);
