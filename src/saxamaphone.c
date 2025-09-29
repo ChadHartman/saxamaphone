@@ -45,8 +45,8 @@ typedef enum sax_secondary_state_t {
 
   SAX_STATE_NONE = 0,
 
-  /// @brief '/' found within start tag
-  SAX_STATE_TAG_START_CLOSE = 1 << 10,
+  /// @brief '/' found within start tag or '?' in a processing instruction
+  SAX_STATE_TAG_CLOSE = 1 << 10,
 
   /// @brief Space after `<foo `, `<foo attr `, `<foo attr="value"`
   ///   `<?foo `, `<?foo attr `, or `<?foo attr="value"`
@@ -583,7 +583,7 @@ static void sax_parser_reset(sax_parser_t *restrict parser) {
 
   // Special case; <foo/> generates 2 events: START_TAG & END_TAG; both sharing
   //   the same data (tag)
-  if (parser->secondary_state != SAX_STATE_TAG_START_CLOSE) {
+  if (parser->secondary_state != SAX_STATE_TAG_CLOSE) {
     parser->data = NULL;
     parser->arena.offset = 0;
   }
@@ -756,30 +756,16 @@ static uint_fast8_t sax_parser_state_proc_inst(sax_parser_t *restrict parser, co
   switch (glyph[0]) {
 
   case SAXAMAPHONE_SPACE:
-
-    // `<?xml? `
-    if (sax_startswith(parser->stage, "?") ||
-        // `<??`
-        sax_strlen(parser->data) == 0) {
+    if (sax_str_empty(parser->data)) {
       return sax_parser_error_unexpected_glyph(parser, glyph);
     }
-
-    // `<?xml `
     parser->secondary_state = SAX_STATE_SPACE;
     return 0;
 
-    // <?xml?>
   case '?':
-    return sax_parser_append(parser, &parser->stage, glyph);
-
-  case '>':
-    if (sax_str_eq(parser->stage, "?")) {
-      parser->primary_state = sax_str_eq("xml", parser->data)
-                                  ? SAX_STATE_INIT
-                                  : SAX_STATE_CONTENT;
-      parser->secondary_state = SAX_STATE_NONE;
-      SAXAMAPHONE_LOG("Parsed processing instruction \"%s\"", parser->data);
-      return SAX_EVENT_PROCESSING_INSTRUCTION;
+    if (sax_strlen(parser->data) > 0) {
+      parser->secondary_state = SAX_STATE_TAG_CLOSE;
+      return 0;
     }
     return sax_parser_error_unexpected_glyph(parser, glyph);
 
@@ -937,7 +923,7 @@ static uint_fast8_t sax_parser_state_tag_start(sax_parser_t *restrict parser, co
     return SAX_EVENT_START_TAG;
 
   case '/':
-    parser->secondary_state = SAX_STATE_TAG_START_CLOSE;
+    parser->secondary_state = SAX_STATE_TAG_CLOSE;
     SAXAMAPHONE_LOG("Parsed start tag \"%s\"", parser->data);
     return SAX_EVENT_START_TAG;
 
@@ -973,7 +959,7 @@ static uint_fast8_t sax_parser_state_tag_start_space(sax_parser_t *restrict pars
     return 0;
 
   case '/':
-    parser->secondary_state = SAX_STATE_TAG_START_CLOSE;
+    parser->secondary_state = SAX_STATE_TAG_CLOSE;
     SAXAMAPHONE_LOG("Parsed start tag \"%s\"", parser->data);
     return SAX_EVENT_START_TAG;
 
@@ -1023,7 +1009,7 @@ static uint_fast8_t sax_parser_state_tag_start_attr_name(sax_parser_t *restrict 
     SAXAMAPHONE_LOG("Parsed start tag attribute name \"%s\"", parser->current_attr->name);
     SAXAMAPHONE_LOG("Parsed start tag \"%s\"", parser->data);
     parser->current_attr = NULL;
-    parser->secondary_state = SAX_STATE_TAG_START_CLOSE;
+    parser->secondary_state = SAX_STATE_TAG_CLOSE;
     return SAX_EVENT_START_TAG;
 
   case '=':
@@ -1346,7 +1332,7 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
       ev = sax_parser_state_tag_start(parser, glyph);
       break;
 
-    case SAX_STATE_TAG_START | SAX_STATE_TAG_START_CLOSE:
+    case SAX_STATE_TAG_START | SAX_STATE_TAG_CLOSE:
       ev = sax_parser_state_tag_start_close(parser, glyph);
       break;
 
