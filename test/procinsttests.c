@@ -45,6 +45,11 @@ static void assert_proc_inst(
 
   ASSERT_EQ(SAX_EVENT_PROCESSING_INSTRUCTION, sax_next(parser));
   ASSERT_STR_EQ(tag, sax_tag(parser));
+
+  if (attrs[0].name == NULL) {
+    ASSERT_NULL(sax_attrs(parser));
+  }
+
   for (const pi_attr_t *restrict attr = attrs; attr->name != NULL; ++attr) {
     if (attr->value == NULL) {
       ASSERT(has_attr(parser, attr->name));
@@ -59,29 +64,25 @@ static void assert_proc_inst(
 
 TEST(proc_inst) {
 
-  ASSERT_PROC_INST(
-      arena,
-      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
-      "xml",
-      {"version", "1.0"},
-      {"encoding", "UTF-8"});
-
-  ASSERT_PROC_INST(
-      arena,
-      "<?alpha beta=\"gamma\" delta?>",
-      "alpha",
-      {"beta", "gamma"},
-      {"delta", NULL});
-
-  ASSERT_PROC_INST(
-      arena,
-      "<?alpha beta gamma=\"delta\"?>",
-      "alpha",
-      {"beta", NULL},
-      {"gamma", "delta"});
-
+  ASSERT_PROC_INST(arena, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "xml", {"version", "1.0"}, {"encoding", "UTF-8"});
+  ASSERT_PROC_INST(arena, "<?alpha beta=\"gamma\" delta?>", "alpha", {"beta", "gamma"}, {"delta", NULL});
+  ASSERT_PROC_INST(arena, "<?alpha beta=\"gamma\" delta ?>", "alpha", {"beta", "gamma"}, {"delta", NULL});
+  ASSERT_PROC_INST(arena, "<?alpha beta gamma=\"delta\" ?>", "alpha", {"beta", NULL}, {"gamma", "delta"});
   ASSERT_PROC_INST(arena, "<?alpha?>", "alpha", {0});
   ASSERT_PROC_INST(arena, "<?alpha ?>", "alpha", {0});
+
+  ASSERT_PROC_INST(arena, "<?alpha beta=\"foo\"?>", "alpha", {"beta", "foo"});
+  ASSERT_PROC_INST(arena, "<?alpha beta=\"\tfoo\"?>", "alpha", {"beta", "\tfoo"});
+  ASSERT_PROC_INST(arena, "<?alpha beta=\"foo\n\"?>", "alpha", {"beta", "foo\n"});
+  ASSERT_PROC_INST(arena, "<?alpha beta=\"\t foo \n\"?>", "alpha", {"beta", "\t foo \n"});
+  ASSERT_PROC_INST(arena, "<?alpha beta=\"中\"?>", "alpha", {"beta", "中"});
+  ASSERT_PROC_INST(arena, "<?alpha beta=\"\t中\"?>", "alpha", {"beta", "\t中"});
+  ASSERT_PROC_INST(arena, "<?alpha beta=\"中\n\"?>", "alpha", {"beta", "中\n"});
+  ASSERT_PROC_INST(arena, "<?alpha beta=\"\t 中 \n\"?>", "alpha", {"beta", "\t 中 \n"});
+  ASSERT_PROC_INST(arena, "<?alpha beta=\"&#128512;\"?>", "alpha", {"beta", "😀"});
+  ASSERT_PROC_INST(arena, "<?alpha beta=\"\t&#128512;\"?>", "alpha", {"beta", "\t😀"});
+  ASSERT_PROC_INST(arena, "<?alpha beta=\"&#128512;\n\"?>", "alpha", {"beta", "😀\n"});
+  ASSERT_PROC_INST(arena, "<?alpha beta=\"\t &#128512; \n\"?>", "alpha", {"beta", "\t 😀 \n"});
 
   ASSERT_XML_ERR(arena, "<?>", "Unexpected character '>' located on line 1 column 3");
   ASSERT_XML_ERR(arena, "<\?\?>", "Unexpected character '?' located on line 1 column 3");
