@@ -1,18 +1,42 @@
 #include "test.h"
 
-TEST(proc_inst) {
+typedef struct pi_attr_t {
+  const char *name;
+  const char *value;
+} pi_attr_t;
 
+static void assert_proc_inst(
+    arena_t *restrict arena,
+    const char *restrict xml,
+    const char *restrict tag,
+    const pi_attr_t *restrict attrs) {
+
+  // Happy path
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
-      .string = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+      .string = xml,
       .alloc = arena_custom_alloc,
       .alloc_ctx = arena,
   });
 
   ASSERT_EQ(SAX_EVENT_PROCESSING_INSTRUCTION, sax_next(parser));
-  ASSERT_STR_EQ("xml", sax_tag(parser));
-  ASSERT_STR_EQ("1.0", sax_attr(parser, "version"));
-  ASSERT_STR_EQ("UTF-8", sax_attr(parser, "encoding"));
+  ASSERT_STR_EQ(tag, sax_tag(parser));
+  for (const pi_attr_t *restrict attr = attrs; attr->name != NULL; ++attr) {
+    ASSERT_STR_EQ(attr->value, sax_attr(parser, attr->name));
+  }
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 
   sax_free(parser);
+}
+
+TEST(proc_inst) {
+
+  assert_proc_inst(
+      arena,
+      "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+      "xml",
+      (pi_attr_t[]){
+          {"version", "1.0"},
+          {"encoding", "UTF-8"},
+          {0},
+      });
 }
