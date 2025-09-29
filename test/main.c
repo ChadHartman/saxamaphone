@@ -7,6 +7,7 @@
 
 #include "arena.h"
 #include "test.h"
+#include "testlist.h"
 #include <saxamaphone.h>
 
 static void print_test(const char *restrict header) {
@@ -22,7 +23,6 @@ static void print_test(const char *restrict header) {
   printf("+\n");
 }
 
-#define TEST_REG(test_name) {.name = #test_name, .func = test_##test_name}
 #define LOG(...)                                        \
   printf("%s:%d - ", strrchr(__FILE__, '/'), __LINE__); \
   printf(__VA_ARGS__);                                  \
@@ -124,7 +124,7 @@ static const char *xml_parse_proc_inst_attr_val(
 
 // === test cases === //
 
-static TEST(attr_val) {
+TEST(attr_val) {
   ASSERT_STR_EQ("foo", xml_parse_attr_val(arena, "foo"));
   ASSERT_STR_EQ("\tfoo", xml_parse_attr_val(arena, "\tfoo"));
   ASSERT_STR_EQ("foo\n", xml_parse_attr_val(arena, "foo\n"));
@@ -139,7 +139,7 @@ static TEST(attr_val) {
   ASSERT_STR_EQ("\t 😀 \n", xml_parse_attr_val(arena, "\t &#128512; \n"));
 }
 
-static TEST(cdata) {
+TEST(cdata) {
 
   sax_parser_t *restrict parser = xml_parser(
       arena,
@@ -169,7 +169,7 @@ static TEST(cdata) {
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 }
 
-static TEST(cdata_malformed) {
+TEST(cdata_malformed) {
   sax_parser_t *restrict parser = xml_parser(
       arena,
       "<content>"
@@ -190,12 +190,12 @@ static TEST(cdata_malformed) {
   ASSERT_STR_EQ("Unexpected termination at line 1 column 133", sax_error(parser));
 }
 
-static TEST(comment) {
+TEST(comment) {
   sax_parser_t *restrict parser = xml_parser(arena, "<!-- <hello, world!> -->");
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 }
 
-static TEST(default_alloc) {
+TEST(default_alloc) {
 
   (void)arena;
 
@@ -207,7 +207,7 @@ static TEST(default_alloc) {
   ASSERT_NULL(sax_default_alloc(NULL, size, 0));
 }
 
-static TEST(empty_element_tag) {
+TEST(empty_element_tag) {
 
   sax_parser_t *restrict parser = xml_parser(arena, "<foo/>");
 
@@ -222,7 +222,7 @@ static TEST(empty_element_tag) {
   sax_free(parser);
 }
 
-static TEST(file_buf_size) {
+TEST(file_buf_size) {
 
   (void)arena;
   ASSERT_EQ(32, sax_file_buf_size(0));
@@ -231,7 +231,7 @@ static TEST(file_buf_size) {
   ASSERT_EQ(1024, sax_file_buf_size(4095));
 }
 
-static TEST(proc_inst_v0) {
+TEST(proc_inst_v0) {
 
   ASSERT_STR_EQ("foo", xml_parse_proc_inst_attr_val(arena, "foo"));
   ASSERT_STR_EQ("\tfoo", xml_parse_proc_inst_attr_val(arena, "\tfoo"));
@@ -247,7 +247,7 @@ static TEST(proc_inst_v0) {
   ASSERT_STR_EQ("\t 😀 \n", xml_parse_proc_inst_attr_val(arena, "\t &#128512; \n"));
 }
 
-static TEST(start_tag) {
+TEST(start_tag) {
 
   sax_parser_t *restrict parser = xml_parser(
       arena,
@@ -270,7 +270,7 @@ static TEST(start_tag) {
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 }
 
-static TEST(unescape) {
+TEST(unescape) {
 
   (void)arena;
 
@@ -283,7 +283,7 @@ static TEST(unescape) {
   ASSERT_STR_EQ("\"", sax_unescape("&quot;", buf));
 }
 
-static TEST(unescape10) {
+TEST(unescape10) {
 
   (void)arena;
 
@@ -306,7 +306,7 @@ static TEST(unescape10) {
   ASSERT_STR_EQ("🚀", sax_unescape("&#128640;", buf));
 }
 
-static TEST(unescape16) {
+TEST(unescape16) {
 
   (void)arena;
 
@@ -329,7 +329,7 @@ static TEST(unescape16) {
   ASSERT_STR_EQ("🚀", sax_unescape("&#x1f680;", buf));
 }
 
-static TEST(content) {
+TEST(content) {
   ASSERT_STR_EQ("Foo Bar", xml_parse_content(arena, "   Foo Bar   \n"));
   ASSERT_STR_EQ("😀", xml_parse_content(arena, "&#x1f600;"));
   ASSERT_STR_EQ("🌸", xml_parse_content(arena, "    \t  &#x1f338;"));
@@ -337,7 +337,7 @@ static TEST(content) {
   ASSERT_STR_EQ("🚀", xml_parse_content(arena, "\t   \r\n   &#x1f680;  \t  \n"));
 }
 
-static TEST(trim) {
+TEST(trim) {
 
   (void)arena;
 
@@ -363,28 +363,6 @@ static TEST(trim) {
 
 int main(int argc, char **args) {
 
-  typedef struct test_t {
-    const char *name;
-    void (*func)(arena_t *restrict);
-  } test_t;
-
-  const test_t tests[] = {
-      TEST_REG(attr_val),
-      TEST_REG(cdata),
-      TEST_REG(cdata_malformed),
-      TEST_REG(comment),
-      TEST_REG(content),
-      TEST_REG(default_alloc),
-      TEST_REG(empty_element_tag),
-      TEST_REG(file_buf_size),
-      TEST_REG(proc_inst),
-      TEST_REG(proc_inst_v0),
-      TEST_REG(start_tag),
-      TEST_REG(trim),
-      TEST_REG(unescape),
-      TEST_REG(unescape10),
-      TEST_REG(unescape16),
-  };
   const size_t count = sizeof(tests) / sizeof(test_t);
 
   // Run all tests
