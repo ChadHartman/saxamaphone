@@ -35,7 +35,6 @@ static void assert_start_tag(
     const st_attr_t *restrict attrs) {
 
   arena_reset(arena);
-
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
       .string = xml,
       .alloc = arena_custom_alloc,
@@ -64,6 +63,25 @@ static void assert_start_tag(
   sax_free(parser);
 }
 
+void assert_xml_events(
+    arena_t *restrict arena,
+    const char *restrict xml,
+    const uint8_t *restrict expected) {
+
+  arena_reset(arena);
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .string = xml,
+      .alloc = arena_custom_alloc,
+      .alloc_ctx = arena,
+  });
+
+  for (const uint8_t *restrict ex = expected; *ex != 0; ++ex) {
+    ASSERT_EQ(*ex, sax_next(parser));
+  }
+
+  sax_free(parser);
+}
+
 TEST(start_tag_closed) {
 
   ASSERT_START_TAG(arena, "<xml version=\"1.0\" encoding=\"UTF-8\"/>", "xml", {"version", "1.0"}, {"encoding", "UTF-8"});
@@ -87,6 +105,7 @@ TEST(start_tag_closed) {
   ASSERT_START_TAG(arena, "<alpha beta=\"\t &#128512; \n\"/>", "alpha", {"beta", "\t 😀 \n"});
 
   ASSERT_XML_ERR(arena, "</>", "Unexpected character '>' located on line 1 column 3");
-  ASSERT_XML_ERR(arena, "< />", "Unexpected character ' ' located on line 1 column 3");
-  ASSERT_XML_ERR(arena, "< //>", "Unexpected character ' ' located on line 1 column 3");
+  ASSERT_XML_ERR(arena, "< />", "Unexpected character ' ' located on line 1 column 2");
+
+  assert_xml_events(arena, "<alpha //>", (uint8_t[]){SAX_EVENT_START_TAG, SAX_EVENT_ERROR, 0});
 }

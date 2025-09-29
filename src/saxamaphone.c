@@ -1124,8 +1124,11 @@ static uint_fast8_t sax_parser_state_esc_char(sax_parser_t *restrict parser, con
 static uint_fast8_t sax_parser_state_tag_end(sax_parser_t *restrict parser, const char *glyph) {
   switch (glyph[0]) {
   case '>':
-    parser->primary_state = SAX_STATE_CONTENT;
-    return SAX_EVENT_END_TAG;
+    if (sax_strlen(parser->data) > 0) {
+      parser->primary_state = SAX_STATE_CONTENT;
+      return SAX_EVENT_END_TAG;
+    }
+    return sax_parser_error_unexpected_glyph(parser, glyph);
 
   default: {
     const char *exclude = parser->data == NULL ? SAXAMAPHONE_EXCLUDE_TAG_PREFIX : SAXAMAPHONE_EXCLUDE_TAG;
