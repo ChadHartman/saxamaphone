@@ -36,7 +36,6 @@ static void assert_proc_inst(
 
   arena_reset(arena);
 
-  // Happy path
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
       .string = xml,
       .alloc = arena_custom_alloc,
