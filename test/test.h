@@ -136,4 +136,19 @@
     }                                                                     \
   }
 
+#define ASSERT_XML_ERR(arena, xml, expected)                    \
+  {                                                             \
+    arena_reset(arena);                                         \
+    sax_parser_t *restrict parser = sax_parser(&(sax_config_t){ \
+        .string = xml,                                          \
+        .alloc = arena_custom_alloc,                            \
+        .alloc_ctx = arena,                                     \
+    });                                                         \
+    ASSERT_EQ(SAX_EVENT_ERROR, sax_next(parser));               \
+    if (expected != NULL) {                                     \
+      ASSERT_STR_EQ(expected, sax_error(parser));               \
+    }                                                           \
+    sax_free(parser);                                           \
+  }
+
 #endif

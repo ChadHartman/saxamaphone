@@ -34,6 +34,8 @@ static void assert_proc_inst(
     const char *restrict tag,
     const pi_attr_t *restrict attrs) {
 
+  arena_reset(arena);
+
   // Happy path
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
       .string = xml,
@@ -63,4 +65,25 @@ TEST(proc_inst) {
       "xml",
       {"version", "1.0"},
       {"encoding", "UTF-8"});
+
+  ASSERT_PROC_INST(
+      arena,
+      "<?alpha beta=\"gamma\" delta?>",
+      "alpha",
+      {"beta", "gamma"},
+      {"delta", NULL});
+
+  ASSERT_PROC_INST(
+      arena,
+      "<?alpha beta gamma=\"delta\"?>",
+      "alpha",
+      {"beta", NULL},
+      {"gamma", "delta"});
+
+  ASSERT_PROC_INST(arena, "<?alpha?>", "alpha", {0});
+  ASSERT_PROC_INST(arena, "<?alpha ?>", "alpha", {0});
+
+  ASSERT_XML_ERR(arena, "<?>", NULL);
+  ASSERT_XML_ERR(arena, "<\?\?>", NULL);
+  ASSERT_XML_ERR(arena, "<?alpha>", NULL);
 }
