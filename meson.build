@@ -19,11 +19,11 @@ tests_arena = executable('arena-tests',
     c_args: c_args
 )
 
-
-tests_misc = executable('saxamaphone-tests',
+tests_sax = executable('saxamaphone-tests',
     sources: [
         'src/saxamaphone.c',
         'test/arena.c', 
+        'test/objmaptests.c',
         'test/procinsttests.c',
         'test/starttagclosedtests.c',
         'test/main.c'],
@@ -33,27 +33,7 @@ tests_misc = executable('saxamaphone-tests',
         # + '-DSAXAMAPHONE_DEBUG'
     )
 
-tests_obj_map = executable('saxamaphone-tests-obj-map',
-    sources: [
-        'src/saxamaphone.c',
-        'test/arena.c',
-        'test/main-obj-map.c'],
-    include_directories: includes,
-    c_args: c_args
-        + '-DSAXAMAPHONE_DEBUG'
-    )
-
-tests_alloc = executable('saxamaphone-tests-alloc',
-    sources: [
-        'src/saxamaphone.c',
-        'test/main-alloc.c'],
-    include_directories: includes,
-    c_args: c_args)
-
-
 test('tests-arena', tests_arena)
-test('tests-alloc', tests_alloc)
-test('tests', tests_misc)
-test('tests-obj-map', tests_obj_map)
+test('tests-sax', tests_sax)
 
 # `ninja coverage` to generate coverage reports
