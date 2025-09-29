@@ -23,6 +23,7 @@ tests_arena = executable('arena-tests',
 tests_misc = executable('saxamaphone-tests',
     sources: [
         'src/saxamaphone.c',
+        'test/procinsttests.c',
         'test/arena.c', 
         'test/main.c'],
     include_directories: includes,

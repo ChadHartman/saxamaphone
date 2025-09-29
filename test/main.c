@@ -22,7 +22,6 @@ static void print_test(const char *restrict header) {
   printf("+\n");
 }
 
-#define TEST_DECL(test_name) test_##test_name(arena_t *restrict arena)
 #define TEST_REG(test_name) {.name = #test_name, .func = test_##test_name}
 #define LOG(...)                                        \
   printf("%s:%d - ", strrchr(__FILE__, '/'), __LINE__); \
@@ -125,7 +124,7 @@ static const char *xml_parse_proc_inst_attr_val(
 
 // === test cases === //
 
-static void TEST_DECL(attr_val) {
+static TEST(attr_val) {
   ASSERT_STR_EQ("foo", xml_parse_attr_val(arena, "foo"));
   ASSERT_STR_EQ("\tfoo", xml_parse_attr_val(arena, "\tfoo"));
   ASSERT_STR_EQ("foo\n", xml_parse_attr_val(arena, "foo\n"));
@@ -140,7 +139,7 @@ static void TEST_DECL(attr_val) {
   ASSERT_STR_EQ("\t 😀 \n", xml_parse_attr_val(arena, "\t &#128512; \n"));
 }
 
-static void TEST_DECL(cdata) {
+static TEST(cdata) {
 
   sax_parser_t *restrict parser = xml_parser(
       arena,
@@ -170,7 +169,7 @@ static void TEST_DECL(cdata) {
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 }
 
-static void TEST_DECL(cdata_malformed) {
+static TEST(cdata_malformed) {
   sax_parser_t *restrict parser = xml_parser(
       arena,
       "<content>"
@@ -191,12 +190,12 @@ static void TEST_DECL(cdata_malformed) {
   ASSERT_STR_EQ("Unexpected termination at line 1 column 133", sax_error(parser));
 }
 
-static void TEST_DECL(comment) {
+static TEST(comment) {
   sax_parser_t *restrict parser = xml_parser(arena, "<!-- <hello, world!> -->");
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 }
 
-static void TEST_DECL(default_alloc) {
+static TEST(default_alloc) {
 
   (void)arena;
 
@@ -208,7 +207,7 @@ static void TEST_DECL(default_alloc) {
   ASSERT_NULL(sax_default_alloc(NULL, size, 0));
 }
 
-static void TEST_DECL(empty_element_tag) {
+static TEST(empty_element_tag) {
 
   sax_parser_t *restrict parser = xml_parser(arena, "<foo/>");
 
@@ -223,7 +222,7 @@ static void TEST_DECL(empty_element_tag) {
   sax_free(parser);
 }
 
-static void TEST_DECL(file_buf_size) {
+static TEST(file_buf_size) {
 
   (void)arena;
   ASSERT_EQ(32, sax_file_buf_size(0));
@@ -232,7 +231,7 @@ static void TEST_DECL(file_buf_size) {
   ASSERT_EQ(1024, sax_file_buf_size(4095));
 }
 
-static void TEST_DECL(proc_inst) {
+static TEST(proc_inst_v0) {
 
   ASSERT_STR_EQ("foo", xml_parse_proc_inst_attr_val(arena, "foo"));
   ASSERT_STR_EQ("\tfoo", xml_parse_proc_inst_attr_val(arena, "\tfoo"));
@@ -248,7 +247,7 @@ static void TEST_DECL(proc_inst) {
   ASSERT_STR_EQ("\t 😀 \n", xml_parse_proc_inst_attr_val(arena, "\t &#128512; \n"));
 }
 
-static void TEST_DECL(start_tag) {
+static TEST(start_tag) {
 
   sax_parser_t *restrict parser = xml_parser(
       arena,
@@ -271,7 +270,7 @@ static void TEST_DECL(start_tag) {
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 }
 
-static void TEST_DECL(unescape) {
+static TEST(unescape) {
 
   (void)arena;
 
@@ -284,7 +283,7 @@ static void TEST_DECL(unescape) {
   ASSERT_STR_EQ("\"", sax_unescape("&quot;", buf));
 }
 
-static void TEST_DECL(unescape10) {
+static TEST(unescape10) {
 
   (void)arena;
 
@@ -307,7 +306,7 @@ static void TEST_DECL(unescape10) {
   ASSERT_STR_EQ("🚀", sax_unescape("&#128640;", buf));
 }
 
-static void TEST_DECL(unescape16) {
+static TEST(unescape16) {
 
   (void)arena;
 
@@ -330,7 +329,7 @@ static void TEST_DECL(unescape16) {
   ASSERT_STR_EQ("🚀", sax_unescape("&#x1f680;", buf));
 }
 
-static void TEST_DECL(content) {
+static TEST(content) {
   ASSERT_STR_EQ("Foo Bar", xml_parse_content(arena, "   Foo Bar   \n"));
   ASSERT_STR_EQ("😀", xml_parse_content(arena, "&#x1f600;"));
   ASSERT_STR_EQ("🌸", xml_parse_content(arena, "    \t  &#x1f338;"));
@@ -338,7 +337,7 @@ static void TEST_DECL(content) {
   ASSERT_STR_EQ("🚀", xml_parse_content(arena, "\t   \r\n   &#x1f680;  \t  \n"));
 }
 
-static void TEST_DECL(trim) {
+static TEST(trim) {
 
   (void)arena;
 
@@ -379,6 +378,7 @@ int main(int argc, char **args) {
       TEST_REG(empty_element_tag),
       TEST_REG(file_buf_size),
       TEST_REG(proc_inst),
+      TEST_REG(proc_inst_v0),
       TEST_REG(start_tag),
       TEST_REG(trim),
       TEST_REG(unescape),

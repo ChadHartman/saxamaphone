@@ -3,8 +3,10 @@
 
 #include <inttypes.h> // PRId64
 #include <stdbool.h>
-#include <stdio.h>
+#include <stdio.h>  // printf
 #include <string.h> // strrchr
+
+#include "arena.h"
 
 #define COLOR_RED "\x1b[31m"
 #define COLOR_GREEN "\x1b[32m"
@@ -13,6 +15,8 @@
 #define COLOR_MAGENTA "\x1b[35m"
 #define COLOR_CYAN "\x1b[36m"
 #define COLOR_RESET "\x1b[0m"
+
+#define TEST(name) void test_##name(arena_t *restrict arena)
 
 #define FAIL(...)                        \
   {                                      \
@@ -130,14 +134,5 @@
       exit(EXIT_FAILURE);                                                 \
     }                                                                     \
   }
-
-void sax_str_substr(
-    const char *src,
-    uint_fast32_t start,
-    uint_fast32_t len,
-    const char **substr,
-    size_t *substr_len);
-
-// sax_str_t sax_str_unescaped(const sax_str_t src);
 
 #endif
