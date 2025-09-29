@@ -169,7 +169,6 @@ static bool map_prog_lang(
 
 int main() {
 
-  TEST("Object Mapping Tests");
   arena_t *restrict arena = arena_create();
   sax_parser_t *parser = sax_parser(&(sax_config_t){
       .path = "../test/files/programming-languages.xml",
