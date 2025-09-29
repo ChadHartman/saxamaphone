@@ -782,6 +782,19 @@ static uint_fast8_t sax_parser_state_proc_inst(sax_parser_t *restrict parser, co
   }
 }
 
+static uint_fast8_t sax_parser_state_proc_inst_close(sax_parser_t *restrict parser, const char *glyph) {
+
+  if (glyph[0] == '>') {
+    parser->primary_state = sax_str_eq("xml", parser->data)
+                                ? SAX_STATE_INIT
+                                : SAX_STATE_CONTENT;
+    parser->secondary_state = SAX_STATE_NONE;
+    return SAX_EVENT_PROCESSING_INSTRUCTION;
+  }
+
+  return sax_parser_error_unexpected_glyph(parser, glyph);
+}
+
 static uint_fast8_t sax_parser_state_comment(sax_parser_t *restrict parser, const char *glyph) {
 
   if (SAX_EVENT_ERROR == sax_parser_append(parser, &parser->data, glyph)) {
@@ -1304,8 +1317,8 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
       ev = sax_parser_state_proc_inst(parser, glyph);
       break;
 
-    case SAX_STATE_COMMENT:
-      ev = sax_parser_state_comment(parser, glyph);
+    case SAX_STATE_PROC_INST | SAX_STATE_TAG_CLOSE:
+      ev = sax_parser_state_proc_inst_close(parser, glyph);
       break;
 
     case SAX_STATE_PROC_INST | SAX_STATE_SPACE:
@@ -1326,6 +1339,10 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
 
     case SAX_STATE_PROC_INST | SAX_STATE_ESC_CHAR:
       ev = sax_parser_state_esc_char(parser, glyph);
+      break;
+
+    case SAX_STATE_COMMENT:
+      ev = sax_parser_state_comment(parser, glyph);
       break;
 
     case SAX_STATE_TAG_START:
