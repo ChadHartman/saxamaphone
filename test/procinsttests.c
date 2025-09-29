@@ -1,9 +1,32 @@
+#include <string.h> // strcmp
+
 #include "test.h"
+
+#define ASSERT_PROC_INST(arena, xml, tag, ...) \
+  assert_proc_inst(                            \
+      arena,                                   \
+      xml,                                     \
+      tag,                                     \
+      (pi_attr_t[]){                           \
+          __VA_ARGS__,                         \
+          {0},                                 \
+      });
 
 typedef struct pi_attr_t {
   const char *name;
   const char *value;
 } pi_attr_t;
+
+static bool has_attr(const sax_parser_t *restrict parser, const char *restrict name) {
+
+  for (const sax_attr_t *restrict attr = sax_attrs(parser); attr != NULL; attr = attr->next) {
+    if (strcmp(name, attr->name) == 0) {
+      return true;
+    }
+  }
+
+  return false;
+}
 
 static void assert_proc_inst(
     arena_t *restrict arena,
@@ -21,7 +44,11 @@ static void assert_proc_inst(
   ASSERT_EQ(SAX_EVENT_PROCESSING_INSTRUCTION, sax_next(parser));
   ASSERT_STR_EQ(tag, sax_tag(parser));
   for (const pi_attr_t *restrict attr = attrs; attr->name != NULL; ++attr) {
-    ASSERT_STR_EQ(attr->value, sax_attr(parser, attr->name));
+    if (attr->value == NULL) {
+      ASSERT(has_attr(parser, attr->name));
+    } else {
+      ASSERT_STR_EQ(attr->value, sax_attr(parser, attr->name));
+    }
   }
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 
@@ -30,13 +57,10 @@ static void assert_proc_inst(
 
 TEST(proc_inst) {
 
-  assert_proc_inst(
+  ASSERT_PROC_INST(
       arena,
       "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
       "xml",
-      (pi_attr_t[]){
-          {"version", "1.0"},
-          {"encoding", "UTF-8"},
-          {0},
-      });
+      {"version", "1.0"},
+      {"encoding", "UTF-8"});
 }
