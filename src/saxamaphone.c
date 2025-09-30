@@ -1430,7 +1430,12 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
 }
 
 const char *sax_error(const sax_parser_t *restrict parser) {
-  return parser && parser->data ? parser->data : NULL;
+
+  if (!parser) {
+    return NULL;
+  }
+
+  return parser->primary_state == SAX_STATE_ERROR ? parser->data : NULL;
 }
 
 const char *sax_tag(const sax_parser_t *restrict parser) {

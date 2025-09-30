@@ -20,6 +20,7 @@ TEST(empty_element_tag);
 TEST(file_buf_size);
 TEST(obj_map);
 TEST(proc_inst);
+TEST(start_tag);
 TEST(start_tag_closed);
 TEST(start_tag_v0);
 TEST(trim);
@@ -38,6 +39,7 @@ const test_t tests[] = {
     TEST_REG(file_buf_size),
     TEST_REG(obj_map),
     TEST_REG(proc_inst),
+    TEST_REG(start_tag),
     TEST_REG(start_tag_closed),
     TEST_REG(start_tag_v0),
     TEST_REG(trim),

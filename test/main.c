@@ -23,11 +23,6 @@ static void print_test(const char *restrict header) {
   printf("+\n");
 }
 
-#define LOG(...)                                        \
-  printf("%s:%d - ", strrchr(__FILE__, '/'), __LINE__); \
-  printf(__VA_ARGS__);                                  \
-  printf("\n");
-
 // === forward declares === //
 
 size_t sax_file_buf_size(size_t capacity);
@@ -337,7 +332,7 @@ int main(int argc, char **args) {
       arena_reset(arena);
     }
 
-    LOG("Arena managed %zu bytes", arena_size(arena));
+    TEST_LOG("Arena managed %zu bytes", arena_size(arena));
     arena_free(arena);
     return EXIT_SUCCESS;
   }
@@ -363,7 +358,7 @@ int main(int argc, char **args) {
       print_test(tests[i].name);
       arena_t *restrict arena = arena_create();
       tests[i].func(arena);
-      LOG("Arena managed %zu bytes", arena_size(arena));
+      TEST_LOG("Arena managed %zu bytes", arena_size(arena));
       arena_free(arena);
       return EXIT_SUCCESS;
     }

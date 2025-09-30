@@ -19,6 +19,15 @@
 
 #define TEST(name) void test_##name(arena_t *restrict arena)
 
+#if 1
+#define TEST_LOG(...)                                         \
+  printf("%s:%d - ", (strrchr(__FILE__, '/') + 1), __LINE__); \
+  printf(__VA_ARGS__);                                        \
+  printf("\n")
+#else
+#define TEST_LOG(...) (void)0
+#endif
+
 #define FAIL(...)                        \
   {                                      \
     printf("%s:%d: %s" COLOR_RESET "\n", \

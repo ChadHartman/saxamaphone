@@ -63,7 +63,7 @@ static void assert_start_tag(
   sax_free(parser);
 }
 
-void assert_xml_events(
+static void assert_xml_events(
     arena_t *restrict arena,
     const char *restrict xml,
     const uint8_t *restrict expected) {
