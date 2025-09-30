@@ -39,6 +39,7 @@ TEST(unescape10) {
   ASSERT_STR_EQ("🌸", sax_unescape("&#127800;", buf));
   ASSERT_STR_EQ("🎵", sax_unescape("&#127925;", buf));
   ASSERT_STR_EQ("🚀", sax_unescape("&#128640;", buf));
+  ASSERT_STR_EQ("&#0", sax_unescape("&#0", buf));
 
   ASSERT_NULL(sax_unescape("&#65;", NULL));
 }
@@ -65,4 +66,5 @@ TEST(unescape16) {
   ASSERT_STR_EQ("🌸", sax_unescape("&#x1f338;", buf));
   ASSERT_STR_EQ("🎵", sax_unescape("&#x1f3b5;", buf));
   ASSERT_STR_EQ("🚀", sax_unescape("&#x1f680;", buf));
+  ASSERT_STR_EQ("&#x0", sax_unescape("&#x0", buf));
 }
