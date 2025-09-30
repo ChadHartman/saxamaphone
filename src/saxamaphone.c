@@ -1036,6 +1036,12 @@ static uint_fast8_t sax_parser_state_tag_start_attr_name(sax_parser_t *restrict 
     parser->secondary_state = SAX_STATE_SPACE;
     return 0;
 
+  case '>':
+    parser->primary_state = SAX_STATE_CONTENT;
+    parser->secondary_state = SAX_STATE_NONE;
+    SAXAMAPHONE_LOG("Parsed start tag attribute name \"%s\"", parser->current_attr->name);
+    return SAX_EVENT_START_TAG;
+
   default:
     if (strchr(SAXAMAPHONE_EXCLUDE_TAG, glyph[0]) != NULL) {
       return sax_parser_error_unexpected_glyph(parser, glyph);
