@@ -28,7 +28,6 @@ static void print_test(const char *restrict header) {
 size_t sax_file_buf_size(size_t capacity);
 void *sax_default_alloc(void *ctx, void *ptr, size_t size);
 const char *sax_unescape(const char *restrict src, char *restrict buf);
-char *sax_trim(char *str);
 
 // === utilities === //
 
@@ -291,28 +290,6 @@ TEST(content) {
   ASSERT_STR_EQ("🌸", xml_parse_content(arena, "    \t  &#x1f338;"));
   ASSERT_STR_EQ("🎵", xml_parse_content(arena, "&#x1f3b5;    \t  \n"));
   ASSERT_STR_EQ("🚀", xml_parse_content(arena, "\t   \r\n   &#x1f680;  \t  \n"));
-}
-
-TEST(trim) {
-
-  (void)arena;
-
-  char buf[1024];
-
-  strcpy(buf, "   Foo Bar   \n");
-  ASSERT_STR_EQ("Foo Bar", sax_trim(buf));
-
-  strcpy(buf, "🎵");
-  ASSERT_STR_EQ("🎵", sax_trim(buf));
-
-  strcpy(buf, "   😀   \n");
-  ASSERT_STR_EQ("😀", sax_trim(buf));
-
-  strcpy(buf, "   🌸");
-  ASSERT_STR_EQ("🌸", sax_trim(buf));
-
-  strcpy(buf, "🚀   \n");
-  ASSERT_STR_EQ("🚀", sax_trim(buf));
 }
 
 // === main === //
