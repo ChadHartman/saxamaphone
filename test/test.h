@@ -54,6 +54,20 @@
     }                                                                         \
   }
 
+#define ASSERT_FALSE(computed)                                                \
+  {                                                                           \
+    const bool passed = !(computed);                                          \
+    printf("%s:%d: %s" COLOR_RESET "\n",                                      \
+           (strrchr(__FILE__, '/') + 1),                                      \
+           __LINE__,                                                          \
+           passed ? COLOR_GREEN "PASSED" : COLOR_RED "FAILED");               \
+    printf(COLOR_CYAN "  ASSERT(" #computed ")\n");                           \
+    printf(COLOR_YELLOW "    %s\n\n" COLOR_RESET, passed ? "true" : "false"); \
+    if (!passed) {                                                            \
+      exit(EXIT_FAILURE);                                                     \
+    }                                                                         \
+  }
+
 #define ASSERT_NULL(computed)                                   \
   {                                                             \
     const void *result = computed;                              \
