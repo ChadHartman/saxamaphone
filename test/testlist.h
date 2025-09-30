@@ -21,6 +21,7 @@ TEST(file_buf_size);
 TEST(long_to_code_pt);
 TEST(obj_map);
 TEST(proc_inst);
+TEST(startswith);
 TEST(start_tag);
 TEST(start_tag_closed);
 TEST(str_eq);
@@ -41,6 +42,7 @@ const test_t tests[] = {
     TEST_REG(long_to_code_pt),
     TEST_REG(obj_map),
     TEST_REG(proc_inst),
+    TEST_REG(startswith),
     TEST_REG(start_tag),
     TEST_REG(start_tag_closed),
     TEST_REG(str_eq),

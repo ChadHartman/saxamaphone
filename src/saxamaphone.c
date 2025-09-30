@@ -264,7 +264,7 @@ SAX_TEST_API bool sax_str_eq(const char *restrict lhs, const char *restrict rhs)
 /// @param subject the subject to test
 /// @param prefix the expected starting string
 /// @return true if src startswith prefix
-static bool sax_startswith(const char *restrict subject, const char *restrict prefix) {
+SAX_TEST_API bool sax_startswith(const char *restrict subject, const char *restrict prefix) {
 
   if (!subject) {
     return false;
