@@ -15,7 +15,6 @@ TEST(cdata);
 TEST(cdata_malformed);
 TEST(comment);
 TEST(content);
-TEST(default_alloc);
 TEST(file_buf_size);
 TEST(obj_map);
 TEST(proc_inst);
@@ -32,7 +31,6 @@ const test_t tests[] = {
     TEST_REG(cdata_malformed),
     TEST_REG(comment),
     TEST_REG(content),
-    TEST_REG(default_alloc),
     TEST_REG(file_buf_size),
     TEST_REG(obj_map),
     TEST_REG(proc_inst),

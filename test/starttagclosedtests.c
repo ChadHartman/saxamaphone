@@ -82,6 +82,48 @@ static void assert_xml_events(
   sax_free(parser);
 }
 
+static const char *xml_parse_attr_val(
+    arena_t *restrict arena,
+    const char *restrict attr_val) {
+
+  char xml[1024];
+  snprintf(xml, sizeof(xml), "<content name=\"%s\"/>", attr_val);
+
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .string = xml,
+      .alloc = arena_custom_alloc,
+      .alloc_ctx = arena,
+  });
+  sax_event_t ev = sax_next(parser);
+
+  if (ev == SAX_EVENT_ERROR) {
+    printf("%s\n", sax_error(parser));
+    return NULL;
+  }
+
+  ASSERT_EQ(SAX_EVENT_START_TAG, ev);
+  ASSERT_STR_EQ("content", sax_tag(parser));
+
+  const char *restrict attr = arena_strdup(arena, sax_attr(parser, "name"));
+  sax_free(parser);
+  return attr;
+}
+
+TEST(attr_val) {
+  ASSERT_STR_EQ("foo", xml_parse_attr_val(arena, "foo"));
+  ASSERT_STR_EQ("\tfoo", xml_parse_attr_val(arena, "\tfoo"));
+  ASSERT_STR_EQ("foo\n", xml_parse_attr_val(arena, "foo\n"));
+  ASSERT_STR_EQ("\t foo \n", xml_parse_attr_val(arena, "\t foo \n"));
+  ASSERT_STR_EQ("中", xml_parse_attr_val(arena, "中"));
+  ASSERT_STR_EQ("\t中", xml_parse_attr_val(arena, "\t中"));
+  ASSERT_STR_EQ("中\n", xml_parse_attr_val(arena, "中\n"));
+  ASSERT_STR_EQ("\t 中 \n", xml_parse_attr_val(arena, "\t 中 \n"));
+  ASSERT_STR_EQ("😀", xml_parse_attr_val(arena, "&#128512;"));
+  ASSERT_STR_EQ("\t😀", xml_parse_attr_val(arena, "\t&#128512;"));
+  ASSERT_STR_EQ("😀\n", xml_parse_attr_val(arena, "&#128512;\n"));
+  ASSERT_STR_EQ("\t 😀 \n", xml_parse_attr_val(arena, "\t &#128512; \n"));
+}
+
 TEST(start_tag_closed) {
 
   ASSERT_START_TAG(arena, "<xml version=\"1.0\" encoding=\"UTF-8\"/>", "xml", {"version", "1.0"}, {"encoding", "UTF-8"});

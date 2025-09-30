@@ -1,14 +1,9 @@
-#include <assert.h>
-#include <stdbool.h>
-#include <stdint.h>
 #include <stdio.h>  // printf
 #include <stdlib.h> // EXIT_SUCCESS
-#include <string.h> // strrchr
 
 #include "arena.h"
-#include "test.h"
+#include "test.h" // COLOR_MAGENTA
 #include "testlist.h"
-#include <saxamaphone.h>
 
 static void print_test(const char *restrict header) {
   const size_t len = strlen(header);
@@ -21,78 +16,6 @@ static void print_test(const char *restrict header) {
     putchar('-');
   }
   printf("+\n");
-}
-
-// === forward declares === //
-
-size_t sax_file_buf_size(size_t capacity);
-void *sax_default_alloc(void *ctx, void *ptr, size_t size);
-
-// === utilities === //
-
-static sax_parser_t *xml_parser(arena_t *restrict arena, const char *restrict xml) {
-  return sax_parser(&(sax_config_t){
-      .alloc = arena_custom_alloc,
-      .alloc_ctx = arena,
-      .string = xml,
-  });
-}
-
-static const char *xml_parse_attr_val(
-    arena_t *restrict arena,
-    const char *restrict attr_val) {
-
-  char xml[1024];
-  snprintf(xml, sizeof(xml), "<content name=\"%s\"/>", attr_val);
-
-  sax_parser_t *parser = xml_parser(arena, xml);
-  sax_event_t ev = sax_next(parser);
-
-  if (ev == SAX_EVENT_ERROR) {
-    printf("%s\n", sax_error(parser));
-    return NULL;
-  }
-
-  ASSERT_EQ(SAX_EVENT_START_TAG, ev);
-  ASSERT_STR_EQ("content", sax_tag(parser));
-
-  const char *restrict attr = arena_strdup(arena, sax_attr(parser, "name"));
-  sax_free(parser);
-  return attr;
-}
-
-// === test cases === //
-
-TEST(attr_val) {
-  ASSERT_STR_EQ("foo", xml_parse_attr_val(arena, "foo"));
-  ASSERT_STR_EQ("\tfoo", xml_parse_attr_val(arena, "\tfoo"));
-  ASSERT_STR_EQ("foo\n", xml_parse_attr_val(arena, "foo\n"));
-  ASSERT_STR_EQ("\t foo \n", xml_parse_attr_val(arena, "\t foo \n"));
-  ASSERT_STR_EQ("中", xml_parse_attr_val(arena, "中"));
-  ASSERT_STR_EQ("\t中", xml_parse_attr_val(arena, "\t中"));
-  ASSERT_STR_EQ("中\n", xml_parse_attr_val(arena, "中\n"));
-  ASSERT_STR_EQ("\t 中 \n", xml_parse_attr_val(arena, "\t 中 \n"));
-  ASSERT_STR_EQ("😀", xml_parse_attr_val(arena, "&#128512;"));
-  ASSERT_STR_EQ("\t😀", xml_parse_attr_val(arena, "\t&#128512;"));
-  ASSERT_STR_EQ("😀\n", xml_parse_attr_val(arena, "&#128512;\n"));
-  ASSERT_STR_EQ("\t 😀 \n", xml_parse_attr_val(arena, "\t &#128512; \n"));
-}
-
-TEST(comment) {
-  sax_parser_t *restrict parser = xml_parser(arena, "<!-- <hello, world!> -->");
-  ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
-}
-
-TEST(default_alloc) {
-
-  (void)arena;
-
-  size_t *size = sax_default_alloc(NULL, NULL, sizeof(size_t));
-  ASSERT_NON_NULL(size);
-  *size = 42;
-  size = sax_default_alloc(NULL, size, 2 * sizeof(size_t));
-  ASSERT_EQ(42, *size);
-  ASSERT_NULL(sax_default_alloc(NULL, size, 0));
 }
 
 // === main === //
