@@ -83,6 +83,7 @@ TEST(proc_inst) {
   ASSERT_PROC_INST(arena, "<?alpha beta=\"&#128512;\n\"?>", "alpha", {"beta", "😀\n"});
   ASSERT_PROC_INST(arena, "<?alpha beta=\"\t &#128512; \n\"?>", "alpha", {"beta", "\t 😀 \n"});
 
+  ASSERT_XML_ERR(arena, "Hello, world!", "Unexpected character 'H' located on line 1 column 1");
   ASSERT_XML_ERR(arena, "<?>", "Unexpected character '>' located on line 1 column 3");
   ASSERT_XML_ERR(arena, "<\?\?>", "Unexpected character '?' located on line 1 column 3");
   ASSERT_XML_ERR(arena, "<? ?>", "Unexpected character ' ' located on line 1 column 3");

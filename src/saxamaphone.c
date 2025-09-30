@@ -432,7 +432,7 @@ static bool sax_str_empty(const char *restrict str) {
 /// @brief Remove spaces (' ', '\t', '\n', etc) to the left of the first non-space character
 /// @param src string to ltrim
 /// @return left-trimmed string (pointer arithmatically produced)
-static char *sax_ltrim(char *src) {
+SAX_TEST_API char *sax_ltrim(char *src) {
 
   if (src == NULL) {
     return NULL;
@@ -456,7 +456,7 @@ static char *sax_ltrim(char *src) {
 /// @brief Remove spaces (' ', '\t', '\n', etc) to the right of the first non-space character
 /// @param src string to rtrim
 /// @return src mutated to be NULL-termed
-static char *sax_rtrim(char *src) {
+SAX_TEST_API char *sax_rtrim(char *src) {
 
   if (sax_str_empty(src)) {
     return src;

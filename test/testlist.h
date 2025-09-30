@@ -20,8 +20,10 @@ TEST(content);
 TEST(endswith);
 TEST(file_buf_size);
 TEST(long_to_code_pt);
+TEST(ltrim);
 TEST(obj_map);
 TEST(proc_inst);
+TEST(rtrim);
 TEST(startswith);
 TEST(start_tag);
 TEST(start_tag_closed);
@@ -42,8 +44,10 @@ const test_t tests[] = {
     TEST_REG(endswith),
     TEST_REG(file_buf_size),
     TEST_REG(long_to_code_pt),
+    TEST_REG(ltrim),
     TEST_REG(obj_map),
     TEST_REG(proc_inst),
+    TEST_REG(rtrim),
     TEST_REG(startswith),
     TEST_REG(start_tag),
     TEST_REG(start_tag_closed),

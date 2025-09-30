@@ -3,6 +3,8 @@
 bool sax_str_eq(const char *restrict lhs, const char *restrict rhs);
 bool sax_startswith(const char *restrict subject, const char *restrict prefix);
 bool sax_endswith(const char *restrict subject, const char *restrict suffix);
+char *sax_ltrim(char *src);
+char *sax_rtrim(char *src);
 
 TEST(str_eq) {
 
@@ -29,4 +31,19 @@ TEST(endswith) {
   ASSERT_FALSE(sax_endswith(NULL, "alpha"));
   ASSERT(sax_endswith("alpha", NULL));
   ASSERT(sax_endswith("alpha", ""));
+}
+
+TEST(ltrim) {
+
+  (void)arena;
+
+  ASSERT_NULL(sax_ltrim(NULL));
+  ASSERT_STR_EQ("", sax_ltrim(""));
+}
+
+TEST(rtrim) {
+
+  (void)arena;
+
+  ASSERT_NULL(sax_rtrim(NULL));
 }
