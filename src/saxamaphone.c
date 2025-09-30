@@ -371,7 +371,7 @@ SAX_TEST_API const char *sax_unescape(const char *restrict src, char *restrict b
   if (sax_startswith(src, "&#x") && sax_endswith(src, ";")) {
     // -3 for "&#x" + ";"
     snprintf(num, sizeof(num), "%.*s", (int)(strlen(src) - 4), src + 3);
-    long code_pt = strtol(num, NULL, 16);
+    const long code_pt = strtol(num, NULL, 16);
     if (code_pt == 0) {
       return src;
     }
@@ -383,7 +383,7 @@ SAX_TEST_API const char *sax_unescape(const char *restrict src, char *restrict b
 
     // -3 for "&#" + ";"
     snprintf(num, sizeof(num), "%.*s", (int)(strlen(src) - 3), src + 2);
-    long code_pt = strtol(num, NULL, 10);
+    const long code_pt = strtol(num, NULL, 10);
     if (code_pt == 0) {
       return src;
     }

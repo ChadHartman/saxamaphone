@@ -13,6 +13,8 @@ TEST(unescape) {
   ASSERT_STR_EQ("&", sax_unescape("&amp;", buf));
   ASSERT_STR_EQ("'", sax_unescape("&apos;", buf));
   ASSERT_STR_EQ("\"", sax_unescape("&quot;", buf));
+
+  ASSERT_NULL(sax_unescape(NULL, buf));
 }
 
 TEST(unescape10) {
@@ -20,6 +22,7 @@ TEST(unescape10) {
   (void)arena;
 
   char buf[5];
+  ASSERT_STR_EQ("&#0;", sax_unescape("&#0;", buf));
   ASSERT_STR_EQ("A", sax_unescape("&#65;", buf));
   ASSERT_STR_EQ("a", sax_unescape("&#97;", buf));
   ASSERT_STR_EQ("$", sax_unescape("&#36;", buf));
@@ -36,6 +39,8 @@ TEST(unescape10) {
   ASSERT_STR_EQ("🌸", sax_unescape("&#127800;", buf));
   ASSERT_STR_EQ("🎵", sax_unescape("&#127925;", buf));
   ASSERT_STR_EQ("🚀", sax_unescape("&#128640;", buf));
+
+  ASSERT_NULL(sax_unescape("&#65;", NULL));
 }
 
 TEST(unescape16) {
@@ -43,6 +48,7 @@ TEST(unescape16) {
   (void)arena;
 
   char buf[5];
+  ASSERT_STR_EQ("&#x0;", sax_unescape("&#x0;", buf));
   ASSERT_STR_EQ("A", sax_unescape("&#x41;", buf));
   ASSERT_STR_EQ("a", sax_unescape("&#x61;", buf));
   ASSERT_STR_EQ("$", sax_unescape("&#x24;", buf));
