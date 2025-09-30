@@ -78,8 +78,8 @@ static bool assert_start_tag(
 TEST(start_tag) {
 
   ASSERT_START_TAG(arena, "<xml version=\"1.0\" encoding=\"UTF-8\">", "xml", {"version", "1.0"}, {"encoding", "UTF-8"});
-  ASSERT_START_TAG(arena, "<alpha beta=\"gamma\" delta>", "alpha", {"beta", "gamma"}, {"delta", NULL});
-  ASSERT_START_TAG(arena, "<alpha beta=\"gamma\" delta >", "alpha", {"beta", "gamma"}, {"delta", NULL});
+  ASSERT_START_TAG(arena, "<alpha beta=\"gamma\" \t delta>", "alpha", {"beta", "gamma"}, {"delta", NULL});
+  ASSERT_START_TAG(arena, "<alpha beta=\"gamma\" \t delta \n>", "alpha", {"beta", "gamma"}, {"delta", NULL});
   ASSERT_START_TAG(arena, "<alpha beta gamma=\"delta\" >", "alpha", {"beta", NULL}, {"gamma", "delta"});
   ASSERT_START_TAG(arena, "<alpha>", "alpha", {0});
   ASSERT_START_TAG(arena, "<alpha >", "alpha", {0});

@@ -64,9 +64,9 @@ static void assert_proc_inst(
 TEST(proc_inst) {
 
   ASSERT_PROC_INST(arena, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "xml", {"version", "1.0"}, {"encoding", "UTF-8"});
-  ASSERT_PROC_INST(arena, "<?alpha beta=\"gamma\" delta?>", "alpha", {"beta", "gamma"}, {"delta", NULL});
-  ASSERT_PROC_INST(arena, "<?alpha beta=\"gamma\" delta ?>", "alpha", {"beta", "gamma"}, {"delta", NULL});
-  ASSERT_PROC_INST(arena, "<?alpha beta gamma=\"delta\" ?>", "alpha", {"beta", NULL}, {"gamma", "delta"});
+  ASSERT_PROC_INST(arena, "<?alpha beta=\"gamma\" \tdelta?>", "alpha", {"beta", "gamma"}, {"delta", NULL});
+  ASSERT_PROC_INST(arena, "<?alpha beta=\"gamma\" delta \n?>", "alpha", {"beta", "gamma"}, {"delta", NULL});
+  ASSERT_PROC_INST(arena, "<?alpha \t beta  gamma=\"delta\" \n?>", "alpha", {"beta", NULL}, {"gamma", "delta"});
   ASSERT_PROC_INST(arena, "<?alpha?>", "alpha", {0});
   ASSERT_PROC_INST(arena, "<?alpha ?>", "alpha", {0});
 
