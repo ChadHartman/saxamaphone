@@ -10,9 +10,11 @@ typedef struct test_t {
   void (*func)(arena_t *restrict);
 } test_t;
 
+TEST(alloc);
 TEST(attr_val);
 TEST(cdata);
 TEST(cdata_malformed);
+TEST(code_pt_size);
 TEST(comment);
 TEST(content);
 TEST(file_buf_size);
@@ -26,9 +28,11 @@ TEST(unescape10);
 TEST(unescape16);
 
 const test_t tests[] = {
+    TEST_REG(alloc),
     TEST_REG(attr_val),
     TEST_REG(cdata),
     TEST_REG(cdata_malformed),
+    TEST_REG(code_pt_size),
     TEST_REG(comment),
     TEST_REG(content),
     TEST_REG(file_buf_size),

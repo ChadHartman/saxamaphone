@@ -194,7 +194,7 @@ SAX_TEST_API size_t sax_file_buf_size(size_t capacity) {
 /// @brief Given the provided byte determine the UTF-8 code point size
 /// @param byte byte value
 /// @return size 1-4 if value; 0 if invalid
-static uint_fast8_t sax_code_pt_size(uint8_t byte) {
+SAX_TEST_API uint_fast8_t sax_code_pt_size(uint8_t byte) {
 
   if (byte < 0x7F) {
     return 1;
