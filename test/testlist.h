@@ -18,6 +18,7 @@ TEST(code_pt_size);
 TEST(comment);
 TEST(content);
 TEST(file_buf_size);
+TEST(long_to_code_pt);
 TEST(obj_map);
 TEST(proc_inst);
 TEST(start_tag);
@@ -36,6 +37,7 @@ const test_t tests[] = {
     TEST_REG(comment),
     TEST_REG(content),
     TEST_REG(file_buf_size),
+    TEST_REG(long_to_code_pt),
     TEST_REG(obj_map),
     TEST_REG(proc_inst),
     TEST_REG(start_tag),

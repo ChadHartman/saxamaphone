@@ -220,7 +220,7 @@ SAX_TEST_API uint_fast8_t sax_code_pt_size(uint8_t byte) {
 /// @param value to convert
 /// @param buf buffer to populate and return; must be at least sized 5
 /// @return buf
-static const char *sax_long_to_code_pt(long value, char *restrict buf) {
+SAX_TEST_API const char *sax_long_to_code_pt(long value, char *restrict buf) {
 
   if (value < 0 || value > 0x10FFFF || (value >= 0xD800 && value <= 0xDFFF)) {
     buf[0] = '\0';
