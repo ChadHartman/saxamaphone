@@ -17,6 +17,7 @@ TEST(cdata_malformed);
 TEST(code_pt_size);
 TEST(comment);
 TEST(content);
+TEST(endswith);
 TEST(file_buf_size);
 TEST(long_to_code_pt);
 TEST(obj_map);
@@ -38,6 +39,7 @@ const test_t tests[] = {
     TEST_REG(code_pt_size),
     TEST_REG(comment),
     TEST_REG(content),
+    TEST_REG(endswith),
     TEST_REG(file_buf_size),
     TEST_REG(long_to_code_pt),
     TEST_REG(obj_map),
