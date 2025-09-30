@@ -1136,6 +1136,10 @@ static uint_fast8_t sax_parser_state_tag_end(sax_parser_t *restrict parser, cons
     }
     return sax_parser_error_unexpected_glyph(parser, glyph);
 
+  case SAXAMAPHONE_SPACE:
+    parser->secondary_state = SAX_STATE_SPACE;
+    return 0;
+
   default: {
     const char *exclude = parser->data == NULL ? SAXAMAPHONE_EXCLUDE_TAG_PREFIX : SAXAMAPHONE_EXCLUDE_TAG;
     if (strchr(exclude, glyph[0]) == NULL) {
@@ -1143,6 +1147,24 @@ static uint_fast8_t sax_parser_state_tag_end(sax_parser_t *restrict parser, cons
     }
     return sax_parser_error_unexpected_glyph(parser, glyph);
   }
+  }
+}
+
+static uint_fast8_t sax_parser_state_tag_end_space(sax_parser_t *restrict parser, const char *glyph) {
+
+  switch (glyph[0]) {
+
+  case SAXAMAPHONE_SPACE:
+    // noop
+    return 0;
+
+  case '>':
+    parser->primary_state = SAX_STATE_CONTENT;
+    parser->secondary_state = SAX_STATE_NONE;
+    return SAX_EVENT_END_TAG;
+
+  default:
+    return sax_parser_error_unexpected_glyph(parser, glyph);
   }
 }
 
@@ -1396,6 +1418,10 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
 
     case SAX_STATE_TAG_END:
       ev = sax_parser_state_tag_end(parser, glyph);
+      break;
+
+    case SAX_STATE_TAG_END | SAX_STATE_SPACE:
+      ev = sax_parser_state_tag_end_space(parser, glyph);
       break;
 
     default:

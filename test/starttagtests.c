@@ -71,8 +71,9 @@ static bool assert_start_tag(
     }
   }
 
+  const bool pass = SAX_EVENT_END_DOCUMENT == sax_next(parser);
   sax_free(parser);
-  return SAX_EVENT_END_DOCUMENT == sax_next(parser);
+  return pass;
 }
 
 TEST(start_tag) {
