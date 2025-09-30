@@ -23,6 +23,7 @@ tests_sax = executable('saxamaphone-tests',
     sources: [
         'src/saxamaphone.c',
         'test/arena.c', 
+        'test/cdatatests.c',
         'test/contenttests.c',
         'test/filebufsizetests.c',
         'test/objmaptests.c',

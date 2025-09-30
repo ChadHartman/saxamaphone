@@ -78,57 +78,6 @@ TEST(attr_val) {
   ASSERT_STR_EQ("\t 😀 \n", xml_parse_attr_val(arena, "\t &#128512; \n"));
 }
 
-TEST(cdata) {
-
-  sax_parser_t *restrict parser = xml_parser(
-      arena,
-      "<content>"
-      "  Sample content: "
-      "  <![CDATA[<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-      "    <body>Hello, world!</body>]]> (xml)"
-      "</content>");
-
-  ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
-  ASSERT_STR_EQ("content", sax_tag(parser));
-
-  ASSERT_EQ(SAX_EVENT_CONTENT, sax_next(parser));
-  ASSERT_STR_EQ("Sample content:", sax_content(parser));
-
-  ASSERT_EQ(SAX_EVENT_CONTENT, sax_next(parser));
-  ASSERT_STR_EQ("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                "    <body>Hello, world!</body>",
-                sax_content(parser));
-
-  ASSERT_EQ(SAX_EVENT_CONTENT, sax_next(parser));
-  ASSERT_STR_EQ("(xml)", sax_content(parser));
-
-  ASSERT_EQ(SAX_EVENT_END_TAG, sax_next(parser));
-  ASSERT_STR_EQ("content", sax_tag(parser));
-
-  ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
-}
-
-TEST(cdata_malformed) {
-  sax_parser_t *restrict parser = xml_parser(
-      arena,
-      "<content>"
-      "  Sample content: "
-      "  <![CDATA["
-      "    <?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-      "    <body>Hello, world!</body>"
-      "  ] ]> (xml)"
-      "</content>");
-
-  ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
-  ASSERT_STR_EQ("content", sax_tag(parser));
-
-  ASSERT_EQ(SAX_EVENT_CONTENT, sax_next(parser));
-  ASSERT_STR_EQ("Sample content:", sax_content(parser));
-
-  ASSERT_EQ(SAX_EVENT_ERROR, sax_next(parser));
-  ASSERT_STR_EQ("Unexpected termination at line 1 column 133", sax_error(parser));
-}
-
 TEST(comment) {
   sax_parser_t *restrict parser = xml_parser(arena, "<!-- <hello, world!> -->");
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
@@ -145,7 +94,6 @@ TEST(default_alloc) {
   ASSERT_EQ(42, *size);
   ASSERT_NULL(sax_default_alloc(NULL, size, 0));
 }
-
 
 // === main === //
 
