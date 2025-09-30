@@ -22,7 +22,6 @@ TEST(obj_map);
 TEST(proc_inst);
 TEST(start_tag);
 TEST(start_tag_closed);
-TEST(start_tag_v0);
 TEST(trim);
 TEST(unescape);
 TEST(unescape10);
@@ -41,7 +40,6 @@ const test_t tests[] = {
     TEST_REG(proc_inst),
     TEST_REG(start_tag),
     TEST_REG(start_tag_closed),
-    TEST_REG(start_tag_v0),
     TEST_REG(trim),
     TEST_REG(unescape),
     TEST_REG(unescape10),

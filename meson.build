@@ -28,6 +28,7 @@ tests_sax = executable('saxamaphone-tests',
         'test/starttagclosedtests.c',
         'test/starttagtests.c',
         'test/trimtests.c',
+        'test/unescapetests.c',
         'test/main.c'],
     include_directories: includes,
     c_args: c_args
