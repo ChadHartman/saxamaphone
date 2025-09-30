@@ -38,22 +38,6 @@ static sax_parser_t *xml_parser(arena_t *restrict arena, const char *restrict xm
   });
 }
 
-static const char *xml_parse_content(
-    arena_t *restrict arena,
-    const char *restrict content) {
-
-  char xml[1024];
-  snprintf(xml, sizeof(xml), "<content>%s</content>", content);
-
-  sax_parser_t *parser = xml_parser(arena, xml);
-
-  // <content>
-  ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
-  // ...
-  ASSERT_EQ(SAX_EVENT_CONTENT, sax_next(parser));
-  return sax_content(parser);
-}
-
 static const char *xml_parse_attr_val(
     arena_t *restrict arena,
     const char *restrict attr_val) {
@@ -162,21 +146,6 @@ TEST(default_alloc) {
   ASSERT_NULL(sax_default_alloc(NULL, size, 0));
 }
 
-TEST(empty_element_tag) {
-
-  sax_parser_t *restrict parser = xml_parser(arena, "<foo/>");
-
-  ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
-  ASSERT_STR_EQ("foo", sax_tag(parser));
-  ASSERT_NULL(sax_attrs(parser));
-  ASSERT_EQ(SAX_EVENT_END_TAG, sax_next(parser));
-  ASSERT_STR_EQ("foo", sax_tag(parser));
-  ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
-  ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
-
-  sax_free(parser);
-}
-
 TEST(file_buf_size) {
 
   (void)arena;
@@ -184,14 +153,6 @@ TEST(file_buf_size) {
   ASSERT_EQ(32, sax_file_buf_size(31));
   ASSERT_EQ(256, sax_file_buf_size(512));
   ASSERT_EQ(1024, sax_file_buf_size(4095));
-}
-
-TEST(content) {
-  ASSERT_STR_EQ("Foo Bar", xml_parse_content(arena, "   Foo Bar   \n"));
-  ASSERT_STR_EQ("😀", xml_parse_content(arena, "&#x1f600;"));
-  ASSERT_STR_EQ("🌸", xml_parse_content(arena, "    \t  &#x1f338;"));
-  ASSERT_STR_EQ("🎵", xml_parse_content(arena, "&#x1f3b5;    \t  \n"));
-  ASSERT_STR_EQ("🚀", xml_parse_content(arena, "\t   \r\n   &#x1f680;  \t  \n"));
 }
 
 // === main === //
