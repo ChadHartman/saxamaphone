@@ -11,6 +11,7 @@ typedef struct test_t {
 } test_t;
 
 TEST(arena_alloc);
+TEST(attr);
 TEST(attr_val);
 TEST(cdata);
 TEST(cdata_malformed);
@@ -24,6 +25,7 @@ TEST(file_buf_size);
 TEST(long_to_code_pt);
 TEST(ltrim);
 TEST(obj_map);
+TEST(parser_free);
 TEST(proc_inst);
 TEST(rtrim);
 TEST(startswith);
@@ -38,6 +40,7 @@ TEST(unescape16);
 
 const test_t tests[] = {
     TEST_REG(arena_alloc),
+    TEST_REG(attr),
     TEST_REG(attr_val),
     TEST_REG(cdata),
     TEST_REG(cdata_malformed),
@@ -51,6 +54,7 @@ const test_t tests[] = {
     TEST_REG(long_to_code_pt),
     TEST_REG(ltrim),
     TEST_REG(obj_map),
+    TEST_REG(parser_free),
     TEST_REG(proc_inst),
     TEST_REG(rtrim),
     TEST_REG(startswith),
