@@ -408,8 +408,12 @@ SAX_TEST_API void *sax_arena_alloc(sax_arena_t *restrict arena, size_t size) {
   if (arena->offset + size + align > arena->bytes_size) {
 
     if (arena->alloc) {
-      arena->bytes = arena->alloc(arena->alloc_ctx, arena->bytes, arena->bytes_size * 2);
-      SAXAMAPHONE_LOG("Called realloc for arena and received %p sized %d\n", arena->bytes, arena->bytes_size);
+      arena->bytes_size = arena->bytes_size * 2;
+      arena->bytes = arena->alloc(arena->alloc_ctx, arena->bytes, arena->bytes_size);
+      if (arena->bytes == NULL) {
+        return NULL;
+      }
+      SAXAMAPHONE_LOG("Called realloc for arena and received %p sized %d", arena->bytes, arena->bytes_size);
       return sax_arena_alloc(arena, size);
     }
 
@@ -1273,7 +1277,7 @@ static sax_parser_t *sax_parser_create_alloc(const sax_config_t *restrict config
       parser,
       config,
       arena_bytes,
-      1024,
+      arena_size,
       file_buffer,
       4096,
       alloc,

@@ -41,7 +41,7 @@ tests_sax = executable('saxamaphone-tests',
     include_directories: includes,
     c_args: c_args
         + '-DSAXAMAPHONE_TEST'
-        # + '-DSAXAMAPHONE_DEBUG'
+        + '-DSAXAMAPHONE_DEBUG'
     )
 
 test('tests-arena', tests_arena)
