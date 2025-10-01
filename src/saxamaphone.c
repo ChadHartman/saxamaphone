@@ -394,6 +394,23 @@ SAX_TEST_API const char *sax_unescape(const char *restrict src, char *restrict b
   return src;
 }
 
+static bool sax_arena_expand(sax_arena_t *restrict arena) {
+
+  if (!arena->alloc) {
+    return false;
+  }
+
+  const size_t size = arena->bytes_size * 2;
+  arena->bytes = arena->alloc(arena->alloc_ctx, arena->bytes, size);
+  if (arena->bytes == NULL) {
+    return false;
+  }
+
+  arena->bytes_size = size;
+  SAXAMAPHONE_LOG("Called realloc for arena and received %p sized %d", arena->bytes, arena->bytes_size);
+  return true;
+}
+
 /// @brief Perform an object allocation
 /// @param alloc instance
 /// @param size in bytes of the allocation
@@ -406,14 +423,7 @@ SAX_TEST_API void *sax_arena_alloc(sax_arena_t *restrict arena, size_t size) {
 
   const uintptr_t align = (arena->offset + size) % sizeof(uint8_t *);
   if (arena->offset + size + align > arena->bytes_size) {
-
-    if (arena->alloc) {
-      arena->bytes_size = arena->bytes_size * 2;
-      arena->bytes = arena->alloc(arena->alloc_ctx, arena->bytes, arena->bytes_size);
-      if (arena->bytes == NULL) {
-        return NULL;
-      }
-      SAXAMAPHONE_LOG("Called realloc for arena and received %p sized %d", arena->bytes, arena->bytes_size);
+    if (sax_arena_expand(arena)) {
       return sax_arena_alloc(arena, size);
     }
 
@@ -638,30 +648,35 @@ static uint_fast8_t sax_parser_append(
     char **token,
     const char *restrict glyph) {
 
-  const char *end = (char *)(parser->arena.bytes + parser->arena.bytes_size);
+  const uint8_t *end = parser->arena.bytes + parser->arena.bytes_size;
   const size_t glyph_size = strlen(glyph) + 1;
+  const size_t token_len = (*token) == NULL ? 0 : strlen(*token);
+  uint8_t *candidate = NULL;
   uintptr_t alignment = 0;
 
-  if (!(*token)) {
-    // Initialize
-    *token = (char *)(parser->arena.bytes + parser->arena.offset);
-    alignment = (uintptr_t)(*token) % sizeof(char *);
-    (*token) += alignment; // align
-    if (*token >= end) {
-      sax_parser_error(parser, "Out of memory");
-      return SAX_EVENT_ERROR;
-    }
-    (*token)[0] = '\0';
+  if ((*token) == NULL) {
+    candidate = parser->arena.bytes + parser->arena.offset;
+    alignment = (uintptr_t)(*candidate) % sizeof(char *);
+    (*candidate) += alignment;
+  } else {
+    candidate = (uint8_t *)(*token);
   }
 
-  const size_t token_len = strlen(*token);
+  if ((candidate + token_len + glyph_size) >= end) {
+    if (sax_arena_expand(&parser->arena)) {
+      return sax_parser_append(parser, token, glyph);
+    }
 
-  if ((*token + token_len + glyph_size) > end) {
     sax_parser_error(parser, "Out of memory");
     return SAX_EVENT_ERROR;
   }
 
-  strcpy(*token + token_len, glyph);
+  if ((*token) == NULL) {
+    // Initialize
+    (*token) = (char *)candidate;
+  }
+
+  strcpy((*token) + token_len, glyph);
   parser->arena.offset += glyph_size + alignment;
   return 0;
 }

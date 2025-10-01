@@ -101,7 +101,11 @@ static void test_start_tag_oom_alloc(arena_t *restrict arena) {
   });
 
   ASSERT_NON_NULL(parser);
-  ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
+  sax_event_t ev = sax_next(parser);
+  if (SAX_EVENT_START_TAG != ev) {
+    TEST_LOG("%s", sax_error(parser));
+  }
+  ASSERT_EQ(SAX_EVENT_START_TAG, ev);
   ASSERT_STR_EQ("hello-world", sax_tag(parser));
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 
