@@ -161,6 +161,12 @@ struct sax_parser_t {
 #define SAXAMAPHONE_LOG(...) ((void)0)
 #endif
 
+#ifdef SAXAMAPHONE_TEST
+sax_arena_t *sax_parser_arena(sax_parser_t *restrict parser) {
+  return &parser->arena;
+}
+#endif
+
 SAX_TEST_API void *sax_default_alloc(void *ctx, void *ptr, size_t size) {
 
   (void)ctx;
