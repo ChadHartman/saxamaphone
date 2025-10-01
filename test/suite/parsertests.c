@@ -114,7 +114,7 @@ static void test_parser_buf_fail_file_buf() {
       .path = "foo.xml",
   });
   ASSERT_NON_NULL(parser);
-  ASSERT_STR_EQ("Out of memory", sax_error(parser));
+  ASSERT_STR_EQ("Provided buffer size too small; a minimum of 4096 is recommended", sax_error(parser));
 }
 
 TEST(parser) {

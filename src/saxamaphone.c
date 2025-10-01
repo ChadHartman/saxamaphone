@@ -1333,7 +1333,9 @@ static sax_parser_t *sax_parser_create_buf(const sax_config_t *restrict config) 
     file_buffer_size = sax_file_buf_size(arena.bytes_size - arena.offset);
     file_buffer = sax_arena_alloc(&arena, file_buffer_size);
     if (file_buffer == NULL) {
-      sax_parser_error(parser, "Out of memory");
+      memset(parser, 0, sizeof(sax_parser_t));
+      parser->primary_state = SAX_STATE_ERROR;
+      parser->data = "Provided buffer size too small; a minimum of 4096 is recommended";
       return parser;
     }
   }
