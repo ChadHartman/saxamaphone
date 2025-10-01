@@ -91,7 +91,7 @@ static void test_start_tag_oom_buf() {
   sax_free(parser);
 }
 
-static void test_start_tag_oom_alloc(arena_t *restrict arena) {
+static void test_start_tag_oom_alloc_expand(arena_t *restrict arena) {
 
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
       .alloc = arena_custom_alloc,
@@ -108,6 +108,39 @@ static void test_start_tag_oom_alloc(arena_t *restrict arena) {
   ASSERT_EQ(SAX_EVENT_START_TAG, ev);
   ASSERT_STR_EQ("hello-world", sax_tag(parser));
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
+
+  sax_free(parser);
+}
+
+static void *start_tag_oom_alloc(void *ud, void *ptr, size_t size) {
+
+  (void)ptr;
+
+  switch (size) {
+
+  // Initial arena size
+  case 8:
+    return arena_alloc(ud, size);
+
+  // Parser size
+  case 128:
+    return arena_alloc(ud, size);
+
+  default:
+    return NULL;
+  }
+}
+
+static void test_start_tag_oom_alloc_runs_out(arena_t *restrict arena) {
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .alloc = start_tag_oom_alloc,
+      .alloc_ctx = arena,
+      .xml = "<hello-world>",
+      .arena_size = 8,
+  });
+
+  ASSERT_NON_NULL(parser);
+  ASSERT_EQ(SAX_EVENT_ERROR, sax_next(parser));
 
   sax_free(parser);
 }
@@ -139,6 +172,7 @@ TEST(start_tag) {
 }
 
 TEST(start_tag_oom) {
-  test_start_tag_oom_alloc(arena);
+  test_start_tag_oom_alloc_expand(arena);
+  test_start_tag_oom_alloc_runs_out(arena);
   test_start_tag_oom_buf();
 }
