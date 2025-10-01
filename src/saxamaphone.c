@@ -1519,15 +1519,15 @@ const char *sax_error(const sax_parser_t *restrict parser) {
 }
 
 const char *sax_tag(const sax_parser_t *restrict parser) {
-  return parser && parser->data ? parser->data : NULL;
+  return parser ? parser->data : NULL;
 }
 
 const char *sax_content(const sax_parser_t *restrict parser) {
-  return parser && parser->data ? parser->data : NULL;
+  return parser ? parser->data : NULL;
 }
 
 const sax_attr_t *sax_attrs(const sax_parser_t *restrict parser) {
-  return parser && parser->attrs ? parser->attrs : NULL;
+  return parser ? parser->attrs : NULL;
 }
 
 const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict name) {
