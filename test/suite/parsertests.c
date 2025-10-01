@@ -117,6 +117,25 @@ static void test_parser_buf_fail_file_buf() {
   ASSERT_STR_EQ("Provided buffer size too small; a minimum of 4096 is recommended", sax_error(parser));
 }
 
+static void test_parser_buf_success() {
+
+  uint8_t buf[4096];
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .buf = buf,
+      .buf_size = sizeof(buf),
+      .path = "../test/files/parser-tests.xml",
+  });
+
+  ASSERT_EQ(SAX_EVENT_PROCESSING_INSTRUCTION, sax_next(parser));
+  ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
+  ASSERT_EQ(SAX_EVENT_CONTENT, sax_next(parser));
+  ASSERT_EQ(SAX_EVENT_END_TAG, sax_next(parser));
+  ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
+  ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
+
+  sax_parser_free(parser);
+}
+
 TEST(parser) {
 
   // Confirm noop
@@ -124,9 +143,12 @@ TEST(parser) {
   ASSERT_NULL(sax_parser(NULL));
   test_parser_missing_file(arena);
   test_parser_no_src(arena);
+
   test_parser_null_alloc_parser();
   test_parser_null_alloc_arena(arena);
   test_parser_null_alloc_file_buf(arena);
+
+  test_parser_buf_success();
   test_parser_buf_fail_parser();
   test_parser_buf_fail_file_buf();
 }
