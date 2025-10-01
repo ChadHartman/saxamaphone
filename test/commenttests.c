@@ -11,4 +11,6 @@ TEST(comment) {
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 
   ASSERT_XML_ERR(arena, "<!?", "Unexpected character '?' located on line 1 column 3");
+  ASSERT_XML_ERR(arena, "<!/", "Unexpected character '/' located on line 1 column 3");
+  ASSERT_XML_ERR(arena, "<!!", "Unexpected character '!' located on line 1 column 3");
 }

@@ -101,3 +101,20 @@ TEST(start_tag) {
   ASSERT_XML_ERR(arena, "<>", "Unexpected character '>' located on line 1 column 2");
   ASSERT_XML_ERR(arena, "< >", "Unexpected character ' ' located on line 1 column 2");
 }
+
+TEST(start_tag_oom) {
+
+  (void)arena;
+
+  uint8_t buf[130];
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .buf = buf,
+      .buf_size = sizeof(buf),
+      .string = "<hello-world>",
+  });
+
+  ASSERT_NON_NULL(parser);
+  ASSERT_EQ(SAX_EVENT_ERROR, sax_next(parser));
+
+  sax_free(parser);
+}

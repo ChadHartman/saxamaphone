@@ -28,6 +28,7 @@ TEST(rtrim);
 TEST(startswith);
 TEST(start_tag);
 TEST(start_tag_closed);
+TEST(start_tag_oom);
 TEST(str_eq);
 TEST(trim);
 TEST(unescape);
@@ -53,6 +54,7 @@ const test_t tests[] = {
     TEST_REG(startswith),
     TEST_REG(start_tag),
     TEST_REG(start_tag_closed),
+    TEST_REG(start_tag_oom),
     TEST_REG(str_eq),
     TEST_REG(trim),
     TEST_REG(unescape),

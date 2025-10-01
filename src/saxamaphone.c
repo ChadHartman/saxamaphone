@@ -604,8 +604,22 @@ static void sax_parser_error(sax_parser_t *restrict parser, const char *restrict
 
   parser->primary_state = SAX_STATE_ERROR;
   parser->secondary_state = SAX_STATE_NONE;
-  parser->data = (char *)parser->arena.bytes;
-  vsnprintf(parser->data, parser->arena.bytes_size, format, args);
+  sax_parser_reset(parser);
+
+  if (format == NULL) {
+    parser->data = "NULL Error";
+    va_end(args);
+    return;
+  }
+
+  // Safety factor of 2 to ensure there's enough space for vsnprintf; despite
+  //   the contract, vsnprintf still overflowed the buffer
+  parser->data = sax_arena_alloc(&parser->arena, strlen(format) * 2);
+  if (parser->data == NULL) {
+    parser->data = "Out of memory";
+  } else {
+    vsnprintf(parser->data, parser->arena.bytes_size, format, args);
+  }
 
   va_end(args);
 }
@@ -1262,6 +1276,10 @@ static sax_parser_t *sax_parser_create_alloc(const sax_config_t *restrict config
 }
 
 static sax_parser_t *sax_parser_create_buf(const sax_config_t *restrict config) {
+
+  if (config->buf_size <= sizeof(sax_parser_t)) {
+    return NULL;
+  }
 
   sax_arena_t arena = {
       .bytes = config->buf,
