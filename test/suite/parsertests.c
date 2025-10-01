@@ -143,6 +143,7 @@ TEST(parser) {
   // Confirm noop
   sax_parser_free(NULL);
   ASSERT_NULL(sax_parser(NULL));
+  ASSERT_EQ(SAX_EVENT_ERROR, sax_next(NULL));
   test_parser_missing_file(arena);
   test_parser_no_src(arena);
 
