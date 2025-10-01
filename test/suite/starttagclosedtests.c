@@ -122,6 +122,7 @@ TEST(attr_val) {
   ASSERT_STR_EQ("\t😀", xml_parse_attr_val(arena, "\t&#128512;"));
   ASSERT_STR_EQ("😀\n", xml_parse_attr_val(arena, "&#128512;\n"));
   ASSERT_STR_EQ("\t 😀 \n", xml_parse_attr_val(arena, "\t &#128512; \n"));
+  ASSERT_XML_ERR(arena, "<alpha beta)=\"gamma\">", "Unexpected character ')' located on line 1 column 12");
 }
 
 TEST(start_tag_closed) {

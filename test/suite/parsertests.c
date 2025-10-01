@@ -90,6 +90,7 @@ static void test_parser_null_alloc_file_buf(arena_t *restrict arena) {
       .alloc = capped_alloc,
       .alloc_ctx = &allocator,
       .arena_size = 128,
+      .file_buf_size = 4096,
       .path = "../test/files/xml-well-formed.xml",
   });
 

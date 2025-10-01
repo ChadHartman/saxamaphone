@@ -3,7 +3,8 @@
 
 static const char *xml_parse_content(
     arena_t *restrict arena,
-    const char *restrict content) {
+    const char *restrict content,
+    bool untrimmed) {
 
   char xml[1024];
   snprintf(xml, sizeof(xml), "<content>%s</content>", content);
@@ -12,6 +13,7 @@ static const char *xml_parse_content(
       .alloc = arena_custom_alloc,
       .alloc_ctx = arena,
       .xml = xml,
+      .untrimmed_content = untrimmed,
   });
 
   // <content>
@@ -22,10 +24,11 @@ static const char *xml_parse_content(
 }
 
 TEST(content) {
-  ASSERT_STR_EQ("Foo Bar", xml_parse_content(arena, "   Foo Bar   \n"));
-  ASSERT_STR_EQ("😀", xml_parse_content(arena, "&#x1f600;"));
-  ASSERT_STR_EQ("🌸", xml_parse_content(arena, "    \t  &#x1f338;"));
-  ASSERT_STR_EQ("🎵", xml_parse_content(arena, "&#x1f3b5;    \t  \n"));
-  ASSERT_STR_EQ("🚀", xml_parse_content(arena, "\t   \r\n   &#x1f680;  \t  \n"));
+  ASSERT_STR_EQ("Foo Bar", xml_parse_content(arena, "   Foo Bar   \n", false));
+  ASSERT_STR_EQ("   Foo Bar   \n", xml_parse_content(arena, "   Foo Bar   \n", true));
+  ASSERT_STR_EQ("😀", xml_parse_content(arena, "&#x1f600;", false));
+  ASSERT_STR_EQ("🌸", xml_parse_content(arena, "    \t  &#x1f338;", false));
+  ASSERT_STR_EQ("🎵", xml_parse_content(arena, "&#x1f3b5;    \t  \n", false));
+  ASSERT_STR_EQ("🚀", xml_parse_content(arena, "\t   \r\n   &#x1f680;  \t  \n", false));
   ASSERT_XML_SEQ(arena, "<foo>bar", SAX_EVENT_START_TAG, SAX_EVENT_ERROR);
 }

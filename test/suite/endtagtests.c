@@ -35,5 +35,7 @@ static bool assert_end_tag(
 
 TEST(end_tag) {
   ASSERT_END_TAG(arena, "</alpha>", "alpha");
-  ASSERT_END_TAG(arena, "</alpha\n>", "alpha");
+  ASSERT_XML_ERR(arena, "</alpha)", "Unexpected character ')' located on line 1 column 8");
+  ASSERT_END_TAG(arena, "</alpha \n>", "alpha");
+  ASSERT_XML_ERR(arena, "</alpha foo>", "Unexpected character 'f' located on line 1 column 9");
 }
