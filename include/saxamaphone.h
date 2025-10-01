@@ -25,7 +25,7 @@ typedef struct sax_config_t {
   const char *path;
 
   /// @brief The XML string to parse; when path is provided; this field is ignored
-  const char *string;
+  const char *xml;
 
   /// @brief Leave content leading and trailing spaces
   bool untrimmed_content;

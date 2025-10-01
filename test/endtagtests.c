@@ -12,7 +12,7 @@ static bool assert_end_tag(
 
   arena_reset(arena);
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
-      .string = xml,
+      .xml = xml,
       .alloc = arena_custom_alloc,
       .alloc_ctx = arena,
   });

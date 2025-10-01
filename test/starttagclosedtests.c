@@ -36,7 +36,7 @@ static void assert_start_tag(
 
   arena_reset(arena);
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
-      .string = xml,
+      .xml = xml,
       .alloc = arena_custom_alloc,
       .alloc_ctx = arena,
   });
@@ -70,7 +70,7 @@ static void assert_xml_events(
 
   arena_reset(arena);
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
-      .string = xml,
+      .xml = xml,
       .alloc = arena_custom_alloc,
       .alloc_ctx = arena,
   });
@@ -90,7 +90,7 @@ static const char *xml_parse_attr_val(
   snprintf(xml, sizeof(xml), "<content name=\"%s\"/>", attr_val);
 
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
-      .string = xml,
+      .xml = xml,
       .alloc = arena_custom_alloc,
       .alloc_ctx = arena,
   });

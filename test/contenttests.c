@@ -11,7 +11,7 @@ static const char *xml_parse_content(
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
       .alloc = arena_custom_alloc,
       .alloc_ctx = arena,
-      .string = xml,
+      .xml = xml,
   });
 
   // <content>

@@ -38,7 +38,7 @@ static bool assert_start_tag(
 
   arena_reset(arena);
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
-      .string = xml,
+      .xml = xml,
       .alloc = arena_custom_alloc,
       .alloc_ctx = arena,
   });
@@ -82,7 +82,7 @@ static void test_start_tag_oom_buf() {
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
       .buf = buf,
       .buf_size = sizeof(buf),
-      .string = "<hello-world>",
+      .xml = "<hello-world>",
   });
 
   ASSERT_NON_NULL(parser);
@@ -96,7 +96,7 @@ static void test_start_tag_oom_alloc(arena_t *restrict arena) {
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
       .alloc = arena_custom_alloc,
       .alloc_ctx = arena,
-      .string = "<hello-world>",
+      .xml = "<hello-world>",
       .arena_size = 8,
   });
 

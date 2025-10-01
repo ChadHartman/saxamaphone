@@ -1246,11 +1246,11 @@ static sax_parser_t *sax_parser_create(
             },
         },
     };
-  } else if (config->string != NULL) {
+  } else if (config->xml != NULL) {
     parser->iter = (sax_iter_t){
         .type = SAX_ITER_STR,
         .impl.str = {
-            .value = config->string,
+            .value = config->xml,
         },
     };
   } else {

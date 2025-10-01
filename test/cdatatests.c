@@ -6,11 +6,11 @@ TEST(cdata) {
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
       .alloc = arena_custom_alloc,
       .alloc_ctx = arena,
-      .string = "<content>"
-                "  Sample content: "
-                "  <![CDATA[<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
-                "    <body>Hello, world!</body>]]> (xml)"
-                "</content>",
+      .xml = "<content>"
+             "  Sample content: "
+             "  <![CDATA[<?xml version=\"1.0\" encoding=\"UTF-8\"?>"
+             "    <body>Hello, world!</body>]]> (xml)"
+             "</content>",
   });
 
   ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
@@ -38,7 +38,7 @@ TEST(cdata_malformed) {
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
       .alloc = arena_custom_alloc,
       .alloc_ctx = arena,
-      .string =
+      .xml =
           "<content>"
           "  Sample content: "
           "  <![CDATA["
