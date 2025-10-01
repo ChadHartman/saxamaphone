@@ -72,7 +72,7 @@ static void test_parser_null_alloc_arena(arena_t *restrict arena) {
   });
 
   ASSERT_NON_NULL(parser);
-  ASSERT_STR_EQ("Out of memory", sax_error(parser));
+  ASSERT_STR_EQ("Allocator returned NULL for arena", sax_error(parser));
 
   sax_parser_free(parser);
 }
@@ -92,9 +92,29 @@ static void test_parser_null_alloc_file_buf(arena_t *restrict arena) {
   });
 
   ASSERT_NON_NULL(parser);
-  ASSERT_STR_EQ("Out of memory", sax_error(parser));
+  ASSERT_STR_EQ("Allocator returned NULL for file buffer", sax_error(parser));
 
   sax_parser_free(parser);
+}
+
+static void test_parser_buf_fail_parser() {
+  uint8_t buf[8];
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .buf = buf,
+      .buf_size = sizeof(buf),
+  });
+  ASSERT_NULL(parser);
+}
+
+static void test_parser_buf_fail_file_buf() {
+  uint8_t buf[128];
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .buf = buf,
+      .buf_size = sizeof(buf),
+      .path = "foo.xml",
+  });
+  ASSERT_NON_NULL(parser);
+  ASSERT_STR_EQ("Out of memory", sax_error(parser));
 }
 
 TEST(parser) {
@@ -107,4 +127,6 @@ TEST(parser) {
   test_parser_null_alloc_parser();
   test_parser_null_alloc_arena(arena);
   test_parser_null_alloc_file_buf(arena);
+  test_parser_buf_fail_parser();
+  test_parser_buf_fail_file_buf();
 }

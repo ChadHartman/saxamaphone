@@ -636,7 +636,12 @@ static void sax_parser_error(sax_parser_t *restrict parser, const char *restrict
   //   the contract, vsnprintf still overflowed the buffer
   parser->data = sax_arena_alloc(&parser->arena, strlen(format) * 2);
   if (parser->data == NULL) {
-    parser->data = "Out of memory";
+    if (strchr(format, '%') == NULL) {
+      // No args; can use it directly
+      parser->data = (char *)format;
+    } else {
+      parser->data = "Out of memory";
+    }
   } else {
     vsnprintf(parser->data, parser->arena.bytes_size, format, args);
   }
@@ -1281,7 +1286,7 @@ static sax_parser_t *sax_parser_create_alloc(const sax_config_t *restrict config
   const size_t arena_size = config->arena_size == 0 ? 1024 : config->arena_size;
   void *arena_bytes = alloc(alloc_ctx, NULL, arena_size);
   if (arena_bytes == NULL) {
-    sax_parser_error(parser, "ERROR: Allocator returned NULL");
+    sax_parser_error(parser, "Allocator returned NULL for arena");
     return parser;
   }
 
@@ -1289,7 +1294,7 @@ static sax_parser_t *sax_parser_create_alloc(const sax_config_t *restrict config
   if (config->path) {
     file_buffer = alloc(alloc_ctx, NULL, 4096);
     if (file_buffer == NULL) {
-      sax_parser_error(parser, "ERROR: Allocator returned NULL");
+      sax_parser_error(parser, "Allocator returned NULL for file buffer");
       return parser;
     }
   }
@@ -1306,10 +1311,6 @@ static sax_parser_t *sax_parser_create_alloc(const sax_config_t *restrict config
 }
 
 static sax_parser_t *sax_parser_create_buf(const sax_config_t *restrict config) {
-
-  if (config->buf_size <= sizeof(sax_parser_t)) {
-    return NULL;
-  }
 
   sax_arena_t arena = {
       .bytes = config->buf,
@@ -1330,7 +1331,7 @@ static sax_parser_t *sax_parser_create_buf(const sax_config_t *restrict config) 
     file_buffer_size = sax_file_buf_size(arena.bytes_size - arena.offset);
     file_buffer = sax_arena_alloc(&arena, file_buffer_size);
     if (file_buffer == NULL) {
-      sax_parser_error(parser, "ERROR: Out of memory");
+      sax_parser_error(parser, "Out of memory");
       return parser;
     }
   }
