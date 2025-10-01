@@ -54,6 +54,10 @@ typedef struct sax_config_t {
   ///   of bytes allocated for tag & content parsing. 1024 by default
   size_t arena_size;
 
+  /// @brief When non-zero, and `alloc` is provided; this is the initial number
+  ///   of bytes allocated for streaming in a file. 4096 by default
+  size_t file_buf_size;
+
 } sax_config_t;
 
 /// @brief Saxamaphone XML Attribute

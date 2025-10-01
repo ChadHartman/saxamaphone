@@ -1290,9 +1290,11 @@ static sax_parser_t *sax_parser_create_alloc(const sax_config_t *restrict config
     return parser;
   }
 
+  const size_t file_buf_size = config->file_buf_size == 0 ? 4096 : config->file_buf_size;
   void *file_buffer = NULL;
+
   if (config->path) {
-    file_buffer = alloc(alloc_ctx, NULL, 4096);
+    file_buffer = alloc(alloc_ctx, NULL, file_buf_size);
     if (file_buffer == NULL) {
       sax_parser_error(parser, "Allocator returned NULL for file buffer");
       return parser;
@@ -1305,7 +1307,7 @@ static sax_parser_t *sax_parser_create_alloc(const sax_config_t *restrict config
       arena_bytes,
       arena_size,
       file_buffer,
-      4096,
+      file_buf_size,
       alloc,
       alloc_ctx);
 }
