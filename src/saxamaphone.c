@@ -634,7 +634,7 @@ static uint_fast8_t sax_parser_append(
     char **token,
     const char *restrict glyph) {
 
-  const uint8_t *end = parser->arena.bytes + parser->arena.bytes_size;
+  const char *end = (char *)(parser->arena.bytes + parser->arena.bytes_size);
   const size_t glyph_size = strlen(glyph) + 1;
   uintptr_t alignment = 0;
 
@@ -643,12 +643,16 @@ static uint_fast8_t sax_parser_append(
     *token = (char *)(parser->arena.bytes + parser->arena.offset);
     alignment = (uintptr_t)(*token) % sizeof(char *);
     (*token) += alignment; // align
+    if (*token >= end) {
+      sax_parser_error(parser, "Out of memory");
+      return SAX_EVENT_ERROR;
+    }
     (*token)[0] = '\0';
   }
 
   const size_t token_len = strlen(*token);
 
-  if ((uint8_t *)(*token + token_len + glyph_size) > end) {
+  if ((*token + token_len + glyph_size) > end) {
     sax_parser_error(parser, "Out of memory");
     return SAX_EVENT_ERROR;
   }
