@@ -171,7 +171,7 @@
     if (expected != NULL) {                                     \
       ASSERT_STR_EQ(expected, sax_error(parser));               \
     }                                                           \
-    sax_free(parser);                                           \
+    sax_parser_free(parser);                                           \
   }
 
 #endif

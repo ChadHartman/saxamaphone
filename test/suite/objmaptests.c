@@ -258,5 +258,5 @@ TEST(obj_map) {
   ASSERT_STR_EQ("Web Development (Frontend & Backend)", langs[3].app_doms[0]);
   ASSERT_STR_EQ("Mobile Development", langs[3].app_doms[1]);
 
-  sax_free(parser);
+  sax_parser_free(parser);
 }

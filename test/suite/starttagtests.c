@@ -72,7 +72,7 @@ static bool assert_start_tag(
   }
 
   const bool pass = SAX_EVENT_END_DOCUMENT == sax_next(parser);
-  sax_free(parser);
+  sax_parser_free(parser);
   return pass;
 }
 
@@ -88,7 +88,7 @@ static void test_start_tag_oom_buf() {
   ASSERT_NON_NULL(parser);
   ASSERT_EQ(SAX_EVENT_ERROR, sax_next(parser));
 
-  sax_free(parser);
+  sax_parser_free(parser);
 }
 
 static void test_start_tag_oom_alloc_expand(arena_t *restrict arena) {
@@ -109,7 +109,7 @@ static void test_start_tag_oom_alloc_expand(arena_t *restrict arena) {
   ASSERT_STR_EQ("hello-world", sax_tag(parser));
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 
-  sax_free(parser);
+  sax_parser_free(parser);
 }
 
 static void *start_tag_oom_alloc(void *ud, void *ptr, size_t size) {
@@ -142,7 +142,7 @@ static void test_start_tag_oom_alloc_runs_out(arena_t *restrict arena) {
   ASSERT_NON_NULL(parser);
   ASSERT_EQ(SAX_EVENT_ERROR, sax_next(parser));
 
-  sax_free(parser);
+  sax_parser_free(parser);
 }
 
 TEST(start_tag) {

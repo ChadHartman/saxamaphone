@@ -58,7 +58,7 @@ static void assert_proc_inst(
   }
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 
-  sax_free(parser);
+  sax_parser_free(parser);
 }
 
 TEST(proc_inst) {

@@ -60,7 +60,7 @@ static void assert_start_tag(
   ASSERT_STR_EQ(tag, sax_tag(parser));
   ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
 
-  sax_free(parser);
+  sax_parser_free(parser);
 }
 
 static void assert_xml_events(
@@ -79,7 +79,7 @@ static void assert_xml_events(
     ASSERT_EQ(*ex, sax_next(parser));
   }
 
-  sax_free(parser);
+  sax_parser_free(parser);
 }
 
 static const char *xml_parse_attr_val(
@@ -105,7 +105,7 @@ static const char *xml_parse_attr_val(
   ASSERT_STR_EQ("content", sax_tag(parser));
 
   const char *restrict attr = arena_strdup(arena, sax_attr(parser, "name"));
-  sax_free(parser);
+  sax_parser_free(parser);
   return attr;
 }
 

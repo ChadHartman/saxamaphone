@@ -112,6 +112,6 @@ const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict n
 
 /// @brief Use to close out and free any resourced
 /// @param parser instance
-void sax_free(sax_parser_t *restrict parser);
+void sax_parser_free(sax_parser_t *restrict parser);
 
 #endif // SAXAMAPHONE_H

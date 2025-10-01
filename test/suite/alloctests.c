@@ -36,5 +36,5 @@ TEST(arena_alloc) {
   // Expands beyond initial allocation
   ASSERT_NON_NULL(sax_arena_alloc(sax_arena, 16));
 
-  sax_free(parser);
+  sax_parser_free(parser);
 }

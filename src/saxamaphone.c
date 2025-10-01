@@ -1547,7 +1547,7 @@ const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict n
   return NULL;
 }
 
-void sax_free(sax_parser_t *restrict parser) {
+void sax_parser_free(sax_parser_t *restrict parser) {
 
   if (!parser) {
     return;

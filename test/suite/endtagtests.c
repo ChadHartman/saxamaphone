@@ -29,7 +29,7 @@ static bool assert_end_tag(
   }
 
   const bool pass = SAX_EVENT_END_DOCUMENT == sax_next(parser);
-  sax_free(parser);
+  sax_parser_free(parser);
   return pass;
 }
 
