@@ -398,7 +398,7 @@ SAX_TEST_API const char *sax_unescape(const char *restrict src, char *restrict b
 /// @param alloc instance
 /// @param size in bytes of the allocation
 /// @return the pointer or NULL if insufficient memory
-static void *sax_arena_alloc(sax_arena_t *restrict arena, size_t size) {
+SAX_TEST_API void *sax_arena_alloc(sax_arena_t *restrict arena, size_t size) {
 
   if (arena == NULL || arena->bytes == NULL || size == 0) {
     return NULL;
@@ -1253,7 +1253,8 @@ static sax_parser_t *sax_parser_create_alloc(const sax_config_t *restrict config
   }
   memset(parser, 0, sizeof(sax_parser_t));
 
-  void *arena_bytes = alloc(alloc_ctx, NULL, 1024);
+  const size_t arena_size = config->arena_size == 0 ? 1024 : config->arena_size;
+  void *arena_bytes = alloc(alloc_ctx, NULL, arena_size);
   if (arena_bytes == NULL) {
     sax_parser_error(parser, "ERROR: Allocator returned NULL");
     return parser;

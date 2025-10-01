@@ -76,6 +76,38 @@ static bool assert_start_tag(
   return pass;
 }
 
+static void test_start_tag_oom_buf() {
+
+  uint8_t buf[130];
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .buf = buf,
+      .buf_size = sizeof(buf),
+      .string = "<hello-world>",
+  });
+
+  ASSERT_NON_NULL(parser);
+  ASSERT_EQ(SAX_EVENT_ERROR, sax_next(parser));
+
+  sax_free(parser);
+}
+
+static void test_start_tag_oom_alloc(arena_t *restrict arena) {
+
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .alloc = arena_custom_alloc,
+      .alloc_ctx = arena,
+      .string = "<hello-world>",
+      .arena_size = 8,
+  });
+
+  ASSERT_NON_NULL(parser);
+  ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
+  ASSERT_STR_EQ("hello-world", sax_tag(parser));
+  ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
+
+  sax_free(parser);
+}
+
 TEST(start_tag) {
 
   ASSERT_START_TAG(arena, "<xml version=\"1.0\" encoding=\"UTF-8\">", "xml", {"version", "1.0"}, {"encoding", "UTF-8"});
@@ -103,18 +135,6 @@ TEST(start_tag) {
 }
 
 TEST(start_tag_oom) {
-
-  (void)arena;
-
-  uint8_t buf[130];
-  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
-      .buf = buf,
-      .buf_size = sizeof(buf),
-      .string = "<hello-world>",
-  });
-
-  ASSERT_NON_NULL(parser);
-  ASSERT_EQ(SAX_EVENT_ERROR, sax_next(parser));
-
-  sax_free(parser);
+  test_start_tag_oom_alloc(arena);
+  test_start_tag_oom_buf();
 }

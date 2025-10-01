@@ -1,8 +1,11 @@
 #include "test.h"
 
-void *sax_default_alloc(void *ctx, void *ptr, size_t size);
+typedef struct sax_arena_t sax_arena_t;
 
-TEST(alloc) {
+void *sax_default_alloc(void *ctx, void *ptr, size_t size);
+void *sax_arena_alloc(sax_arena_t *restrict arena, size_t size);
+
+TEST(default_alloc) {
 
   (void)arena;
 
@@ -14,4 +17,10 @@ TEST(alloc) {
   ASSERT_EQ(42, *size);
 
   sax_default_alloc(NULL, size, 0);
+}
+
+TEST(arena_alloc) {
+  (void)arena;
+
+  ASSERT_NULL(sax_arena_alloc(NULL, 42));
 }
