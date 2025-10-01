@@ -26,7 +26,7 @@ TEST(getter);
 TEST(long_to_code_pt);
 TEST(ltrim);
 TEST(obj_map);
-TEST(parser_free);
+TEST(parser);
 TEST(proc_inst);
 TEST(rtrim);
 TEST(startswith);
@@ -56,7 +56,7 @@ const test_t tests[] = {
     TEST_REG(long_to_code_pt),
     TEST_REG(ltrim),
     TEST_REG(obj_map),
-    TEST_REG(parser_free),
+    TEST_REG(parser),
     TEST_REG(proc_inst),
     TEST_REG(rtrim),
     TEST_REG(startswith),

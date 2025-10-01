@@ -27,4 +27,5 @@ TEST(content) {
   ASSERT_STR_EQ("🌸", xml_parse_content(arena, "    \t  &#x1f338;"));
   ASSERT_STR_EQ("🎵", xml_parse_content(arena, "&#x1f3b5;    \t  \n"));
   ASSERT_STR_EQ("🚀", xml_parse_content(arena, "\t   \r\n   &#x1f680;  \t  \n"));
+  ASSERT_XML_SEQ(arena, "<foo>bar", SAX_EVENT_START_TAG, SAX_EVENT_ERROR);
 }

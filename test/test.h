@@ -171,7 +171,38 @@
     if (expected != NULL) {                                     \
       ASSERT_STR_EQ(expected, sax_error(parser));               \
     }                                                           \
-    sax_parser_free(parser);                                           \
+    sax_parser_free(parser);                                    \
+  }
+
+#define ASSERT_XML_SEQ(arena, xmlstr, ...)                                         \
+  {                                                                                \
+    bool passed = true;                                                            \
+    arena_reset(arena);                                                            \
+    sax_parser_t *restrict parser = sax_parser(&(sax_config_t){                    \
+        .xml = xmlstr,                                                             \
+        .alloc = arena_custom_alloc,                                               \
+        .alloc_ctx = arena,                                                        \
+    });                                                                            \
+    const sax_event_t expected[] = {__VA_ARGS__, 0};                               \
+    const sax_event_t *ev = expected;                                              \
+    sax_event_t actual;                                                            \
+    for (; *ev != 0; ++ev) {                                                       \
+      actual = sax_next(parser);                                                   \
+      if (*ev != actual) {                                                         \
+        passed = false;                                                            \
+        break;                                                                     \
+      }                                                                            \
+    }                                                                              \
+    sax_parser_free(parser);                                                       \
+    printf("%s:%d: %s" COLOR_RESET "\n",                                           \
+           (strrchr(__FILE__, '/') + 1),                                           \
+           __LINE__,                                                               \
+           passed ? COLOR_GREEN "PASSED" : COLOR_RED "FAILED");                    \
+    printf(COLOR_CYAN "  ASSERT_XML_SEQ(arena, " #xmlstr ", " #__VA_ARGS__ ")\n"); \
+    if (!passed) {                                                                 \
+      printf(COLOR_YELLOW "    %d != %d\n\n" COLOR_RESET, *ev, actual);            \
+      exit(EXIT_FAILURE);                                                          \
+    }                                                                              \
   }
 
 #endif

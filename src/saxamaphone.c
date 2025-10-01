@@ -1380,10 +1380,6 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
 
     switch (parser->primary_state | parser->secondary_state) {
 
-    case SAX_STATE_ERROR:
-      ev = SAX_EVENT_ERROR;
-      break;
-
     case SAX_STATE_INIT:
       ev = sax_parser_state_init(parser, glyph);
       break;
