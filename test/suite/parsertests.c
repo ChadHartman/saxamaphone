@@ -44,6 +44,8 @@ static void test_parser_no_src(arena_t *restrict arena) {
   ASSERT_NON_NULL(parser);
   ASSERT_STR_EQ("No XML source provided", sax_error(parser));
   ASSERT_EQ(SAX_EVENT_ERROR, sax_next(parser));
+  // Just to be sure the state remains unchanged
+  ASSERT_EQ(SAX_EVENT_ERROR, sax_next(parser));
 
   sax_parser_free(parser);
 }
