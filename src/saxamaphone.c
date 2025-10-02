@@ -9,7 +9,9 @@
 
 // === typedefs === //
 
+/// @brief Primary state of the `sax_parser_t` hierarchical state machine
 typedef enum sax_primary_state_t {
+
   /// @brief Initial position
   SAX_STATE_INIT = 0,
 
@@ -41,6 +43,7 @@ typedef enum sax_primary_state_t {
   SAX_STATE_ERROR = 1 << 9,
 } sax_primary_state_t;
 
+/// @brief Secondary state of the `sax_parser_t` hierarchical state machine
 typedef enum sax_secondary_state_t {
 
   SAX_STATE_NONE = 0,
@@ -66,11 +69,13 @@ typedef enum sax_secondary_state_t {
 
 } sax_secondary_state_t;
 
+/// @brief XML Iterator type
 typedef enum {
   SAX_ITER_FILE,
   SAX_ITER_STR,
 } sax_iter_type_t;
 
+/// @brief XML File Iterator
 typedef struct sax_file_iter_t {
   FILE *fp;
   uint_fast32_t offset;
@@ -79,12 +84,14 @@ typedef struct sax_file_iter_t {
   size_t file_buffer_size;
 } sax_file_iter_t;
 
+/// @brief XML String Iterator
 typedef struct sax_str_iter_t {
   const char *value;
   uint_fast32_t offset;
   uint_fast32_t len;
 } sax_str_iter_t;
 
+/// @brief Unified XML Iterator
 typedef struct sax_iter_t {
 
   sax_iter_type_t type;
@@ -96,6 +103,7 @@ typedef struct sax_iter_t {
 
 } sax_iter_t;
 
+/// @brief Arena allocator
 typedef struct sax_arena_t {
   uint8_t *bytes;
   uint32_t bytes_size;
@@ -104,6 +112,7 @@ typedef struct sax_arena_t {
   void *alloc_ctx;
 } sax_arena_t;
 
+/// @brief SAX Parser definition
 struct sax_parser_t {
 
   // Configuration
@@ -125,21 +134,30 @@ struct sax_parser_t {
   /// @brief Used to build intermediate data (such as comments, cdata, and
   ///   ampersand-escapes)
   char *stage;
+
+  /// @brief Pointer to the root sax_attr_t for the current tag
   sax_attr_t *attrs;
+
+  /// @brief Pointer to the current sax_attr_t being constructed
   sax_attr_t *current_attr;
 };
 
 // === constants === //
 
+/// @brief Used to expose APIs for testing
 #ifdef SAXAMAPHONE_TEST
 #define SAX_TEST_API
 #else
 #define SAX_TEST_API static
 #endif
 
+/// @brief Illegal XML tag characters
 #define SAXAMAPHONE_EXCLUDE_TAG "!\"#$%&'()*+,/;<=>?@[\\]^`{|}~"
+
+/// @brief Illegal XML Starting tag characters
 #define SAXAMAPHONE_EXCLUDE_TAG_PREFIX (SAXAMAPHONE_EXCLUDE_TAG ".-0123456789")
 
+/// @brief Various space chars used in switch cases
 #define SAXAMAPHONE_SPACE \
   ' ' : case '\f':        \
   case '\n':              \
@@ -147,8 +165,7 @@ struct sax_parser_t {
   case '\t':              \
   case '\v'
 
-// === private methods === //
-
+/// @brief Simple logger
 #ifdef SAXAMAPHONE_DEBUG
 #define SAXAMAPHONE_LOG(...)                      \
   printf("\x1b[36m"                               \
@@ -161,12 +178,18 @@ struct sax_parser_t {
 #define SAXAMAPHONE_LOG(...) ((void)0)
 #endif
 
+/// @brief Only used for testing
 #ifdef SAXAMAPHONE_TEST
 sax_arena_t *sax_parser_arena(sax_parser_t *restrict parser) {
   return &parser->arena;
 }
 #endif
 
+/// @brief Default allocator
+/// @param ctx provided to config
+/// @param ptr pointer to free or reallocate
+/// @param size size of the requested allocation or when 0; free
+/// @return the pointer to memory when size > 0 else NULL
 SAX_TEST_API void *sax_default_alloc(void *ctx, void *ptr, size_t size) {
 
   (void)ctx;
@@ -253,10 +276,17 @@ SAX_TEST_API const char *sax_long_to_code_pt(long value, char *restrict buf) {
   return buf;
 }
 
+/// @brief NULL-safe strlen utility
+/// @param str NULLable string to test
+/// @return -1 when NULL, otherwise strlen(str)
 static int_fast32_t sax_strlen(const char *restrict str) {
   return str == NULL ? -1 : strlen(str);
 }
 
+/// @brief NULL-safe string comparison utility
+/// @param lhs left-hand-side string to test
+/// @param rhs right-hand-side string to test
+/// @return true if lhs and rhs are NULL or strcmp(lhs, rhs) == 0
 SAX_TEST_API bool sax_str_eq(const char *restrict lhs, const char *restrict rhs) {
 
   if (lhs == NULL || rhs == NULL) {
@@ -272,11 +302,11 @@ SAX_TEST_API bool sax_str_eq(const char *restrict lhs, const char *restrict rhs)
 /// @return true if src startswith prefix
 SAX_TEST_API bool sax_startswith(const char *restrict subject, const char *restrict prefix) {
 
-  if (!subject) {
+  if (subject == NULL) {
     return false;
   }
 
-  if (!prefix) {
+  if (prefix == NULL) {
     return false;
   }
 
@@ -334,112 +364,6 @@ static bool sax_str_is_space(const char *restrict str) {
   }
 
   return true;
-}
-
-/// @brief Unescape the provided string and populate the buffer with the
-///   resulting utf-8 character
-/// @param src string to convert
-/// @param buf at least sized 5; must be populated
-/// @return string literal or populated buf depending on the encoding
-SAX_TEST_API const char *sax_unescape(const char *restrict src, char *restrict buf) {
-
-  if (src == NULL) {
-    return NULL;
-  }
-
-  if (strcmp("&lt;", src) == 0) {
-    return "<";
-  }
-
-  if (strcmp("&gt;", src) == 0) {
-    return ">";
-  }
-
-  if (strcmp("&amp;", src) == 0) {
-    return "&";
-  }
-
-  if (strcmp("&apos;", src) == 0) {
-    return "'";
-  }
-
-  if (strcmp("&quot;", src) == 0) {
-    return "\"";
-  }
-
-  if (buf == NULL) {
-    return NULL;
-  }
-
-  // Longest is &#1114111; (10 chars)
-  char num[16];
-
-  if (sax_startswith(src, "&#x") && sax_endswith(src, ";")) {
-    // -3 for "&#x" + ";"
-    snprintf(num, sizeof(num), "%.*s", (int)(strlen(src) - 4), src + 3);
-    const long code_pt = strtol(num, NULL, 16);
-    if (code_pt == 0) {
-      return src;
-    }
-
-    return sax_long_to_code_pt(code_pt, buf);
-  }
-
-  if (sax_startswith(src, "&#") && sax_endswith(src, ";")) {
-
-    // -3 for "&#" + ";"
-    snprintf(num, sizeof(num), "%.*s", (int)(strlen(src) - 3), src + 2);
-    const long code_pt = strtol(num, NULL, 10);
-    if (code_pt == 0) {
-      return src;
-    }
-
-    return sax_long_to_code_pt(code_pt, buf);
-  }
-
-  return src;
-}
-
-static bool sax_arena_expand(sax_arena_t *restrict arena) {
-
-  if (!arena->alloc) {
-    return false;
-  }
-
-  const size_t size = arena->bytes_size * 2;
-  arena->bytes = arena->alloc(arena->alloc_ctx, arena->bytes, size);
-  if (arena->bytes == NULL) {
-    return false;
-  }
-
-  arena->bytes_size = size;
-  SAXAMAPHONE_LOG("Called realloc for arena and received %p sized %d", arena->bytes, arena->bytes_size);
-  return true;
-}
-
-/// @brief Perform an object allocation
-/// @param alloc instance
-/// @param size in bytes of the allocation
-/// @return the pointer or NULL if insufficient memory
-SAX_TEST_API void *sax_arena_alloc(sax_arena_t *restrict arena, size_t size) {
-
-  if (arena == NULL || arena->bytes == NULL || size == 0) {
-    return NULL;
-  }
-
-  const uintptr_t align = (arena->offset + size) % sizeof(uint8_t *);
-  if (arena->offset + size + align > arena->bytes_size) {
-    if (sax_arena_expand(arena)) {
-      return sax_arena_alloc(arena, size);
-    }
-
-    // Out of memory
-    return NULL;
-  }
-
-  void *restrict res = arena->bytes + arena->offset;
-  arena->offset += size + align;
-  return res;
 }
 
 /// @brief Test whether the provided string is empty
@@ -508,7 +432,114 @@ SAX_TEST_API char *sax_trim(char *str) {
   return sax_ltrim(sax_rtrim(str));
 }
 
-// --- private sax_iter_t methods --- //
+/// @brief Unescape the provided string and populate the buffer with the
+///   resulting utf-8 character
+/// @param src string to convert
+/// @param buf at least sized 5; may be populated
+/// @return string literal or populated buf depending on the encoding
+SAX_TEST_API const char *sax_unescape(const char *restrict src, char *restrict buf) {
+
+  if (src == NULL) {
+    return NULL;
+  }
+
+  if (strcmp("&lt;", src) == 0) {
+    return "<";
+  }
+
+  if (strcmp("&gt;", src) == 0) {
+    return ">";
+  }
+
+  if (strcmp("&amp;", src) == 0) {
+    return "&";
+  }
+
+  if (strcmp("&apos;", src) == 0) {
+    return "'";
+  }
+
+  if (strcmp("&quot;", src) == 0) {
+    return "\"";
+  }
+
+  if (buf == NULL) {
+    return NULL;
+  }
+
+  // Longest is &#1114111; (10 chars)
+  char num[16];
+
+  if (sax_startswith(src, "&#x") && sax_endswith(src, ";")) {
+    // -3 for "&#x" + ";"
+    snprintf(num, sizeof(num), "%.*s", (int)(strlen(src) - 4), src + 3);
+    const long code_pt = strtol(num, NULL, 16);
+    if (code_pt == 0) {
+      return src;
+    }
+
+    return sax_long_to_code_pt(code_pt, buf);
+  }
+
+  if (sax_startswith(src, "&#") && sax_endswith(src, ";")) {
+
+    // -3 for "&#" + ";"
+    snprintf(num, sizeof(num), "%.*s", (int)(strlen(src) - 3), src + 2);
+    const long code_pt = strtol(num, NULL, 10);
+    if (code_pt == 0) {
+      return src;
+    }
+
+    return sax_long_to_code_pt(code_pt, buf);
+  }
+
+  return src;
+}
+
+/// @brief Expand the arena if bytes have ran out
+/// @param arena instance
+/// @return true if successfully expanded
+static bool sax_arena_expand(sax_arena_t *restrict arena) {
+
+  if (!arena->alloc) {
+    return false;
+  }
+
+  const size_t size = arena->bytes_size * 2;
+  arena->bytes = arena->alloc(arena->alloc_ctx, arena->bytes, size);
+  if (arena->bytes == NULL) {
+    return false;
+  }
+
+  arena->bytes_size = size;
+  SAXAMAPHONE_LOG("Called realloc for arena and received %p sized %d", arena->bytes, arena->bytes_size);
+  return true;
+}
+
+/// @brief Perform an object allocation
+/// @param alloc instance
+/// @param size in bytes of the allocation
+/// @return the pointer or NULL if insufficient memory
+SAX_TEST_API void *sax_arena_alloc(sax_arena_t *restrict arena, size_t size) {
+
+  if (arena == NULL || arena->bytes == NULL || size == 0) {
+    return NULL;
+  }
+
+  const uintptr_t align = (arena->offset + size) % sizeof(uint8_t *);
+  if (arena->offset + size + align > arena->bytes_size) {
+    if (sax_arena_expand(arena)) {
+      return sax_arena_alloc(arena, size);
+    }
+
+    // Out of memory
+    return NULL;
+  }
+
+  void *restrict res = arena->bytes + arena->offset;
+  arena->offset += size + align;
+  return res;
+}
 
 /// @brief Retrieve the next byte value or 0 if iteration is complete (or malformed utf-8)
 /// @param iter iterator
@@ -696,7 +727,7 @@ static sax_event_t sax_parser_error_unexpected_glyph(
     const char *restrict glyph) {
 
   sax_parser_error(parser,
-                   "Unexpected character \'%s\' located on line %" PRIuFAST16 " column %" PRIuFAST16,
+                   "Unexpected character \'%s\' located on line %" PRIuFAST32 " column %" PRIuFAST32,
                    glyph,
                    parser->line,
                    parser->column);
