@@ -64,9 +64,6 @@ static void assert_proc_inst(
 TEST(proc_inst) {
 
   ASSERT_PROC_INST(arena, "<?xml version=\"1.0\" encoding=\"UTF-8\"?>", "xml", {"version", "1.0"}, {"encoding", "UTF-8"});
-  ASSERT_PROC_INST(arena, "<?alpha beta=\"gamma\" \tdelta?>", "alpha", {"beta", "gamma"}, {"delta", NULL});
-  ASSERT_PROC_INST(arena, "<?alpha beta=\"gamma\" delta \n?>", "alpha", {"beta", "gamma"}, {"delta", NULL});
-  ASSERT_PROC_INST(arena, "<?alpha \t beta  gamma=\"delta\" \n?>", "alpha", {"beta", NULL}, {"gamma", "delta"});
   ASSERT_PROC_INST(arena, "<?alpha beta=\"gamma\" \ndelta=\"epsilon\" \nzeta=\"eta\" ?>", "alpha", {"beta", "gamma"}, {"delta", "epsilon"}, {"zeta", "eta"});
   ASSERT_PROC_INST(arena, "<?alpha?>", "alpha", {0});
   ASSERT_PROC_INST(arena, "<?alpha ?>", "alpha", {0});
@@ -84,6 +81,9 @@ TEST(proc_inst) {
   ASSERT_PROC_INST(arena, "<?alpha beta=\"&#128512;\n\"?>", "alpha", {"beta", "😀\n"});
   ASSERT_PROC_INST(arena, "<?alpha beta=\"\t &#128512; \n\"?>", "alpha", {"beta", "\t 😀 \n"});
 
+  ASSERT_XML_ERR(arena, "<?alpha beta=\"gamma\" delta \n?>", "Unexpected character ' ' located on line 1 column 27");
+  ASSERT_XML_ERR(arena, "<?alpha \t beta  gamma=\"delta\" \n?>", "Unexpected character ' ' located on line 1 column 15");
+  ASSERT_XML_ERR(arena, "<?alpha beta=\"gamma\" \tdelta?>", "Unexpected character '?' located on line 1 column 28");
   ASSERT_XML_ERR(arena, "Hello, world!", "Unexpected character 'H' located on line 1 column 1");
   ASSERT_XML_ERR(arena, "<?>", "Unexpected character '>' located on line 1 column 3");
   ASSERT_XML_ERR(arena, "<?xml )>", "Unexpected character ')' located on line 1 column 7");
