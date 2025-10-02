@@ -7,8 +7,6 @@
 
 #include <saxamaphone.h>
 
-// === typedefs === //
-
 /// @brief Primary state of the `sax_parser_t` hierarchical state machine
 typedef enum sax_primary_state_t {
 
@@ -141,8 +139,6 @@ struct sax_parser_t {
   /// @brief Pointer to the current sax_attr_t being constructed
   sax_attr_t *current_attr;
 };
-
-// === constants === //
 
 /// @brief Used to expose APIs for testing
 #ifdef SAXAMAPHONE_TEST
@@ -978,6 +974,11 @@ static uint_fast8_t sax_parser_state_attr_name(sax_parser_t *restrict parser, co
   }
 }
 
+/// @brief Handle the glyph when in the (SAX_STATE_PROC_INST or SAX_STATE_TAG_START)
+///    | SAX_STATE_ATTR_ASSIGN state
+/// @param parser instance
+/// @param glyph glyph to process
+/// @return event if raised
 static uint_fast8_t sax_parser_state_attr_assign(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
@@ -991,6 +992,11 @@ static uint_fast8_t sax_parser_state_attr_assign(sax_parser_t *restrict parser, 
   }
 }
 
+/// @brief Handle the glyph when in the (SAX_STATE_PROC_INST or SAX_STATE_TAG_START)
+///    | SAX_STATE_ATTR_VALUE state
+/// @param parser instance
+/// @param glyph glyph to process
+/// @return event if raised
 static uint_fast8_t sax_parser_state_attr_value(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
@@ -1010,6 +1016,10 @@ static uint_fast8_t sax_parser_state_attr_value(sax_parser_t *restrict parser, c
   }
 }
 
+/// @brief Handle the glyph when in the SAX_STATE_TAG_START state
+/// @param parser instance
+/// @param glyph glyph to process
+/// @return event if raised
 static uint_fast8_t sax_parser_state_tag_start(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
@@ -1036,6 +1046,10 @@ static uint_fast8_t sax_parser_state_tag_start(sax_parser_t *restrict parser, co
   }
 }
 
+/// @brief Handle the glyph when in the SAX_STATE_TAG_START | SAX_STATE_TAG_CLOSE state
+/// @param parser instance
+/// @param glyph glyph to process
+/// @return event if raised
 static uint_fast8_t sax_parser_state_tag_start_close(sax_parser_t *restrict parser, const char *restrict glyph) {
   switch (glyph[0]) {
   case '>':
@@ -1048,6 +1062,10 @@ static uint_fast8_t sax_parser_state_tag_start_close(sax_parser_t *restrict pars
   }
 }
 
+/// @brief Handle the glyph when in the SAX_STATE_TAG_START | SAX_STATE_SPACE state
+/// @param parser instance
+/// @param glyph glyph to process
+/// @return event if raised
 static uint_fast8_t sax_parser_state_tag_start_space(sax_parser_t *restrict parser, const char *restrict glyph) {
   switch (glyph[0]) {
 
@@ -1098,6 +1116,10 @@ static uint_fast8_t sax_parser_state_tag_start_space(sax_parser_t *restrict pars
   }
 }
 
+/// @brief Handle the glyph when in the SAX_STATE_CONTENT state
+/// @param parser instance
+/// @param glyph glyph to process
+/// @return event if raised
 static uint_fast8_t sax_parser_state_content(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
@@ -1125,6 +1147,10 @@ static uint_fast8_t sax_parser_state_content(sax_parser_t *restrict parser, cons
   }
 }
 
+/// @brief Handle the glyph when in the SAX_STATE_CDATA state
+/// @param parser instance
+/// @param glyph glyph to process
+/// @return event if raised
 static uint_fast8_t sax_parser_state_cdata(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   if (SAX_EVENT_ERROR == sax_parser_append(parser, &parser->data, glyph)) {
@@ -1141,6 +1167,11 @@ static uint_fast8_t sax_parser_state_cdata(sax_parser_t *restrict parser, const 
   return 0;
 }
 
+/// @brief Handle the glyph when in the (SAX_STATE_PROC_INST, SAX_STATE_TAG_START
+///   or SAX_STATE_CONTENT) | SAX_STATE_ESC_CHAR state
+/// @param parser instance
+/// @param glyph glyph to process
+/// @return event if raised
 static uint_fast8_t sax_parser_state_esc_char(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   if (glyph[0] != ';') {
@@ -1175,6 +1206,10 @@ static uint_fast8_t sax_parser_state_esc_char(sax_parser_t *restrict parser, con
   }
 }
 
+/// @brief Handle the glyph when in the SAX_STATE_TAG_END state
+/// @param parser instance
+/// @param glyph glyph to process
+/// @return event if raised
 static uint_fast8_t sax_parser_state_tag_end(sax_parser_t *restrict parser, const char *restrict glyph) {
   switch (glyph[0]) {
   case '>':
@@ -1198,6 +1233,10 @@ static uint_fast8_t sax_parser_state_tag_end(sax_parser_t *restrict parser, cons
   }
 }
 
+/// @brief Handle the glyph when in the SAX_STATE_TAG_END | SAX_STATE_SPACE state
+/// @param parser instance
+/// @param glyph glyph to process
+/// @return event if raised
 static uint_fast8_t sax_parser_state_tag_end_space(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
@@ -1216,6 +1255,16 @@ static uint_fast8_t sax_parser_state_tag_end_space(sax_parser_t *restrict parser
   }
 }
 
+/// @brief Create the parser instance
+/// @param parser allocated parser
+/// @param config passed-in config
+/// @param arena_bytes allocated arena bytes
+/// @param arena_bytes_size number of allocated arena bytes
+/// @param file_buffer (NULLable) allocated file buffer bytes
+/// @param file_buffer_size number of allocated file buffer bytes
+/// @param alloc (NULLable) custom allocator to use
+/// @param alloc_ctx (NULLable) custom allocator context to provide to allocator
+/// @return the created instance
 static sax_parser_t *sax_parser_create(
     sax_parser_t *parser,
     const sax_config_t *restrict config,
@@ -1271,6 +1320,9 @@ static sax_parser_t *sax_parser_create(
   return parser;
 }
 
+/// @brief Create a parser instance using an allocator
+/// @param config passed-in config to use
+/// @return the created parser
 static sax_parser_t *sax_parser_create_alloc(const sax_config_t *restrict config) {
 
   void *(*alloc)(void *, void *, size_t) = config->alloc == NULL ? sax_default_alloc : config->alloc;
@@ -1312,6 +1364,9 @@ static sax_parser_t *sax_parser_create_alloc(const sax_config_t *restrict config
       alloc_ctx);
 }
 
+/// @brief Create a parser instance using a static buffer
+/// @param config passed-in config to use
+/// @return the created parser
 static sax_parser_t *sax_parser_create_buf(const sax_config_t *restrict config) {
 
   sax_arena_t arena = {
