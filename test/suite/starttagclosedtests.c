@@ -128,9 +128,6 @@ TEST(attr_val) {
 TEST(start_tag_closed) {
 
   ASSERT_START_TAG(arena, "<xml version=\"1.0\" encoding=\"UTF-8\"/>", "xml", {"version", "1.0"}, {"encoding", "UTF-8"});
-  ASSERT_START_TAG(arena, "<alpha beta=\"gamma\" delta/>", "alpha", {"beta", "gamma"}, {"delta", NULL});
-  ASSERT_START_TAG(arena, "<alpha beta=\"gamma\" delta />", "alpha", {"beta", "gamma"}, {"delta", NULL});
-  ASSERT_START_TAG(arena, "<alpha beta gamma=\"delta\" />", "alpha", {"beta", NULL}, {"gamma", "delta"});
   ASSERT_START_TAG(arena, "<alpha/>", "alpha", {0});
   ASSERT_START_TAG(arena, "<alpha />", "alpha", {0});
 
@@ -147,6 +144,9 @@ TEST(start_tag_closed) {
   ASSERT_START_TAG(arena, "<alpha beta=\"&#128512;\n\"/>", "alpha", {"beta", "😀\n"});
   ASSERT_START_TAG(arena, "<alpha beta=\"\t &#128512; \n\"/>", "alpha", {"beta", "\t 😀 \n"});
 
+  ASSERT_XML_ERR(arena, "<alpha beta=\"gamma\" delta/>", "Unexpected character ' ' located on line 1 column 2");
+  ASSERT_XML_ERR(arena, "<alpha beta=\"gamma\" delta />", "Unexpected character ' ' located on line 1 column 2");
+  ASSERT_XML_ERR(arena, "<alpha beta gamma=\"delta\" />", "Unexpected character ' ' located on line 1 column 2");
   ASSERT_XML_ERR(arena, "</>", "Unexpected character '>' located on line 1 column 3");
   ASSERT_XML_ERR(arena, "< />", "Unexpected character ' ' located on line 1 column 2");
 
