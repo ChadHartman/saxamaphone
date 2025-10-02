@@ -171,6 +171,8 @@ TEST(start_tag) {
   ASSERT_XML_ERR(arena, "<>", "Unexpected character '>' located on line 1 column 2");
   ASSERT_XML_ERR(arena, "< >", "Unexpected character ' ' located on line 1 column 2");
   ASSERT_XML_ERR(arena, "<foo )>", "Unexpected character ')' located on line 1 column 6");
+  ASSERT_XML_ERR(arena, "<f)o>", "Unexpected character ')' located on line 1 column 3");
+  ASSERT_XML_ERR(arena, "<alpha beta=gamma>", "Unexpected character 'g' located on line 1 column 13");
 }
 
 TEST(start_tag_oom) {

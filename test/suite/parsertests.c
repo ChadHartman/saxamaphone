@@ -10,6 +10,11 @@ static void *capped_alloc(void *ctx, void *ptr, size_t size) {
 
   (void)ptr;
 
+  if (size == 0) {
+    // no free impl for arenas
+    return NULL;
+  }
+
   capped_allocator_t *restrict allocator = ctx;
   if (allocator->max >= allocator->current + size) {
     allocator->current += size;
@@ -139,6 +144,50 @@ static void test_parser_buf_success() {
   sax_parser_free(parser);
 }
 
+static void test_parser_null_alloc_attr(arena_t *restrict arena) {
+
+  const size_t arena_size = 8;
+  capped_allocator_t allocator = {
+      .arena = arena,
+      .max = 128 + arena_size,
+  };
+
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .alloc = capped_alloc,
+      .alloc_ctx = &allocator,
+      .xml = "<alpha beta=\"gamma\">",
+      .arena_size = arena_size,
+  });
+
+  ASSERT_NON_NULL(parser);
+  ASSERT_EQ(SAX_EVENT_ERROR, sax_next(parser));
+  ASSERT_STR_EQ("Out of memory", sax_error(parser));
+
+  sax_parser_free(parser);
+}
+
+static void test_parser_proc_inst_null_alloc_attr(arena_t *restrict arena) {
+
+  const size_t arena_size = 8;
+  capped_allocator_t allocator = {
+      .arena = arena,
+      .max = 128 + arena_size,
+  };
+
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .alloc = capped_alloc,
+      .alloc_ctx = &allocator,
+      .xml = "<?alpha beta=\"gamma\"?>",
+      .arena_size = arena_size,
+  });
+
+  ASSERT_NON_NULL(parser);
+  ASSERT_EQ(SAX_EVENT_ERROR, sax_next(parser));
+  ASSERT_STR_EQ("Out of memory", sax_error(parser));
+
+  sax_parser_free(parser);
+}
+
 TEST(parser) {
 
   // Confirm noop
@@ -151,6 +200,8 @@ TEST(parser) {
   test_parser_null_alloc_parser();
   test_parser_null_alloc_arena(arena);
   test_parser_null_alloc_file_buf(arena);
+  test_parser_null_alloc_attr(arena);
+  test_parser_proc_inst_null_alloc_attr(arena);
 
   test_parser_buf_success();
   test_parser_buf_fail_parser();

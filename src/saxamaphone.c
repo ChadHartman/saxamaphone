@@ -940,7 +940,6 @@ static uint_fast8_t sax_parser_state_proc_inst_attr_name(sax_parser_t *restrict 
   }
 }
 
-// TODO: may be multipurpos
 static uint_fast8_t sax_parser_state_attr_assign(sax_parser_t *restrict parser, const char *glyph) {
 
   switch (glyph[0]) {
@@ -954,7 +953,6 @@ static uint_fast8_t sax_parser_state_attr_assign(sax_parser_t *restrict parser, 
   }
 }
 
-// TODO: may be multipurpos
 static uint_fast8_t sax_parser_state_attr_value(sax_parser_t *restrict parser, const char *glyph) {
 
   switch (glyph[0]) {
