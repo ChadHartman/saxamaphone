@@ -12,16 +12,7 @@ endif
 
 includes = include_directories(['include', 'src', 'test'])
 
-tests_arena = executable('arena-tests',
-    sources: [
-        'test/arena.c', 
-        'test/main-arena.c'
-    ],
-    include_directories: includes,
-    c_args: c_args
-)
-
-tests_sax = executable('saxamaphone-tests',
+tests = executable('saxamaphone-tests',
     sources: [
         'src/saxamaphone.c',
         'test/arena.c', 
@@ -46,10 +37,19 @@ tests_sax = executable('saxamaphone-tests',
     include_directories: includes,
     c_args: c_args
         + '-DSAXAMAPHONE_TEST'
-        + '-DSAXAMAPHONE_DEBUG'
-    )
+        # + '-DSAXAMAPHONE_DEBUG'
+)
 
-test('tests-arena', tests_arena)
-test('tests-sax', tests_sax)
+test('saxamaphone-tests', tests)
 
 # `ninja coverage` to generate coverage reports
+
+libsaxamaphone = library(
+    'saxamaphone', 
+    files('./src/saxamaphone.c')
+)
+
+saxamaphone_dep = declare_dependency(
+  include_directories: include_directories('./include/'),
+  link_with: libsaxamaphone,
+)
