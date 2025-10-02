@@ -210,6 +210,26 @@ static void test_parser_null_alloc_error(arena_t *restrict arena) {
   sax_parser_free(parser);
 }
 
+static void test_parser_buf_file_success() {
+
+  uint8_t buf[512];
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .buf = buf,
+      .buf_size = sizeof(buf),
+      .path = "../test/files/programming-languages.xml",
+  });
+
+  sax_event_t ev;
+  do {
+    ev = sax_next(parser);
+    if (ev == SAX_EVENT_ERROR) {
+      FAIL("%s", sax_error(parser));
+    }
+  } while (ev != SAX_EVENT_END_DOCUMENT);
+
+  sax_parser_free(parser);
+}
+
 TEST(parser) {
 
   // Confirm noop
@@ -227,6 +247,7 @@ TEST(parser) {
   test_parser_null_alloc_error(arena);
 
   test_parser_buf_success();
+  test_parser_buf_file_success();
   test_parser_buf_fail_parser();
   test_parser_buf_fail_file_buf();
 }
