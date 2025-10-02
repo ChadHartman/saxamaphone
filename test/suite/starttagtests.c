@@ -151,6 +151,7 @@ TEST(start_tag) {
   ASSERT_START_TAG(arena, "<alpha beta=\"gamma\" \t delta>", "alpha", {"beta", "gamma"}, {"delta", NULL});
   ASSERT_START_TAG(arena, "<alpha beta=\"gamma\" \t delta \n>", "alpha", {"beta", "gamma"}, {"delta", NULL});
   ASSERT_START_TAG(arena, "<alpha beta gamma=\"delta\" >", "alpha", {"beta", NULL}, {"gamma", "delta"});
+  ASSERT_START_TAG(arena, "<alpha beta=\"gamma\" \ndelta=\"epsilon\" \nzeta=\"eta\">", "alpha", {"beta", "gamma"}, {"delta", "epsilon"}, {"zeta", "eta"});
   ASSERT_START_TAG(arena, "<alpha>", "alpha", {0});
   ASSERT_START_TAG(arena, "<alpha >", "alpha", {0});
 
@@ -169,6 +170,7 @@ TEST(start_tag) {
 
   ASSERT_XML_ERR(arena, "<>", "Unexpected character '>' located on line 1 column 2");
   ASSERT_XML_ERR(arena, "< >", "Unexpected character ' ' located on line 1 column 2");
+  ASSERT_XML_ERR(arena, "<foo )>", "Unexpected character ')' located on line 1 column 6");
 }
 
 TEST(start_tag_oom) {
