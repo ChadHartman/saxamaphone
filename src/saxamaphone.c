@@ -751,10 +751,12 @@ sax_event_t sax_parser_state_init(sax_parser_t *restrict parser, const char *res
   default:
     return sax_parser_error_unexpected_glyph(parser, glyph);
   }
-
-  return 0;
 }
 
+/// @brief Handle the glyph when in the SAX_STATE_TAG state
+/// @param parser instance
+/// @param glyph glyph to process
+/// @return event if raised
 static uint_fast8_t sax_parser_state_tag(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
@@ -823,6 +825,10 @@ static uint_fast8_t sax_parser_state_tag(sax_parser_t *restrict parser, const ch
   }
 }
 
+/// @brief Handle the glyph when in the SAX_STATE_PROC_INST state
+/// @param parser instance
+/// @param glyph glyph to process
+/// @return event if raised
 static uint_fast8_t sax_parser_state_proc_inst(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
@@ -854,6 +860,10 @@ static uint_fast8_t sax_parser_state_proc_inst(sax_parser_t *restrict parser, co
   }
 }
 
+/// @brief Handle the glyph when in the SAX_STATE_PROC_INST | SAX_STATE_TAG_CLOSE state
+/// @param parser instance
+/// @param glyph glyph to process
+/// @return event if raised
 static uint_fast8_t sax_parser_state_proc_inst_close(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   if (glyph[0] == '>') {
@@ -867,6 +877,10 @@ static uint_fast8_t sax_parser_state_proc_inst_close(sax_parser_t *restrict pars
   return sax_parser_error_unexpected_glyph(parser, glyph);
 }
 
+/// @brief Handle the glyph when in the SAX_STATE_COMMENT state
+/// @param parser instance
+/// @param glyph glyph to process
+/// @return event if raised
 static uint_fast8_t sax_parser_state_comment(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   if (SAX_EVENT_ERROR == sax_parser_append(parser, &parser->data, glyph)) {
@@ -881,6 +895,10 @@ static uint_fast8_t sax_parser_state_comment(sax_parser_t *restrict parser, cons
   return 0;
 }
 
+/// @brief Handle the glyph when in the SAX_STATE_PROC_INST | SAX_STATE_SPACE state
+/// @param parser instance
+/// @param glyph glyph to process
+/// @return event if raised
 static uint_fast8_t sax_parser_state_proc_inst_space(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
@@ -935,12 +953,17 @@ static uint_fast8_t sax_parser_state_proc_inst_space(sax_parser_t *restrict pars
   }
 }
 
-static uint_fast8_t sax_parser_state_proc_inst_attr_name(sax_parser_t *restrict parser, const char *restrict glyph) {
+/// @brief Handle the glyph when in the (SAX_STATE_PROC_INST or SAX_STATE_TAG_START)
+///    | SAX_STATE_ATTR_NAME state
+/// @param parser instance
+/// @param glyph glyph to process
+/// @return event if raised
+static uint_fast8_t sax_parser_state_attr_name(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
 
   case '=':
-    SAXAMAPHONE_LOG("Parsed processing instructing attribute name \"%s\"", parser->current_attr->name);
+    SAXAMAPHONE_LOG("Parsed attribute name \"%s\"", parser->current_attr->name);
     parser->secondary_state = SAX_STATE_ATTR_ASSIGN;
     return 0;
 
@@ -1071,26 +1094,6 @@ static uint_fast8_t sax_parser_state_tag_start_space(sax_parser_t *restrict pars
     }
 
     // Populate
-    return sax_parser_append(parser, &parser->current_attr->name, glyph);
-  }
-}
-
-static uint_fast8_t sax_parser_state_tag_start_attr_name(sax_parser_t *restrict parser, const char *restrict glyph) {
-
-  switch (glyph[0]) {
-
-  case '=':
-    SAXAMAPHONE_LOG("Parsed start tag attribute name \"%s\"", parser->current_attr->name);
-    parser->secondary_state = SAX_STATE_ATTR_ASSIGN;
-    return 0;
-
-  case SAXAMAPHONE_SPACE:
-    return sax_parser_error_unexpected_glyph(parser, glyph);
-
-  default:
-    if (strchr(SAXAMAPHONE_EXCLUDE_TAG, glyph[0]) != NULL) {
-      return sax_parser_error_unexpected_glyph(parser, glyph);
-    }
     return sax_parser_append(parser, &parser->current_attr->name, glyph);
   }
 }
@@ -1403,7 +1406,7 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
       break;
 
     case SAX_STATE_PROC_INST | SAX_STATE_ATTR_NAME:
-      ev = sax_parser_state_proc_inst_attr_name(parser, glyph);
+      ev = sax_parser_state_attr_name(parser, glyph);
       break;
 
     case SAX_STATE_PROC_INST | SAX_STATE_ATTR_ASSIGN:
@@ -1435,7 +1438,7 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
       break;
 
     case SAX_STATE_TAG_START | SAX_STATE_ATTR_NAME:
-      ev = sax_parser_state_tag_start_attr_name(parser, glyph);
+      ev = sax_parser_state_attr_name(parser, glyph);
       break;
 
     case SAX_STATE_TAG_START | SAX_STATE_ATTR_ASSIGN:
