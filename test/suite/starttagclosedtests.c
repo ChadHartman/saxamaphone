@@ -144,9 +144,9 @@ TEST(start_tag_closed) {
   ASSERT_START_TAG(arena, "<alpha beta=\"&#128512;\n\"/>", "alpha", {"beta", "😀\n"});
   ASSERT_START_TAG(arena, "<alpha beta=\"\t &#128512; \n\"/>", "alpha", {"beta", "\t 😀 \n"});
 
-  ASSERT_XML_ERR(arena, "<alpha beta=\"gamma\" delta/>", "Unexpected character ' ' located on line 1 column 2");
-  ASSERT_XML_ERR(arena, "<alpha beta=\"gamma\" delta />", "Unexpected character ' ' located on line 1 column 2");
-  ASSERT_XML_ERR(arena, "<alpha beta gamma=\"delta\" />", "Unexpected character ' ' located on line 1 column 2");
+  ASSERT_XML_ERR(arena, "<alpha beta=\"gamma\" delta/>", "Unexpected character '/' located on line 1 column 26");
+  ASSERT_XML_ERR(arena, "<alpha beta=\"gamma\" delta />", "Unexpected character ' ' located on line 1 column 26");
+  ASSERT_XML_ERR(arena, "<alpha beta gamma=\"delta\" />", "Unexpected character ' ' located on line 1 column 12");
   ASSERT_XML_ERR(arena, "</>", "Unexpected character '>' located on line 1 column 3");
   ASSERT_XML_ERR(arena, "< />", "Unexpected character ' ' located on line 1 column 2");
 
