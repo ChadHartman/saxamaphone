@@ -619,29 +619,24 @@ static void sax_parser_reset(sax_parser_t *restrict parser) {
 /// @param  ... message args
 static void sax_parser_error(sax_parser_t *restrict parser, const char *restrict format, ...) {
 
-  va_list args;
-  va_start(args, format);
-
   parser->primary_state = SAX_STATE_ERROR;
   parser->secondary_state = SAX_STATE_NONE;
   sax_parser_reset(parser);
 
-  if (format == NULL) {
-    parser->data = "NULL Error";
-    va_end(args);
+  if (strchr(format, '%') == NULL) {
+    // No args; can use it directly
+    parser->data = (char *)format;
     return;
   }
 
+  va_list args;
+  va_start(args, format);
+
   // Safety factor of 2 to ensure there's enough space for vsnprintf; despite
-  //   the contract, vsnprintf still overflowed the buffer
+  //   the contract, vsnprintf still overflowed the buffer on clang
   parser->data = sax_arena_alloc(&parser->arena, strlen(format) * 2);
   if (parser->data == NULL) {
-    if (strchr(format, '%') == NULL) {
-      // No args; can use it directly
-      parser->data = (char *)format;
-    } else {
-      parser->data = "Out of memory";
-    }
+    parser->data = "Out of memory";
   } else {
     vsnprintf(parser->data, parser->arena.bytes_size, format, args);
   }

@@ -188,6 +188,28 @@ static void test_parser_proc_inst_null_alloc_attr(arena_t *restrict arena) {
   sax_parser_free(parser);
 }
 
+static void test_parser_null_alloc_error(arena_t *restrict arena) {
+
+  const size_t arena_size = 1;
+  capped_allocator_t allocator = {
+      .arena = arena,
+      .max = 128 + arena_size,
+  };
+
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .alloc = capped_alloc,
+      .alloc_ctx = &allocator,
+      .xml = "< >",
+      .arena_size = arena_size,
+  });
+
+  ASSERT_NON_NULL(parser);
+  ASSERT_EQ(SAX_EVENT_ERROR, sax_next(parser));
+  ASSERT_STR_EQ("Out of memory", sax_error(parser));
+
+  sax_parser_free(parser);
+}
+
 TEST(parser) {
 
   // Confirm noop
@@ -202,6 +224,7 @@ TEST(parser) {
   test_parser_null_alloc_file_buf(arena);
   test_parser_null_alloc_attr(arena);
   test_parser_proc_inst_null_alloc_attr(arena);
+  test_parser_null_alloc_error(arena);
 
   test_parser_buf_success();
   test_parser_buf_fail_parser();

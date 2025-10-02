@@ -13,4 +13,5 @@ TEST(comment) {
   ASSERT_XML_ERR(arena, "<!?", "Unexpected character '?' located on line 1 column 3");
   ASSERT_XML_ERR(arena, "<!/", "Unexpected character '/' located on line 1 column 3");
   ASSERT_XML_ERR(arena, "<!!", "Unexpected character '!' located on line 1 column 3");
+  ASSERT_XML_ERR(arena, "<!-foo", "Unexpected character 'f' located on line 1 column 4");
 }
