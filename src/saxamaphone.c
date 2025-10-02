@@ -626,8 +626,6 @@ static const char *sax_iter_next_glyph(sax_iter_t *restrict iter, char *restrict
   return glyph;
 }
 
-// --- private parser methods --- //
-
 /// @brief Reset parser to parse a new XML tag
 /// @param parser instance
 static void sax_parser_reset(sax_parser_t *restrict parser) {
@@ -739,7 +737,7 @@ static sax_event_t sax_parser_error_unexpected_glyph(
 /// @param parser instance
 /// @param glyph glyph to process
 /// @return event if raised
-sax_event_t sax_parser_state_init(sax_parser_t *restrict parser, const char *glyph) {
+sax_event_t sax_parser_state_init(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
 
@@ -757,7 +755,7 @@ sax_event_t sax_parser_state_init(sax_parser_t *restrict parser, const char *gly
   return 0;
 }
 
-static uint_fast8_t sax_parser_state_tag(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_tag(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
 
@@ -825,7 +823,7 @@ static uint_fast8_t sax_parser_state_tag(sax_parser_t *restrict parser, const ch
   }
 }
 
-static uint_fast8_t sax_parser_state_proc_inst(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_proc_inst(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
 
@@ -856,7 +854,7 @@ static uint_fast8_t sax_parser_state_proc_inst(sax_parser_t *restrict parser, co
   }
 }
 
-static uint_fast8_t sax_parser_state_proc_inst_close(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_proc_inst_close(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   if (glyph[0] == '>') {
     parser->primary_state = sax_str_eq("xml", parser->data)
@@ -869,7 +867,7 @@ static uint_fast8_t sax_parser_state_proc_inst_close(sax_parser_t *restrict pars
   return sax_parser_error_unexpected_glyph(parser, glyph);
 }
 
-static uint_fast8_t sax_parser_state_comment(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_comment(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   if (SAX_EVENT_ERROR == sax_parser_append(parser, &parser->data, glyph)) {
     return SAX_EVENT_ERROR;
@@ -883,7 +881,7 @@ static uint_fast8_t sax_parser_state_comment(sax_parser_t *restrict parser, cons
   return 0;
 }
 
-static uint_fast8_t sax_parser_state_proc_inst_space(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_proc_inst_space(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
 
@@ -937,7 +935,7 @@ static uint_fast8_t sax_parser_state_proc_inst_space(sax_parser_t *restrict pars
   }
 }
 
-static uint_fast8_t sax_parser_state_proc_inst_attr_name(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_proc_inst_attr_name(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
 
@@ -957,7 +955,7 @@ static uint_fast8_t sax_parser_state_proc_inst_attr_name(sax_parser_t *restrict 
   }
 }
 
-static uint_fast8_t sax_parser_state_attr_assign(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_attr_assign(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
 
@@ -970,7 +968,7 @@ static uint_fast8_t sax_parser_state_attr_assign(sax_parser_t *restrict parser, 
   }
 }
 
-static uint_fast8_t sax_parser_state_attr_value(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_attr_value(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
 
@@ -989,7 +987,7 @@ static uint_fast8_t sax_parser_state_attr_value(sax_parser_t *restrict parser, c
   }
 }
 
-static uint_fast8_t sax_parser_state_tag_start(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_tag_start(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
 
@@ -1015,7 +1013,7 @@ static uint_fast8_t sax_parser_state_tag_start(sax_parser_t *restrict parser, co
   }
 }
 
-static uint_fast8_t sax_parser_state_tag_start_close(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_tag_start_close(sax_parser_t *restrict parser, const char *restrict glyph) {
   switch (glyph[0]) {
   case '>':
     parser->primary_state = SAX_STATE_CONTENT;
@@ -1027,7 +1025,7 @@ static uint_fast8_t sax_parser_state_tag_start_close(sax_parser_t *restrict pars
   }
 }
 
-static uint_fast8_t sax_parser_state_tag_start_space(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_tag_start_space(sax_parser_t *restrict parser, const char *restrict glyph) {
   switch (glyph[0]) {
 
   case SAXAMAPHONE_SPACE:
@@ -1077,7 +1075,7 @@ static uint_fast8_t sax_parser_state_tag_start_space(sax_parser_t *restrict pars
   }
 }
 
-static uint_fast8_t sax_parser_state_tag_start_attr_name(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_tag_start_attr_name(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
 
@@ -1097,7 +1095,7 @@ static uint_fast8_t sax_parser_state_tag_start_attr_name(sax_parser_t *restrict 
   }
 }
 
-static uint_fast8_t sax_parser_state_content(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_content(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
 
@@ -1124,7 +1122,7 @@ static uint_fast8_t sax_parser_state_content(sax_parser_t *restrict parser, cons
   }
 }
 
-static uint_fast8_t sax_parser_state_cdata(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_cdata(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   if (SAX_EVENT_ERROR == sax_parser_append(parser, &parser->data, glyph)) {
     return SAX_EVENT_ERROR;
@@ -1140,7 +1138,7 @@ static uint_fast8_t sax_parser_state_cdata(sax_parser_t *restrict parser, const 
   return 0;
 }
 
-static uint_fast8_t sax_parser_state_esc_char(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_esc_char(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   if (glyph[0] != ';') {
     return sax_parser_append(parser, &parser->stage, glyph);
@@ -1174,7 +1172,7 @@ static uint_fast8_t sax_parser_state_esc_char(sax_parser_t *restrict parser, con
   }
 }
 
-static uint_fast8_t sax_parser_state_tag_end(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_tag_end(sax_parser_t *restrict parser, const char *restrict glyph) {
   switch (glyph[0]) {
   case '>':
     if (sax_strlen(parser->data) > 0) {
@@ -1197,7 +1195,7 @@ static uint_fast8_t sax_parser_state_tag_end(sax_parser_t *restrict parser, cons
   }
 }
 
-static uint_fast8_t sax_parser_state_tag_end_space(sax_parser_t *restrict parser, const char *glyph) {
+static uint_fast8_t sax_parser_state_tag_end_space(sax_parser_t *restrict parser, const char *restrict glyph) {
 
   switch (glyph[0]) {
 
