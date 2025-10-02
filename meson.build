@@ -1,5 +1,7 @@
 project('saxamaphone', 'c', default_options: ['c_std=c99'])
 
+# meson setup -Db_coverage=true builddir
+
 c_args = []
 
 if build_machine.system() == 'windows'
