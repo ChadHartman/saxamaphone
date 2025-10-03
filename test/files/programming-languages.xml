@@ -1,81 +1,82 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<programming-languages>
+<test:programming-languages xmlns:test="http://example.com/default">
 
-  <language name="Python" first-appeared="1991">
-    <paradigms>
-      <paradigm>Procedural</paradigm>
-      <paradigm>Object-Oriented</paradigm>
-      <paradigm>Functional</paradigm>
-    </paradigms>
-    <typing-dicipline>
-      <typing>Dynamic</typing>
-      <typing>Strong</typing>
-    </typing-dicipline>
-    <execution-model>
-      <model>Interpreted</model>
-    </execution-model>
-    <application-domains>
-      <domain>Web Development</domain>
-      <domain>Data Science</domain>
-      <domain>Machine Learning</domain>
-      <domain>Scripting</domain>
-    </application-domains>
-  </language>
+  <test:language name="Python" first-appeared="1991">
+    <test:paradigms>
+      <test:paradigm>Procedural</test:paradigm>
+      <test:paradigm>Object-Oriented</test:paradigm>
+      <test:paradigm>Functional</test:paradigm>
+    </test:paradigms>
+    <test:typing-dicipline>
+      <test:typing>Dynamic</test:typing>
+      <test:typing>Strong</test:typing>
+    </test:typing-dicipline>
+    <test:execution-model>
+      <test:model>Interpreted</test:model>
+    </test:execution-model>
+    <test:application-domains>
+      <test:domain>Web Development</test:domain>
+      <test:domain>Data Science</test:domain>
+      <test:domain>Machine Learning</test:domain>
+      <test:domain>Scripting</test:domain>
+    </test:application-domains>
+  </test:language>
 
-  <language name="Java" first-appeared="1995">
-    <paradigms>
-      <paradigm>Object-Oriented</paradigm>
-      <paradigm>Concurrent</paradigm>
-    </paradigms>
-    <typing-dicipline>
-      <typing>Static</typing>
-      <typing>Strong</typing>
-    </typing-dicipline>
-    <execution-model>
-      <model>Compiled (to bytecode)</model>
-      <model>Interpreted (by JVM)</model>
-    </execution-model>
-    <application-domains>
-      <domain>Enterprise Systems</domain>
-      <domain>Android Development</domain>
-      <domain>Web Development</domain>
-    </application-domains>
-  </language>
+  <test:language name="Java" first-appeared="1995">
+    <test:paradigms>
+      <test:paradigm>Object-Oriented</test:paradigm>
+      <test:paradigm>Concurrent</test:paradigm>
+    </test:paradigms>
+    <test:typing-dicipline>
+      <test:typing>Static</test:typing>
+      <test:typing>Strong</test:typing>
+    </test:typing-dicipline>
+    <test:execution-model>
+      <test:model>Compiled (to bytecode)</test:model>
+      <test:model>Interpreted (by JVM)</test:model>
+    </test:execution-model>
+    <test:application-domains>
+      <test:domain>Enterprise Systems</test:domain>
+      <test:domain>Android Development</test:domain>
+      <test:domain>Web Development</test:domain>
+    </test:application-domains>
+  </test:language>
 
-  <language name="C" first-appeared="1972">
-    <paradigms>
-      <paradigm>Procedural</paradigm>
-    </paradigms>
-    <typing-dicipline>
-      <typing>Static</typing>
-      <typing>Weak</typing>
-    </typing-dicipline>
-    <execution-model>
-      <model>Compiled (to machine code)</model>
-    </execution-model>
-    <application-domains>
-      <domain>System Programming</domain>
-      <domain>Embedded Systems</domain>
-      <domain>Game Development</domain>
-    </application-domains>
-  </language>
+  <test:language name="C" first-appeared="1972">
+    <test:paradigms>
+      <test:paradigm>Procedural</test:paradigm>
+    </test:paradigms>
+    <test:typing-dicipline>
+      <test:typing>Static</test:typing>
+      <test:typing>Weak</test:typing>
+    </test:typing-dicipline>
+    <test:execution-model>
+      <test:model>Compiled (to machine code)</test:model>
+    </test:execution-model>
+    <test:application-domains>
+      <test:domain>System Programming</test:domain>
+      <test:domain>Embedded Systems</test:domain>
+      <test:domain>Game Development</test:domain>
+    </test:application-domains>
+  </test:language>
 
-  <language name="JavaScript" first-appeared="1995">
-    <paradigms>
-      <paradigm>Event-Driven</paradigm>
-      <paradigm>Object-Oriented</paradigm>
-      <paradigm>Functional</paradigm>
-    </paradigms>
-    <typing-dicipline>
-      <typing>Dynamic</typing>
-      <typing>Weak</typing>
-    </typing-dicipline>
-    <execution-model>
-      <model>Interpreted (JIT compilation)</model>
-    </execution-model>
-    <application-domains>
-      <domain>Web Development (Frontend &amp; Backend)</domain>
-      <domain>Mobile Development</domain>
-    </application-domains>
-  </language>
-</programming-languages>
+  <test:language name="JavaScript" first-appeared="1995">
+    <test:paradigms>
+      <test:paradigm>Event-Driven</test:paradigm>
+      <test:paradigm>Object-Oriented</test:paradigm>
+      <test:paradigm>Functional</test:paradigm>
+    </test:paradigms>
+    <test:typing-dicipline>
+      <test:typing>Dynamic</test:typing>
+      <test:typing>Weak</test:typing>
+    </test:typing-dicipline>
+    <test:execution-model>
+      <test:model>Interpreted (JIT compilation)</test:model>
+    </test:execution-model>
+    <test:application-domains>
+      <test:domain>Web Development (Frontend &amp; Backend)</test:domain>
+      <test:domain>Mobile Development</test:domain>
+    </test:application-domains>
+  </test:language>
+
+</test:programming-languages>

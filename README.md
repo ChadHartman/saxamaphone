@@ -9,6 +9,10 @@ Saxamaphone is a C, SAX-style (Simple API for XML) XML parser with the following
 * Simple import
     * Drag and drop `saxamaphone.h` & `saxamaphone.c`
     * Meson import
+* Robust test coverage
+    * Lines: 98.0%
+    * Functions: 100.0%
+    * Branches: 97.0%
 
 and unsupported XML features:
 
@@ -18,6 +22,9 @@ and unsupported XML features:
 * Processing instruction interpretation
     * Events are still generated
     * Processing instructions are not consumed in any way
+* Namespace interpretation
+    * e.g. when calling `sax_tag` on `<app:value>`; "app:value" will be returned
+    
 
 ## Sample Usages
 

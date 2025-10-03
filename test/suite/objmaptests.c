@@ -135,29 +135,29 @@ static bool map_prog_lang(
        ev != SAX_EVENT_END_DOCUMENT && ev != SAX_EVENT_ERROR;
        ev = sax_next(parser)) {
 
-    if (ev == SAX_EVENT_END_TAG && sax_tag_is(parser, "language")) {
+    if (ev == SAX_EVENT_END_TAG && sax_tag_is(parser, "test:language")) {
       return true;
     }
 
-    if (sax_tag_is(parser, "paradigms")) {
-      if (!map_string_nodes(arena, parser, out->paradigms, "paradigms", "paradigm"))
+    if (sax_tag_is(parser, "test:paradigms")) {
+      if (!map_string_nodes(arena, parser, out->paradigms, "test:paradigms", "test:paradigm"))
         return false;
     }
 
-    if (sax_tag_is(parser, "typing-dicipline")) {
-      if (!map_string_nodes(arena, parser, out->typing, "typing-dicipline", "typing")) {
-        return false;
-      }
-    }
-
-    if (sax_tag_is(parser, "execution-model")) {
-      if (!map_string_nodes(arena, parser, out->exe_model, "execution-model", "model")) {
+    if (sax_tag_is(parser, "test:typing-dicipline")) {
+      if (!map_string_nodes(arena, parser, out->typing, "test:typing-dicipline", "test:typing")) {
         return false;
       }
     }
 
-    if (sax_tag_is(parser, "application-domains")) {
-      if (!map_string_nodes(arena, parser, out->app_doms, "application-domains", "domain")) {
+    if (sax_tag_is(parser, "test:execution-model")) {
+      if (!map_string_nodes(arena, parser, out->exe_model, "test:execution-model", "test:model")) {
+        return false;
+      }
+    }
+
+    if (sax_tag_is(parser, "test:application-domains")) {
+      if (!map_string_nodes(arena, parser, out->app_doms, "test:application-domains", "test:domain")) {
         return false;
       }
     }
@@ -187,7 +187,7 @@ TEST(obj_map) {
     FAIL("error: \"%s\"", sax_error(parser));
   }
   ASSERT_EQ(SAX_EVENT_START_TAG, ev);
-  ASSERT_STR_EQ("programming-languages", sax_tag(parser));
+  ASSERT_STR_EQ("test:programming-languages", sax_tag(parser));
 
   prog_lang_t langs[8] = {0};
   size_t lang_offset = 0;
@@ -196,12 +196,12 @@ TEST(obj_map) {
        ev != SAX_EVENT_END_DOCUMENT && ev != SAX_EVENT_ERROR;
        ev = sax_next(parser)) {
 
-    if (ev == SAX_EVENT_START_TAG && sax_tag_is(parser, "language")) {
+    if (ev == SAX_EVENT_START_TAG && sax_tag_is(parser, "test:language")) {
       if (!map_prog_lang(arena, parser, &langs[lang_offset++])) {
         FAIL("Failed to map language");
       }
 
-    } else if (ev == SAX_EVENT_END_TAG && sax_tag_is(parser, "programming-languages")) {
+    } else if (ev == SAX_EVENT_END_TAG && sax_tag_is(parser, "test:programming-languages")) {
       break;
     } else {
       FAIL("Unexpected tag \"%s\"", sax_tag(parser));
