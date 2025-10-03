@@ -84,8 +84,9 @@ typedef struct sax_config_t {
   ///   of bytes allocated for tag & content parsing. 1024 by default
   size_t arena_size;
 
-  /// @brief When non-zero, and buf is NOT provided; this is the initial number
-  ///   of bytes allocated for streaming in a file. 4096 by default
+  /// @brief When non-zero, path is provided, and buf is NOT provided; this is 
+  ///   the initial number of bytes allocated for streaming in a file. 4096 by 
+  ///   default
   size_t file_buf_size;
 
 } sax_config_t;
