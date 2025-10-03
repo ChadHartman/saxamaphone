@@ -10,7 +10,30 @@ else
     c_args = ['-Wall', '-Wextra', '-Werror']
 endif
 
-includes = include_directories(['include', 'src', 'test'])
+libsaxamaphone = library(
+    'saxamaphone', 
+    files('./src/saxamaphone.c'),
+    include_directories: include_directories('./include/'))
+
+saxamaphone_dep = declare_dependency(
+  include_directories: include_directories('./include/'),
+  link_with: libsaxamaphone)
+
+ex_custom_alloc = executable('example-custom-alloc', 
+    sources: files('./example/customallocator.c'),
+    dependencies: [saxamaphone_dep])
+
+ex_no_alloc = executable('example-no-alloc', 
+    sources: files('./example/noallocator.c'),
+    dependencies: [saxamaphone_dep])
+
+ex_xml_file = executable('example-xml-file', 
+    sources: files('./example/xmlfile.c'),
+    dependencies: [saxamaphone_dep])
+
+ex_xml_string = executable('example-xml-string', 
+    sources: files('./example/xmlstring.c'),
+    dependencies: [saxamaphone_dep])
 
 tests = executable('saxamaphone-tests',
     sources: [
@@ -34,22 +57,15 @@ tests = executable('saxamaphone-tests',
         'test/suite/strtests.c',
         'test/suite/trimtests.c',
         'test/suite/unescapetests.c'],
-    include_directories: includes,
+    include_directories: include_directories(['include', 'src', 'test']),
     c_args: c_args
         + '-DSAXAMAPHONE_TEST'
         # + '-DSAXAMAPHONE_DEBUG'
 )
-
-test('saxamaphone-tests', tests)
-
 # `ninja coverage` to generate coverage reports
 
-libsaxamaphone = library(
-    'saxamaphone', 
-    files('./src/saxamaphone.c')
-)
-
-saxamaphone_dep = declare_dependency(
-  include_directories: include_directories('./include/'),
-  link_with: libsaxamaphone,
-)
+test('saxamaphone-tests', tests)
+test('example-custom-alloc', ex_custom_alloc) 
+test('example-no-alloc', ex_no_alloc) 
+test('example-xml-file', ex_xml_file) 
+test('example-xml-string', ex_xml_string) 
