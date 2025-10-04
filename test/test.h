@@ -122,7 +122,7 @@
     const char *lhs = expected;                                            \
     const char *rhs = computed;                                            \
     if (lhs == NULL || rhs == NULL) {                                      \
-      passed = lhs == rhs;                                                 \
+      passed = (void *)lhs == (void *)rhs;                                 \
     } else {                                                               \
       passed = strcmp(lhs, rhs) == 0;                                      \
     }                                                                      \
