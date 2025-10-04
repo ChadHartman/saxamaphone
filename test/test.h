@@ -119,10 +119,10 @@
 #define ASSERT_STR_EQ(expected, computed)                                  \
   {                                                                        \
     bool passed = false;                                                   \
-    const char *lhs = expected;                                            \
-    const char *rhs = computed;                                            \
+    const char *restrict lhs = expected;                                   \
+    const char *restrict rhs = computed;                                   \
     if (lhs == NULL || rhs == NULL) {                                      \
-      passed = (void *)lhs == (void *)rhs;                                 \
+      passed = lhs == NULL && rhs == NULL;                                 \
     } else {                                                               \
       passed = strcmp(lhs, rhs) == 0;                                      \
     }                                                                      \
@@ -135,28 +135,6 @@
     if (!passed) {                                                         \
       exit(EXIT_FAILURE);                                                  \
     }                                                                      \
-  }
-
-#define ASSERT_STRN_EQ(expected, computed, len)                           \
-  {                                                                       \
-    bool passed = false;                                                  \
-    const char *lhs = expected;                                           \
-    const char *rhs = computed;                                           \
-    if (lhs == NULL || rhs == NULL) {                                     \
-      passed = lhs == rhs;                                                \
-    } else {                                                              \
-      passed = strcmp(lhs, rhs) == 0;                                     \
-    }                                                                     \
-    printf("%s:%d: %s" COLOR_RESET "\n",                                  \
-           (strrchr(__FILE__, '/') + 1),                                  \
-           __LINE__,                                                      \
-           passed ? COLOR_GREEN "PASSED" : COLOR_RED "FAILED");           \
-    printf(COLOR_CYAN "  ASSERT_STR_EQ(" #expected ", " #computed ")\n"); \
-    printf(COLOR_YELLOW "    \"%.*s\" == \"%.*s\"\n\n" COLOR_RESET,       \
-           (int)len, lhs, (int)len, rhs);                                 \
-    if (!passed) {                                                        \
-      exit(EXIT_FAILURE);                                                 \
-    }                                                                     \
   }
 
 #define ASSERT_XML_ERR(arena, xmlstr, expected)                 \

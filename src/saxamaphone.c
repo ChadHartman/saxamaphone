@@ -181,6 +181,15 @@ sax_arena_t *sax_parser_arena(sax_parser_t *restrict parser) {
 }
 #endif
 
+static char *sax_strcpy(char *restrict dest, size_t dest_size, const char *restrict src) {
+#ifdef _MSC_VER
+  strcpy_s(dest, dest_size, src);
+  return dest;
+#else
+  return strcpy(dest, src);
+#endif
+}
+
 /// @brief Default allocator
 /// @param ctx provided to config
 /// @param ptr pointer to free or reallocate
@@ -276,7 +285,7 @@ SAX_TEST_API const char *sax_long_to_code_pt(long value, char *restrict buf) {
 /// @param str NULLable string to test
 /// @return -1 when NULL, otherwise strlen(str)
 static int_fast32_t sax_strlen(const char *restrict str) {
-  return str == NULL ? -1 : strlen(str);
+  return str == NULL ? -1 : (int_fast32_t)strlen(str);
 }
 
 /// @brief NULL-safe string comparison utility
@@ -501,7 +510,7 @@ static bool sax_arena_expand(sax_arena_t *restrict arena) {
     return false;
   }
 
-  const size_t size = arena->bytes_size * 2;
+  const uint_fast32_t size = arena->bytes_size * 2;
   arena->bytes = arena->alloc(arena->alloc_ctx, arena->bytes, size);
   if (arena->bytes == NULL) {
     return false;
@@ -516,13 +525,13 @@ static bool sax_arena_expand(sax_arena_t *restrict arena) {
 /// @param alloc instance
 /// @param size in bytes of the allocation
 /// @return the pointer or NULL if insufficient memory
-SAX_TEST_API void *sax_arena_alloc(sax_arena_t *restrict arena, size_t size) {
+SAX_TEST_API void *sax_arena_alloc(sax_arena_t *restrict arena, uint_fast32_t size) {
 
   if (arena == NULL || arena->bytes == NULL || size == 0) {
     return NULL;
   }
 
-  const uintptr_t align = (arena->offset + size) % sizeof(uint8_t *);
+  const uint_fast32_t align = (arena->offset + size) % sizeof(uint8_t *);
   if (arena->offset + size + align > arena->bytes_size) {
     if (sax_arena_expand(arena)) {
       return sax_arena_alloc(arena, size);
@@ -563,7 +572,7 @@ static uint8_t sax_iter_next_byte(sax_iter_t *restrict iter) {
       }
 
       fiter->offset = 0;
-      fiter->bytes_read = fread(
+      fiter->bytes_read = (uint_fast32_t)fread(
           fiter->file_buffer,
           sizeof(uint8_t),
           fiter->file_buffer_size,
@@ -659,7 +668,7 @@ static void sax_parser_error(sax_parser_t *restrict parser, const char *restrict
 
   // Safety factor of 2 to ensure there's enough space for vsnprintf; despite
   //   the contract, vsnprintf still overflowed the buffer on clang
-  parser->data = sax_arena_alloc(&parser->arena, strlen(format) * 2);
+  parser->data = sax_arena_alloc(&parser->arena, (uint_fast32_t)(strlen(format) * 2));
   if (parser->data == NULL) {
     parser->data = "Out of memory";
   } else {
@@ -687,8 +696,8 @@ static uint_fast8_t sax_parser_append(
 
   if ((*token) == NULL) {
     candidate = parser->arena.bytes + parser->arena.offset;
-    alignment = (uintptr_t)(*candidate) % sizeof(char *);
-    (*candidate) += alignment;
+    alignment = (uintptr_t)(candidate) % sizeof(char *);
+    candidate += alignment;
   } else {
     candidate = (uint8_t *)(*token);
   }
@@ -708,7 +717,7 @@ static uint_fast8_t sax_parser_append(
   }
 
   strcpy((*token) + token_len, glyph);
-  parser->arena.offset += glyph_size + alignment;
+  parser->arena.offset += (uint_fast32_t)(glyph_size + alignment);
   return 0;
 }
 
