@@ -54,13 +54,13 @@ static bool sax_next_is(
   return strcmp(expected_tag, sax_tag(parser)) == 0;
 }
 
-static int32_t sax_attr_d32(sax_parser_t *restrict parser, const char *restrict name) {
+static int16_t sax_attr_d16(sax_parser_t *restrict parser, const char *restrict name) {
   const char *restrict value = sax_attr(parser, name);
   if (value == NULL) {
     return 0;
   }
 
-  return (int32_t)atol(value);
+  return (int16_t)atoi(value);
 }
 
 static char *map_string_node(
@@ -129,7 +129,7 @@ static bool map_prog_lang(
 
   // In <language>
   out->name = arena_strdup(arena, sax_attr(parser, "name"));
-  out->first_appeared = sax_attr_d32(parser, "first-appeared");
+  out->first_appeared = sax_attr_d16(parser, "first-appeared");
 
   for (sax_event_t ev = sax_next(parser);
        ev != SAX_EVENT_END_DOCUMENT && ev != SAX_EVENT_ERROR;

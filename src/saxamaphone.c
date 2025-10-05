@@ -1,4 +1,3 @@
-#include <ctype.h>    // isspace
 #include <inttypes.h> // PRIuFAST16
 #include <stdarg.h>   // va_start
 #include <stdio.h>    // fopen
@@ -360,6 +359,21 @@ SAX_TEST_API bool sax_endswith(const char *restrict subject, const char *restric
   return strcmp(subject + offset, suffix) == 0;
 }
 
+/// @brief Test whether the provided char isspace in a platform independant way
+///   (invalid chars in windows i.e. utf-8 cause aborts)
+/// @param c char to test
+/// @return true if is a space
+static bool sax_isspace(const char c) {
+
+  switch (c) {
+  case SAXAMAPHONE_SPACE:
+    return true;
+
+  default:
+    return false;
+  }
+}
+
 /// @brief Test whether the provided string is all spaces
 /// @param str string to test
 /// @return true if all spaces
@@ -369,8 +383,13 @@ static bool sax_str_is_space(const char *restrict str) {
        str[i] != 0;
        i += sax_code_pt_size(str[i])) {
 
-    if (!isspace(str[i])) {
+    switch (str[i]) {
+    case SAXAMAPHONE_SPACE:
       return false;
+
+    default:
+      // noop
+      break;
     }
   }
 
