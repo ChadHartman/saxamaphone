@@ -181,7 +181,12 @@ sax_arena_t *sax_parser_arena(sax_parser_t *restrict parser) {
 }
 #endif
 
-static char *sax_strcpy(char *restrict dest, size_t dest_size, const char *restrict src) {
+/// @brief Perform a string copy operation in a platform agnostic manner
+/// @param dest destination buffer to fill
+/// @param dest_size capacity of the provided buffer
+/// @param src string to copy
+/// @return the copied string
+SAX_TEST_API char *sax_strcpy(char *restrict dest, size_t dest_size, const char *restrict src) {
 #ifdef _MSC_VER
   strcpy_s(dest, dest_size, src);
   return dest;
@@ -215,11 +220,11 @@ SAX_TEST_API void *sax_default_alloc(void *ctx, void *ptr, size_t size) {
 /// @brief Compute the file buffer size; it should be half the capacity and a power of 2
 /// @param capacity total number of available bytes
 /// @return the computed file buffer size
-SAX_TEST_API size_t sax_file_buf_size(size_t capacity) {
+SAX_TEST_API uint_fast32_t sax_file_buf_size(uint_fast32_t capacity) {
 
-  const size_t half = capacity / 2;
+  const uint_fast32_t half = capacity / 2;
   // Min 32 arbitrarily chosen
-  size_t buf_size = 32;
+  uint_fast32_t buf_size = 32;
   while (buf_size * 2 <= half) {
     buf_size = buf_size * 2;
   }
@@ -1290,7 +1295,7 @@ static sax_parser_t *sax_parser_create(
   *parser = (sax_parser_t){
       .arena = {
           .bytes = arena_bytes,
-          .bytes_size = arena_bytes_size,
+          .bytes_size = (uint_fast32_t)arena_bytes_size,
           .alloc = alloc,
           .alloc_ctx = alloc_ctx,
       },
@@ -1301,7 +1306,12 @@ static sax_parser_t *sax_parser_create(
 
   if (config->path != NULL) {
 
+#ifdef _MSC_VER
+    FILE *fp = NULL;
+    fopen_s(&fp, config->path, "r");
+#else
     FILE *fp = fopen(config->path, "r");
+#endif
 
     if (!fp) {
       sax_parser_error(parser, "Failed to open \"%s\"", config->path);
@@ -1383,7 +1393,7 @@ static sax_parser_t *sax_parser_create_buf(const sax_config_t *restrict config) 
 
   sax_arena_t arena = {
       .bytes = config->buf,
-      .bytes_size = config->buf_size,
+      .bytes_size = (uint_fast32_t)config->buf_size,
   };
 
   sax_parser_t *restrict parser = sax_arena_alloc(&arena, sizeof(sax_parser_t));
@@ -1394,7 +1404,7 @@ static sax_parser_t *sax_parser_create_buf(const sax_config_t *restrict config) 
     return NULL;
   }
 
-  size_t file_buffer_size = 0;
+  uint_fast32_t file_buffer_size = 0;
   void *file_buffer = NULL;
   if (config->path != NULL) {
     file_buffer_size = sax_file_buf_size(arena.bytes_size - arena.offset);
