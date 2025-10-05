@@ -146,9 +146,7 @@
         .alloc_ctx = arena,                                     \
     });                                                         \
     ASSERT_EQ(SAX_EVENT_ERROR, sax_next(parser));               \
-    if (expected != NULL) {                                     \
-      ASSERT_STR_EQ(expected, sax_error(parser));               \
-    }                                                           \
+    ASSERT_STR_EQ(expected, sax_error(parser));                 \
     sax_parser_free(parser);                                    \
   }
 
