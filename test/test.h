@@ -161,7 +161,7 @@
     });                                                                            \
     const sax_event_t expected[] = {__VA_ARGS__, 0};                               \
     const sax_event_t *ev = expected;                                              \
-    sax_event_t actual;                                                            \
+    sax_event_t actual = SAX_EVENT_END_DOCUMENT;                                   \
     for (; *ev != 0; ++ev) {                                                       \
       actual = sax_next(parser);                                                   \
       if (*ev != actual) {                                                         \
