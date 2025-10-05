@@ -186,6 +186,7 @@ static char *sax_strcpy(char *restrict dest, size_t dest_size, const char *restr
   strcpy_s(dest, dest_size, src);
   return dest;
 #else
+  (void)dest_size;
   return strcpy(dest, src);
 #endif
 }
@@ -716,7 +717,9 @@ static uint_fast8_t sax_parser_append(
     (*token) = (char *)candidate;
   }
 
-  strcpy((*token) + token_len, glyph);
+  char *restrict dest = (*token) + token_len;
+  const size_t dest_size = (size_t)((uintptr_t)(parser->arena.bytes + parser->arena.bytes_size) - (uintptr_t)dest);
+  sax_strcpy(dest, dest_size, glyph);
   parser->arena.offset += (uint_fast32_t)(glyph_size + alignment);
   return 0;
 }
