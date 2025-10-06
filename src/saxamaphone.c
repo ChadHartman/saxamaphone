@@ -551,7 +551,11 @@ SAX_TEST_API void *sax_arena_alloc(sax_arena_t *restrict arena, uint_fast32_t si
     return NULL;
   }
 
-  const uint_fast32_t align = (arena->offset + size) % sizeof(uint8_t *);
+  uint_fast32_t align = ((uintptr_t)arena->bytes + arena->offset + size) % sizeof(uint8_t *);
+  if (align != 0) {
+    align = sizeof(uint8_t *) - align;
+  }
+
   if (arena->offset + size + align > arena->bytes_size) {
     if (sax_arena_expand(arena)) {
       return sax_arena_alloc(arena, size);
@@ -561,7 +565,7 @@ SAX_TEST_API void *sax_arena_alloc(sax_arena_t *restrict arena, uint_fast32_t si
     return NULL;
   }
 
-  void *restrict res = arena->bytes + arena->offset;
+  void *restrict res = arena->bytes + arena->offset + align;
   arena->offset += size + align;
   return res;
 }

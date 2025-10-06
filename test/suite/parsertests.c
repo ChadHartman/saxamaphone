@@ -259,6 +259,7 @@ TEST(parser) {
   ASSERT_EQ(SAX_EVENT_ERROR, sax_next(NULL));
   test_parser_missing_file(arena);
   test_parser_no_src(arena);
+  test_parser_alignment();
 
   test_parser_null_alloc_parser();
   test_parser_null_alloc_arena(arena);
