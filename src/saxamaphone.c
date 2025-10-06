@@ -1444,7 +1444,7 @@ static sax_parser_t *sax_parser_create_buf(const sax_config_t *restrict config) 
 
 // === public methods === //
 
-sax_parser_t *sax_parser(const sax_config_t *restrict config) {
+SAXAMAPHONE_API sax_parser_t *sax_parser(const sax_config_t *restrict config) {
 
   if (!config) {
     SAXAMAPHONE_LOG("[SAXAMAPHONE] ERROR: No configuration provided\n");
@@ -1456,7 +1456,7 @@ sax_parser_t *sax_parser(const sax_config_t *restrict config) {
              : sax_parser_create_buf(config);
 }
 
-sax_event_t sax_next(sax_parser_t *restrict parser) {
+SAXAMAPHONE_API sax_event_t sax_next(sax_parser_t *restrict parser) {
 
   if (parser == NULL || parser->primary_state == SAX_STATE_ERROR) {
     return SAX_EVENT_ERROR;
@@ -1601,7 +1601,7 @@ sax_event_t sax_next(sax_parser_t *restrict parser) {
   }
 }
 
-const char *sax_error(const sax_parser_t *restrict parser) {
+SAXAMAPHONE_API const char *sax_error(const sax_parser_t *restrict parser) {
 
   if (!parser) {
     return NULL;
@@ -1610,19 +1610,19 @@ const char *sax_error(const sax_parser_t *restrict parser) {
   return parser->primary_state == SAX_STATE_ERROR ? parser->data : NULL;
 }
 
-const char *sax_tag(const sax_parser_t *restrict parser) {
+SAXAMAPHONE_API const char *sax_tag(const sax_parser_t *restrict parser) {
   return parser ? parser->data : NULL;
 }
 
-const char *sax_content(const sax_parser_t *restrict parser) {
+SAXAMAPHONE_API const char *sax_content(const sax_parser_t *restrict parser) {
   return parser ? parser->data : NULL;
 }
 
-const sax_attr_t *sax_attrs(const sax_parser_t *restrict parser) {
+SAXAMAPHONE_API const sax_attr_t *sax_attrs(const sax_parser_t *restrict parser) {
   return parser ? parser->attrs : NULL;
 }
 
-const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict name) {
+SAXAMAPHONE_API const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict name) {
 
   if (parser == NULL || name == NULL) {
     return NULL;
@@ -1639,7 +1639,7 @@ const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict n
   return NULL;
 }
 
-void sax_parser_free(sax_parser_t *restrict parser) {
+SAXAMAPHONE_API void sax_parser_free(sax_parser_t *restrict parser) {
 
   if (!parser) {
     return;

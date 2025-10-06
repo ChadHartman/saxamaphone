@@ -13,7 +13,9 @@ endif
 libsaxamaphone = library(
     'saxamaphone', 
     files('./src/saxamaphone.c'),
-    include_directories: include_directories('./include/'))
+    include_directories: include_directories('./include/'),
+    c_args: c_args
+        + '-DSAXAMAPHONE_EXPORTS')
 
 saxamaphone_dep = declare_dependency(
   include_directories: include_directories('./include/'),

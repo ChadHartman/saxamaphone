@@ -19,6 +19,22 @@
 #ifndef SAXAMAPHONE_H
 #define SAXAMAPHONE_H
 
+#if (defined(_WIN32) || defined(__CYGWIN__)) && !defined(SAXAMAPHONE_TEST)
+#if defined(SAXAMAPHONE_EXPORTS)
+#define SAXAMAPHONE_API __declspec(dllexport)
+
+#else
+#define SAXAMAPHONE_API __declspec(dllimport)
+
+#endif
+#elif defined(__GNUC__)
+#define SAXAMAPHONE_API __attribute__((visibility("default")))
+
+#else
+#define SAXAMAPHONE_API
+
+#endif
+
 #include <stdbool.h> // bool
 #include <stddef.h>  // size_t
 #include <stdint.h>  // uint8_t
@@ -84,8 +100,8 @@ typedef struct sax_config_t {
   ///   of bytes allocated for tag & content parsing. 1024 by default
   size_t arena_size;
 
-  /// @brief When non-zero, path is provided, and buf is NOT provided; this is 
-  ///   the initial number of bytes allocated for streaming in a file. 4096 by 
+  /// @brief When non-zero, path is provided, and buf is NOT provided; this is
+  ///   the initial number of bytes allocated for streaming in a file. 4096 by
   ///   default
   size_t file_buf_size;
 
@@ -108,43 +124,43 @@ typedef struct sax_attr_t {
 /// @brief Create a Saxamaphone parser instance
 /// @param config (non-NULL) configuration to use
 /// @return Parser instance; or NULL due to missing configuration or error
-sax_parser_t *sax_parser(const sax_config_t *restrict config);
+SAXAMAPHONE_API sax_parser_t *sax_parser(const sax_config_t *restrict config);
 
 /// @brief Advance document iteration to the next event
 /// @param  parser instance
 /// @return next event
-sax_event_t sax_next(sax_parser_t *restrict parser);
+SAXAMAPHONE_API sax_event_t sax_next(sax_parser_t *restrict parser);
 
 /// @brief Retrieve an error message for a @see SAX_EVENT_ERROR
 /// @param parser instance
 /// @return Human-readable error string or NULL if not in an ERROR state
-const char *sax_error(const sax_parser_t *restrict parser);
+SAXAMAPHONE_API const char *sax_error(const sax_parser_t *restrict parser);
 
 /// @brief Retrieve the tag value for events @see SAX_EVENT_START_TAG,
 ///   @see SAX_EVENT_END_TAG, or @see SAX_EVENT_PROCESSING_INSTRUCTION
 /// @param parser instance
 /// @return Tag name or possibly NULL for non-specified events
-const char *sax_tag(const sax_parser_t *restrict parser);
+SAXAMAPHONE_API const char *sax_tag(const sax_parser_t *restrict parser);
 
 /// @brief Retrieve the content for the @see SAX_EVENT_CONTENT event
 /// @param parser instance
 /// @return Content or NULL for non @see SAX_EVENT_CONTENT events
-const char *sax_content(const sax_parser_t *restrict parser);
+SAXAMAPHONE_API const char *sax_content(const sax_parser_t *restrict parser);
 
 /// @brief Retrieve the XML attributes for the @see SAX_EVENT_START_TAG or
 ///   @see SAX_EVENT_PROCESSING_INSTRUCTION events
 /// @param parser instance
 /// @return NULLable attribute linked list
-const sax_attr_t *sax_attrs(const sax_parser_t *restrict parser);
+SAXAMAPHONE_API const sax_attr_t *sax_attrs(const sax_parser_t *restrict parser);
 
 /// @brief Retrieve the XML attribute value associated with the provided name
 /// @param parser instance
 /// @param name to lookup
 /// @return paired value or NULL if not found
-const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict name);
+SAXAMAPHONE_API const char *sax_attr(const sax_parser_t *restrict parser, const char *restrict name);
 
 /// @brief Use to close out and free any resources
 /// @param parser instance
-void sax_parser_free(sax_parser_t *restrict parser);
+SAXAMAPHONE_API void sax_parser_free(sax_parser_t *restrict parser);
 
 #endif // SAXAMAPHONE_H
