@@ -360,7 +360,7 @@ SAX_TEST_API bool sax_endswith(const char *restrict subject, const char *restric
 }
 
 /// @brief Test whether the provided char isspace in a platform independant way
-///   (invalid chars in windows i.e. utf-8 cause aborts)
+///   (invalid chars in windows i.e. utf-8 causes aborts)
 /// @param c char to test
 /// @return true if is a space
 static bool sax_isspace(const char c) {
@@ -383,13 +383,8 @@ static bool sax_str_is_space(const char *restrict str) {
        str[i] != 0;
        i += sax_code_pt_size(str[i])) {
 
-    switch (str[i]) {
-    case SAXAMAPHONE_SPACE:
+    if (sax_isspace(str[i])) {
       return false;
-
-    default:
-      // noop
-      break;
     }
   }
 
@@ -418,7 +413,7 @@ SAX_TEST_API char *sax_ltrim(char *src) {
        i < src_size;
        i += sax_code_pt_size(src[i])) {
 
-    if (!isspace(src[i])) {
+    if (!sax_isspace(src[i])) {
       src += i;
       break;
     }
@@ -445,7 +440,7 @@ SAX_TEST_API char *sax_rtrim(char *src) {
        i < src_size;
        i += sax_code_pt_size(src[i])) {
 
-    if (!isspace(src[i])) {
+    if (!sax_isspace(src[i])) {
       last_non_space = i;
     }
   }
