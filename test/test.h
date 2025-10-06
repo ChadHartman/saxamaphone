@@ -106,7 +106,7 @@
     printf("%s:%d: %s" COLOR_RESET "\n",                                  \
            (strrchr(__FILE__, '/') + 1),                                  \
            __LINE__,                                                      \
-           passed ? COLOR_GREEN "PASSED" : COLOR_RED "FAILED");           \
+           (passed ? COLOR_GREEN "PASSED" : COLOR_RED "FAILED"));         \
     printf(COLOR_CYAN "  ASSERT_EQ(" #expected ", " #computed ")\n");     \
     printf(COLOR_YELLOW "    %" PRId64 " == %" PRId64 "\n\n" COLOR_RESET, \
            lhs,                                                           \

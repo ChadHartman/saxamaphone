@@ -230,6 +230,27 @@ static void test_parser_buf_file_success() {
   sax_parser_free(parser);
 }
 
+static void test_parser_alignment() {
+
+  uint8_t buf[512];
+
+  uintptr_t addr = (uintptr_t)buf;
+  bool aligned = 0 == (addr % sizeof(uint8_t *));
+  ASSERT(aligned);
+
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .buf = buf + 1,
+      .buf_size = sizeof(buf) - 1,
+      .xml = "<alpha/>",
+  });
+
+  addr = (uintptr_t)parser;
+  aligned = 0 == (addr % sizeof(sax_parser_t *));
+  ASSERT(aligned);
+
+  sax_parser_free(parser);
+}
+
 TEST(parser) {
 
   // Confirm noop
