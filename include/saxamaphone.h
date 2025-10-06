@@ -19,6 +19,12 @@
 #ifndef SAXAMAPHONE_H
 #define SAXAMAPHONE_H
 
+#define SAXAMAPHONE_VERSION_MAJOR 1
+#define SAXAMAPHONE_VERSION_MINOR 0
+#define SAXAMAPHONE_VERSION_PATCH 0
+
+#define SAXAMAPHONE_VERSION_STRING "1.0.0"
+
 #if (defined(_WIN32) || defined(__CYGWIN__)) && !defined(SAXAMAPHONE_TEST)
 #if defined(SAXAMAPHONE_EXPORTS)
 #define SAXAMAPHONE_API __declspec(dllexport)

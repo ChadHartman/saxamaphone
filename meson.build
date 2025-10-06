@@ -1,4 +1,7 @@
-project('saxamaphone', 'c', default_options: ['c_std=c99'])
+project('saxamaphone', 
+    'c', 
+    default_options: ['c_std=c99'],
+    version: '1.0.0')
 
 # meson setup -Db_coverage=true builddir
 
@@ -14,6 +17,8 @@ libsaxamaphone = library(
     'saxamaphone', 
     files('./src/saxamaphone.c'),
     include_directories: include_directories('./include/'),
+    version: meson.project_version(),
+    soversion: '1',
     c_args: c_args
         + '-DSAXAMAPHONE_EXPORTS')
 
