@@ -233,10 +233,7 @@ static void test_parser_buf_file_success() {
 static void test_parser_alignment() {
 
   uint8_t buf[512];
-
-  uintptr_t addr = (uintptr_t)buf;
-  bool aligned = 0 == (addr % sizeof(uint8_t *));
-  ASSERT(aligned);
+  ASSERT_ALIGNED(buf);
 
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
       .buf = buf + 1,
@@ -244,9 +241,10 @@ static void test_parser_alignment() {
       .xml = "<alpha/>",
   });
 
-  addr = (uintptr_t)parser;
-  aligned = 0 == (addr % sizeof(sax_parser_t *));
-  ASSERT(aligned);
+  ASSERT_ALIGNED(parser);
+  ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
+  ASSERT_STR_EQ("alpha", sax_tag(parser));
+  ASSERT_ALIGNED(sax_tag(parser));
 
   sax_parser_free(parser);
 }
