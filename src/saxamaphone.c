@@ -377,13 +377,13 @@ static bool sax_isspace(const char c) {
 /// @brief Test whether the provided string is all spaces
 /// @param str string to test
 /// @return true if all spaces
-static bool sax_str_is_space(const char *restrict str) {
+static bool sax_str_isspace(const char *restrict str) {
 
   for (uint_fast64_t i = 0;
        str[i] != 0;
        i += sax_code_pt_size(str[i])) {
 
-    if (sax_isspace(str[i])) {
+    if (!sax_isspace(str[i])) {
       return false;
     }
   }
@@ -1157,7 +1157,7 @@ static uint_fast8_t sax_parser_state_content(sax_parser_t *restrict parser, cons
 
   case '<':
     parser->primary_state = SAX_STATE_TAG;
-    if (sax_str_is_space(parser->data)) {
+    if (sax_str_isspace(parser->data)) {
       sax_parser_reset(parser);
       return 0;
     }
