@@ -7,6 +7,8 @@ typedef struct sax_mapper_t sax_mapper_t;
 
 sax_mapper_t *sax_mapper(sax_parser_t *restrict parser);
 
+void sax_mapper_free(sax_mapper_t *restrict mapper);
+
 typedef enum {
   SAX_FIELD_ATTR,
   SAX_FIELD_NODE,

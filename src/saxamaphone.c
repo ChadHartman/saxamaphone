@@ -1361,6 +1361,23 @@ SAXAMAPHONE_API sax_parser_t *sax_parser(const sax_config_t *restrict config) {
   return parser;
 }
 
+/// @brief Getter for the allocator
+/// @param parser instance
+/// @param alloc_ctx [out] allocator context
+/// @param alloc [out] allocator function
+void sax_alloc(
+    sax_parser_t *restrict parser,
+    void **alloc_ctx,
+    void *(**alloc)(void *, void *, size_t)) {
+
+  if (parser == NULL) {
+    return;
+  }
+
+  *alloc_ctx = parser->arena.alloc_ctx;
+  *alloc = parser->arena.alloc;
+}
+
 SAXAMAPHONE_API sax_event_t sax_next(sax_parser_t *restrict parser) {
 
   if (parser == NULL || parser->primary_state == SAX_STATE_ERROR) {
