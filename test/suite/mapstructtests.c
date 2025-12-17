@@ -1,17 +1,28 @@
 #include <saxmapper.h>
 #include <test.h>
 
-// typedef struct view_t {
+typedef struct view_t {
 
-//   char *name;
-//   bool visible;
+  char *name;
+  bool visible;
 
-//   float x, y, w, h;
+  float x, y, w, h;
 
-//   struct view_t *children;
-//   size_t child_count;
+  struct view_t *children;
 
-// } view_t;
+} view_t;
+
+extern const sax_field_t view_schema[];
+
+const sax_field_t view_schema[] = {
+    {.name = "name", .type = SAX_TYPE_STRING, .offset = offsetof(view_t, name), .optional = true},
+    {.name = "visible", .type = SAX_TYPE_BOOL, .offset = offsetof(view_t, visible), .optional = true},
+    {.name = "x", .type = SAX_TYPE_FLOAT, .offset = offsetof(view_t, x), .optional = true},
+    {.name = "y", .type = SAX_TYPE_FLOAT, .offset = offsetof(view_t, y), .optional = true},
+    {.name = "w", .type = SAX_TYPE_FLOAT, .offset = offsetof(view_t, w), .optional = true},
+    {.name = "h", .type = SAX_TYPE_FLOAT, .offset = offsetof(view_t, h), .optional = true},
+    {.name = "children", .type = SAX_TYPE_ARRAY, .offset = offsetof(view_t, children), .optional = true, .sub_schema = view_schema},
+    {0}};
 
 // bool sax_map_view(
 //     sax_mapper_t *restrict mapper,

@@ -1,3 +1,6 @@
+#include <stdarg.h> // va_list
+#include <stdio.h>  // vsnprintf
+
 #include "saxmapper.h"
 
 /// @brief Simple logger
@@ -17,7 +20,28 @@ struct sax_mapper_t {
   sax_parser_t *parser;
   void *alloc_ctx;
   void *(*alloc)(void *, void *, size_t);
+  char *err;
 };
+
+// static void sax_mapper_set_error(
+//     sax_mapper_t *restrict mapper,
+//     const char *restrict fmt,
+//     ...) {
+
+//   va_list args;
+//   va_start(args, fmt);
+
+//   const size_t len = vsnprintf(NULL, 0, fmt, args);
+//   mapper->alloc(mapper->alloc_ctx, mapper->err, 0);
+//   mapper->err = mapper->alloc(mapper->alloc_ctx, NULL, len + 1);
+//   if (mapper->err == NULL) {
+//     SAXAMAPHONE_LOG("Failed to set error; allocator returned NULL when requesting %zu bytes for format \"%s\"", len + 1, fmt);
+//     va_end(args);
+//     return;
+//   }
+//   vsprintf(mapper->err, fmt, args);
+//   va_end(args);
+// }
 
 void sax_alloc(
     sax_parser_t *restrict parser,
@@ -51,67 +75,12 @@ sax_mapper_t *sax_mapper(sax_parser_t *restrict parser) {
   return mapper;
 }
 
-bool sax_map_bool(
-    sax_mapper_t *restrict mapper,
-    const char *restrict name,
-    sax_map_field_t field,
-    bool required,
-    bool *restrict value) {
-  (void)mapper;
-  (void)name;
-  (void)field;
-  (void)required;
-  (void)value;
-  return true;
-}
-
-bool sax_map_float(
-    sax_mapper_t *restrict mapper,
-    const char *restrict name,
-    sax_map_field_t field,
-    bool required,
-    float *restrict value) {
-  (void)mapper;
-  (void)name;
-  (void)field;
-  (void)required;
-  (void)value;
-  return true;
-}
-
-bool sax_map_size(
-    sax_mapper_t *restrict mapper,
-    const char *restrict name,
-    sax_map_field_t field,
-    bool required,
-    size_t *restrict value) {
-  (void)mapper;
-  (void)name;
-  (void)field;
-  (void)required;
-  (void)value;
-  return true;
-}
-
-bool sax_map_string(
-    sax_mapper_t *restrict mapper,
-    const char *restrict name,
-    sax_map_field_t field,
-    bool required,
-    char **restrict value) {
-  (void)mapper;
-  (void)name;
-  (void)field;
-  (void)required;
-  (void)value;
-  return true;
-}
-
 void sax_mapper_free(sax_mapper_t *restrict mapper) {
 
   if (mapper == NULL) {
     return;
   }
 
+  mapper->alloc(mapper->alloc_ctx, mapper->err, 0);
   mapper->alloc(mapper->alloc_ctx, mapper, 0);
 }
