@@ -5,7 +5,7 @@
 
 typedef struct sax_mapper_t sax_mapper_t;
 
-sax_mapper_t *sax_map(sax_parser_t *restrict parser);
+sax_mapper_t *sax_mapper(sax_parser_t *restrict parser);
 
 typedef enum {
   SAX_FIELD_ATTR,
@@ -17,24 +17,28 @@ bool sax_map_bool(
     sax_mapper_t *restrict mapper,
     const char *restrict name,
     sax_map_field_t field,
+    bool required,
     bool *restrict value);
 
 bool sax_map_float(
     sax_mapper_t *restrict mapper,
     const char *restrict name,
     sax_map_field_t field,
+    bool required,
     float *restrict value);
 
 bool sax_map_size(
     sax_mapper_t *restrict mapper,
     const char *restrict name,
     sax_map_field_t field,
+    bool required,
     size_t *restrict value);
 
 bool sax_map_string(
     sax_mapper_t *restrict mapper,
     const char *restrict name,
     sax_map_field_t field,
+    bool required,
     char **restrict value);
 
 #endif
