@@ -1,7 +1,7 @@
 project('saxamaphone', 
     'c', 
     default_options: ['c_std=c99'],
-    version: '1.0.0')
+    version: '1.1.0')
 
 # meson setup -Db_coverage=true builddir
 
@@ -56,6 +56,7 @@ tests = executable('saxamaphone-tests',
         'test/suite/endtagtests.c',
         'test/suite/filebufsizetests.c',
         'test/suite/gettertests.c',
+        'test/suite/mapstructtests.c',
         'test/suite/objmaptests.c',
         'test/suite/parsertests.c',
         'test/suite/procinsttests.c',

@@ -25,6 +25,7 @@ TEST(file_buf_size);
 TEST(getter);
 TEST(long_to_code_pt);
 TEST(ltrim);
+TEST(map_struct);
 TEST(obj_map);
 TEST(parser);
 TEST(proc_inst);
@@ -55,6 +56,7 @@ const test_t tests[] = {
     TEST_REG(getter),
     TEST_REG(long_to_code_pt),
     TEST_REG(ltrim),
+    TEST_REG(map_struct),
     TEST_REG(obj_map),
     TEST_REG(parser),
     TEST_REG(proc_inst),
