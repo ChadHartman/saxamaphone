@@ -42,5 +42,21 @@ const sax_field_t view_schema[] = {
 // }
 
 TEST(map_struct) {
-  (void)arena;
+
+  view_t view = {0};
+
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .alloc = arena_custom_alloc,
+      .alloc_ctx = arena,
+      .xml = "<view/>",
+  });
+
+  char *errmsg = NULL;
+  ASSERT(sax_deserialize(parser, view_schema, &view, &errmsg));
+  if (errmsg) {
+    TEST_LOG("%s", errmsg);
+  }
+  ASSERT_NULL(errmsg);
+
+  sax_parser_free(parser);
 }

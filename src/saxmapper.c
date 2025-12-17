@@ -16,39 +16,42 @@
 #define SAXAMAPHONE_LOG(...) ((void)0)
 #endif
 
-struct sax_mapper_t {
+typedef struct sax_mapper_t {
   sax_parser_t *parser;
   void *alloc_ctx;
   void *(*alloc)(void *, void *, size_t);
-  char *err;
-};
+} sax_mapper_t;
 
-// static void sax_mapper_set_error(
-//     sax_mapper_t *restrict mapper,
-//     const char *restrict fmt,
-//     ...) {
+static char *sax_mapper_error(
+    sax_mapper_t *restrict mapper,
+    const char *restrict fmt,
+    ...) {
 
-//   va_list args;
-//   va_start(args, fmt);
+  va_list args;
+  va_start(args, fmt);
 
-//   const size_t len = vsnprintf(NULL, 0, fmt, args);
-//   mapper->alloc(mapper->alloc_ctx, mapper->err, 0);
-//   mapper->err = mapper->alloc(mapper->alloc_ctx, NULL, len + 1);
-//   if (mapper->err == NULL) {
-//     SAXAMAPHONE_LOG("Failed to set error; allocator returned NULL when requesting %zu bytes for format \"%s\"", len + 1, fmt);
-//     va_end(args);
-//     return;
-//   }
-//   vsprintf(mapper->err, fmt, args);
-//   va_end(args);
-// }
+  const size_t len = vsnprintf(NULL, 0, fmt, args);
+  char *err = mapper->alloc(mapper->alloc_ctx, NULL, len + 1);
+  if (err == NULL) {
+    SAXAMAPHONE_LOG("Failed to set error; allocator returned NULL when requesting %zu bytes for format \"%s\"", len + 1, fmt);
+    va_end(args);
+    return NULL;
+  }
+  vsprintf(err, fmt, args);
+  va_end(args);
+  return err;
+}
 
 void sax_alloc(
     sax_parser_t *restrict parser,
     void **alloc_ctx,
     void *(**alloc)(void *, void *, size_t));
 
-sax_mapper_t *sax_mapper(sax_parser_t *restrict parser) {
+bool sax_deserialize(
+    sax_parser_t *restrict parser,
+    const sax_field_t *restrict schema,
+    void *restrict value,
+    char **errmsg) {
 
   void *alloc_ctx = NULL;
   void *(*alloc)(void *, void *, size_t) = NULL;
@@ -56,31 +59,31 @@ sax_mapper_t *sax_mapper(sax_parser_t *restrict parser) {
   sax_alloc(parser, &alloc_ctx, &alloc);
 
   if (parser == NULL || alloc == NULL) {
-    SAXAMAPHONE_LOG("Cannot create mapper; invalid parser");
-    return NULL;
+    SAXAMAPHONE_LOG("sax_deserialize failed; invalid parser");
+    return false;
   }
 
-  sax_mapper_t *restrict mapper = alloc(alloc_ctx, NULL, sizeof(mapper));
-  if (mapper == NULL) {
-    SAXAMAPHONE_LOG("Failed to create mapper; allocator returned NULL");
-    return NULL;
-  }
-
-  *mapper = (sax_mapper_t){
+  sax_mapper_t mapper = {
       .alloc = alloc,
       .alloc_ctx = alloc_ctx,
       .parser = parser,
   };
 
-  return mapper;
-}
-
-void sax_mapper_free(sax_mapper_t *restrict mapper) {
-
-  if (mapper == NULL) {
-    return;
+  if (schema == NULL) {
+    SAXAMAPHONE_LOG("sax_deserialize failed; schema was NULL");
+    if (errmsg) {
+      *errmsg = sax_mapper_error(&mapper, "sax_deserialize failed; schema was NULL");
+    }
+    return false;
   }
 
-  mapper->alloc(mapper->alloc_ctx, mapper->err, 0);
-  mapper->alloc(mapper->alloc_ctx, mapper, 0);
+  if (value == NULL) {
+    SAXAMAPHONE_LOG("sax_deserialize failed; value was NULL");
+    if (errmsg) {
+      *errmsg = sax_mapper_error(&mapper, "sax_deserialize failed; value was NULL");
+    }
+    return false;
+  }
+
+  return true;
 }

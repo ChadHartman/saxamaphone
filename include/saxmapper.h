@@ -20,10 +20,10 @@ typedef struct sax_field_t {
   const struct sax_field_t *sub_schema;
 } sax_field_t;
 
-typedef struct sax_mapper_t sax_mapper_t;
-
-sax_mapper_t *sax_mapper(sax_parser_t *restrict parser);
-
-void sax_mapper_free(sax_mapper_t *restrict mapper);
+bool sax_deserialize(
+    sax_parser_t *restrict parser,
+    const sax_field_t *restrict schema,
+    void *restrict value,
+    char **errmsg);
 
 #endif
