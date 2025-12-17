@@ -21,7 +21,6 @@ TEST(content);
 TEST(default_alloc);
 TEST(end_tag);
 TEST(endswith);
-TEST(file_buf_size);
 TEST(getter);
 TEST(long_to_code_pt);
 TEST(ltrim);
@@ -52,7 +51,6 @@ const test_t tests[] = {
     TEST_REG(default_alloc),
     TEST_REG(end_tag),
     TEST_REG(endswith),
-    TEST_REG(file_buf_size),
     TEST_REG(getter),
     TEST_REG(long_to_code_pt),
     TEST_REG(ltrim),

@@ -216,20 +216,6 @@ SAX_TEST_API void *sax_default_alloc(void *ctx, void *ptr, size_t size) {
   return realloc(ptr, size);
 }
 
-/// @brief Compute the file buffer size; it should be half the capacity and a power of 2
-/// @param capacity total number of available bytes
-/// @return the computed file buffer size
-SAX_TEST_API uint_fast32_t sax_file_buf_size(uint_fast32_t capacity) {
-
-  const uint_fast32_t half = capacity / 2;
-  // Min 32 arbitrarily chosen
-  uint_fast32_t buf_size = 32;
-  while (buf_size * 2 <= half) {
-    buf_size = buf_size * 2;
-  }
-  return buf_size;
-}
-
 /// @brief Given the provided byte determine the UTF-8 code point size
 /// @param byte byte value
 /// @return size 1-4 if value; 0 if invalid
