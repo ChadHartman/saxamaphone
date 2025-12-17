@@ -1,7 +1,7 @@
 project('saxamaphone', 
     'c', 
     default_options: ['c_std=c99'],
-    version: '1.1.0')
+    version: '2.0.0')
 
 # meson setup -Db_coverage=true builddir
 
@@ -20,7 +20,7 @@ libsaxamaphone = library(
         './src/saxmapper.c'),
     include_directories: include_directories('./include/'),
     version: meson.project_version(),
-    soversion: '1',
+    soversion: '2',
     c_args: c_args
         + '-DSAXAMAPHONE_EXPORTS')
 
@@ -30,10 +30,6 @@ saxamaphone_dep = declare_dependency(
 
 ex_custom_alloc = executable('example-custom-alloc', 
     sources: files('./example/customallocator.c'),
-    dependencies: [saxamaphone_dep])
-
-ex_no_alloc = executable('example-no-alloc', 
-    sources: files('./example/noallocator.c'),
     dependencies: [saxamaphone_dep])
 
 ex_xml_file = executable('example-xml-file', 
@@ -76,7 +72,6 @@ tests = executable('saxamaphone-tests',
 # `ninja coverage` to generate coverage reports
 
 test('saxamaphone-tests', tests)
-test('example-custom-alloc', ex_custom_alloc) 
-test('example-no-alloc', ex_no_alloc) 
-test('example-xml-file', ex_xml_file) 
-test('example-xml-string', ex_xml_string) 
+test('example-custom-alloc', ex_custom_alloc)
+test('example-xml-file', ex_xml_file)
+test('example-xml-string', ex_xml_string)

@@ -76,21 +76,6 @@ static bool assert_start_tag(
   return pass;
 }
 
-static void test_start_tag_oom_buf() {
-
-  uint8_t buf[130];
-  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
-      .buf = buf,
-      .buf_size = sizeof(buf),
-      .xml = "<hello-world>",
-  });
-
-  ASSERT_NON_NULL(parser);
-  ASSERT_EQ(SAX_EVENT_ERROR, sax_next(parser));
-
-  sax_parser_free(parser);
-}
-
 static void test_start_tag_oom_alloc_expand(arena_t *restrict arena) {
 
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
@@ -178,5 +163,4 @@ TEST(start_tag) {
 TEST(start_tag_oom) {
   test_start_tag_oom_alloc_expand(arena);
   test_start_tag_oom_alloc_runs_out(arena);
-  test_start_tag_oom_buf();
 }

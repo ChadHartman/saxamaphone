@@ -19,11 +19,11 @@
 #ifndef SAXAMAPHONE_H
 #define SAXAMAPHONE_H
 
-#define SAXAMAPHONE_VERSION_MAJOR 1
-#define SAXAMAPHONE_VERSION_MINOR 1
+#define SAXAMAPHONE_VERSION_MAJOR 2
+#define SAXAMAPHONE_VERSION_MINOR 0
 #define SAXAMAPHONE_VERSION_PATCH 0
 
-#define SAXAMAPHONE_VERSION_STRING "1.1.0"
+#define SAXAMAPHONE_VERSION_STRING "2.0.0"
 
 #if (defined(_WIN32) || defined(__CYGWIN__)) && !defined(SAXAMAPHONE_TEST)
 #if defined(SAXAMAPHONE_EXPORTS)
@@ -82,12 +82,6 @@ typedef struct sax_config_t {
   /// @brief Leave content leading and trailing spaces
   bool untrimmed_content;
 
-  /// @brief When specified; neither alloc nor will the default allocator will be used. Buffer sized 4096 is recommended.
-  uint8_t *buf;
-
-  /// @brief Size of buf
-  size_t buf_size;
-
   /// @brief Custom allocator to use instead of the default allocator.
   /// @details * When size is zero; ptr should be freed
   ///   * When ptr is NULL and size is non-zero; malloc should be returned
@@ -102,11 +96,11 @@ typedef struct sax_config_t {
   /// @brief First argument passed into alloc
   void *alloc_ctx;
 
-  /// @brief When non-zero, and buf is NOT provided; this is the initial number
+  /// @brief When non-zero; this is the initial number
   ///   of bytes allocated for tag & content parsing. 1024 by default
   size_t arena_size;
 
-  /// @brief When non-zero, path is provided, and buf is NOT provided; this is
+  /// @brief When non-zero, and path is provided; this is
   ///   the initial number of bytes allocated for streaming in a file. 4096 by
   ///   default
   size_t file_buf_size;

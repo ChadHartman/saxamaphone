@@ -1290,32 +1290,47 @@ static uint_fast8_t sax_parser_state_tag_end_space(sax_parser_t *restrict parser
   }
 }
 
-/// @brief Create the parser instance
-/// @param parser allocated parser
-/// @param config passed-in config
-/// @param arena_bytes allocated arena bytes
-/// @param arena_bytes_size number of allocated arena bytes
-/// @param file_buffer (NULLable) allocated file buffer bytes
-/// @param file_buffer_size number of allocated file buffer bytes
-/// @param alloc (NULLable) custom allocator to use
-/// @param alloc_ctx (NULLable) custom allocator context to provide to allocator
-/// @return the created instance
-static sax_parser_t *sax_parser_create(
-    sax_parser_t *parser,
-    const sax_config_t *restrict config,
-    uint8_t *restrict arena_bytes,
-    size_t arena_bytes_size,
-    uint8_t *restrict file_buffer,
-    size_t file_buffer_size,
-    void *(*alloc)(void *, void *, size_t),
-    void *alloc_ctx) {
+// === public methods === //
+
+SAXAMAPHONE_API sax_parser_t *sax_parser(const sax_config_t *restrict config) {
+
+  if (!config) {
+    SAXAMAPHONE_LOG("[SAXAMAPHONE] ERROR: No configuration provided\n");
+    return NULL;
+  }
+
+  void *(*alloc)(void *, void *, size_t) = config->alloc == NULL ? sax_default_alloc : config->alloc;
+
+  sax_parser_t *restrict parser = alloc(config->alloc_ctx, NULL, sizeof(sax_parser_t));
+  if (parser == NULL) {
+    SAXAMAPHONE_LOG("Allocator returned NULL for %zu\n", sizeof(sax_parser_t));
+    return NULL;
+  }
+
+  const size_t arena_size = config->arena_size == 0 ? 1024 : config->arena_size;
+  void *arena_bytes = alloc(config->alloc_ctx, NULL, arena_size);
+  if (arena_bytes == NULL) {
+    sax_parser_error(parser, "Allocator returned NULL for arena");
+    return parser;
+  }
+
+  const size_t file_buf_size = config->file_buf_size == 0 ? 4096 : config->file_buf_size;
+  void *file_buffer = NULL;
+
+  if (config->path) {
+    file_buffer = alloc(config->alloc_ctx, NULL, file_buf_size);
+    if (file_buffer == NULL) {
+      sax_parser_error(parser, "Allocator returned NULL for file buffer");
+      return parser;
+    }
+  }
 
   *parser = (sax_parser_t){
       .arena = {
           .bytes = arena_bytes,
-          .bytes_size = (uint_fast32_t)arena_bytes_size,
+          .bytes_size = (uint_fast32_t)arena_size,
           .alloc = alloc,
-          .alloc_ctx = alloc_ctx,
+          .alloc_ctx = config->alloc_ctx,
       },
       .untrimmed_content = config->untrimmed_content,
       .line = 1,
@@ -1342,7 +1357,7 @@ static sax_parser_t *sax_parser_create(
             .file = {
                 .fp = fp,
                 .file_buffer = file_buffer,
-                .file_buffer_size = file_buffer_size,
+                .file_buffer_size = file_buf_size,
             },
         },
     };
@@ -1358,106 +1373,6 @@ static sax_parser_t *sax_parser_create(
   }
 
   return parser;
-}
-
-/// @brief Create a parser instance using an allocator
-/// @param config passed-in config to use
-/// @return the created parser
-static sax_parser_t *sax_parser_create_alloc(const sax_config_t *restrict config) {
-
-  void *(*alloc)(void *, void *, size_t) = config->alloc == NULL ? sax_default_alloc : config->alloc;
-  void *alloc_ctx = config->alloc_ctx;
-
-  sax_parser_t *restrict parser = alloc(alloc_ctx, NULL, sizeof(sax_parser_t));
-  if (parser == NULL) {
-    SAXAMAPHONE_LOG("Allocator returned NULL for %zu\n", sizeof(sax_parser_t));
-    return NULL;
-  }
-  memset(parser, 0, sizeof(sax_parser_t));
-
-  const size_t arena_size = config->arena_size == 0 ? 1024 : config->arena_size;
-  void *arena_bytes = alloc(alloc_ctx, NULL, arena_size);
-  if (arena_bytes == NULL) {
-    sax_parser_error(parser, "Allocator returned NULL for arena");
-    return parser;
-  }
-
-  const size_t file_buf_size = config->file_buf_size == 0 ? 4096 : config->file_buf_size;
-  void *file_buffer = NULL;
-
-  if (config->path) {
-    file_buffer = alloc(alloc_ctx, NULL, file_buf_size);
-    if (file_buffer == NULL) {
-      sax_parser_error(parser, "Allocator returned NULL for file buffer");
-      return parser;
-    }
-  }
-
-  return sax_parser_create(
-      parser,
-      config,
-      arena_bytes,
-      arena_size,
-      file_buffer,
-      file_buf_size,
-      alloc,
-      alloc_ctx);
-}
-
-/// @brief Create a parser instance using a static buffer
-/// @param config passed-in config to use
-/// @return the created parser
-static sax_parser_t *sax_parser_create_buf(const sax_config_t *restrict config) {
-
-  sax_arena_t arena = {
-      .bytes = config->buf,
-      .bytes_size = (uint_fast32_t)config->buf_size,
-  };
-
-  sax_parser_t *restrict parser = sax_arena_alloc(&arena, sizeof(sax_parser_t));
-  if (!parser) {
-    SAXAMAPHONE_LOG("ERROR: Unsufficient buffer size {%zu} for allocation %zu\n",
-                    config->buf_size,
-                    sizeof(sax_parser_t));
-    return NULL;
-  }
-
-  uint_fast32_t file_buffer_size = 0;
-  void *file_buffer = NULL;
-  if (config->path != NULL) {
-    file_buffer_size = sax_file_buf_size(arena.bytes_size - arena.offset);
-    file_buffer = sax_arena_alloc(&arena, file_buffer_size);
-    if (file_buffer == NULL) {
-      memset(parser, 0, sizeof(sax_parser_t));
-      parser->primary_state = SAX_STATE_ERROR;
-      parser->data = "Provided buffer size too small; a minimum of 4096 is recommended";
-      return parser;
-    }
-  }
-
-  return sax_parser_create(
-      parser,
-      config,
-      arena.bytes + arena.offset,
-      arena.bytes_size - arena.offset,
-      file_buffer,
-      file_buffer_size,
-      NULL,
-      NULL);
-}
-
-// === public methods === //
-
-SAXAMAPHONE_API sax_parser_t *sax_parser(const sax_config_t *restrict config) {
-
-  if (!config) {
-    SAXAMAPHONE_LOG("[SAXAMAPHONE] ERROR: No configuration provided\n");
-    return NULL;
-  }
-
-  return config->buf == NULL
-             ? sax_parser_create_alloc(config)
-             : sax_parser_create_buf(config);
 }
 
 SAXAMAPHONE_API sax_event_t sax_next(sax_parser_t *restrict parser) {

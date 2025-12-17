@@ -105,45 +105,6 @@ static void test_parser_null_alloc_file_buf(arena_t *restrict arena) {
   sax_parser_free(parser);
 }
 
-static void test_parser_buf_fail_parser() {
-  uint8_t buf[8];
-  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
-      .buf = buf,
-      .buf_size = sizeof(buf),
-  });
-  ASSERT_NULL(parser);
-}
-
-static void test_parser_buf_fail_file_buf() {
-  uint8_t buf[128];
-  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
-      .buf = buf,
-      .buf_size = sizeof(buf),
-      .path = "foo.xml",
-  });
-  ASSERT_NON_NULL(parser);
-  ASSERT_STR_EQ("Provided buffer size too small; a minimum of 4096 is recommended", sax_error(parser));
-}
-
-static void test_parser_buf_success() {
-
-  uint8_t buf[4096];
-  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
-      .buf = buf,
-      .buf_size = sizeof(buf),
-      .path = "../test/files/parser-tests.xml",
-  });
-
-  ASSERT_EQ(SAX_EVENT_PROCESSING_INSTRUCTION, sax_next(parser));
-  ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
-  ASSERT_EQ(SAX_EVENT_CONTENT, sax_next(parser));
-  ASSERT_EQ(SAX_EVENT_END_TAG, sax_next(parser));
-  ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
-  ASSERT_EQ(SAX_EVENT_END_DOCUMENT, sax_next(parser));
-
-  sax_parser_free(parser);
-}
-
 static void test_parser_null_alloc_attr(arena_t *restrict arena) {
 
   const size_t arena_size = 8;
@@ -210,45 +171,6 @@ static void test_parser_null_alloc_error(arena_t *restrict arena) {
   sax_parser_free(parser);
 }
 
-static void test_parser_buf_file_success() {
-
-  uint8_t buf[512];
-  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
-      .buf = buf,
-      .buf_size = sizeof(buf),
-      .path = "../test/files/programming-languages.xml",
-  });
-
-  sax_event_t ev;
-  do {
-    ev = sax_next(parser);
-    if (ev == SAX_EVENT_ERROR) {
-      FAIL("%s", sax_error(parser));
-    }
-  } while (ev != SAX_EVENT_END_DOCUMENT);
-
-  sax_parser_free(parser);
-}
-
-static void test_parser_alignment() {
-
-  uint8_t buf[512];
-  ASSERT_ALIGNED(buf);
-
-  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
-      .buf = buf + 1,
-      .buf_size = sizeof(buf) - 1,
-      .xml = "<alpha/>",
-  });
-
-  ASSERT_ALIGNED(parser);
-  ASSERT_EQ(SAX_EVENT_START_TAG, sax_next(parser));
-  ASSERT_STR_EQ("alpha", sax_tag(parser));
-  ASSERT_ALIGNED(sax_tag(parser));
-
-  sax_parser_free(parser);
-}
-
 TEST(parser) {
 
   // Confirm noop
@@ -257,7 +179,6 @@ TEST(parser) {
   ASSERT_EQ(SAX_EVENT_ERROR, sax_next(NULL));
   test_parser_missing_file(arena);
   test_parser_no_src(arena);
-  test_parser_alignment();
 
   test_parser_null_alloc_parser();
   test_parser_null_alloc_arena(arena);
@@ -265,9 +186,4 @@ TEST(parser) {
   test_parser_null_alloc_attr(arena);
   test_parser_proc_inst_null_alloc_attr(arena);
   test_parser_null_alloc_error(arena);
-
-  test_parser_buf_success();
-  test_parser_buf_file_success();
-  test_parser_buf_fail_parser();
-  test_parser_buf_fail_file_buf();
 }
