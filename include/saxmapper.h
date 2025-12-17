@@ -5,7 +5,34 @@
 
 typedef struct sax_mapper_t sax_mapper_t;
 
+typedef enum {
+  SAX_FIELD_ATTR,
+  SAX_FIELD_NODE,
+  SAX_FIELD_CONTENT,
+} sax_map_field_t;
 
+bool sax_map_bool(
+    sax_mapper_t *restrict mapper,
+    const char *restrict name,
+    sax_map_field_t field,
+    bool *restrict value);
 
+bool sax_map_float(
+    sax_mapper_t *restrict mapper,
+    const char *restrict name,
+    sax_map_field_t field,
+    float *restrict value);
+
+bool sax_map_size(
+    sax_mapper_t *restrict mapper,
+    const char *restrict name,
+    sax_map_field_t field,
+    size_t *restrict value);
+
+bool sax_map_string(
+    sax_mapper_t *restrict mapper,
+    const char *restrict name,
+    sax_map_field_t field,
+    char **restrict value);
 
 #endif
