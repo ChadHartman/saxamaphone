@@ -67,7 +67,7 @@ tests = executable('saxamaphone-tests',
     include_directories: include_directories(['include', 'src', 'test']),
     c_args: c_args
         + '-DSAXAMAPHONE_TEST'
-        # + '-DSAXAMAPHONE_DEBUG'
+        + '-DSAXAMAPHONE_DEBUG'
 )
 # `ninja coverage` to generate coverage reports
 
