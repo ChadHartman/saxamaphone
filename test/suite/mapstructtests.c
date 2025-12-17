@@ -19,6 +19,9 @@ bool sax_map_view(
     sax_map_field_t field,
     view_t *restrict view) {
 
+  (void)name;
+  (void)field;
+
   return sax_map_string(mapper, "name", SAX_FIELD_ATTR, &view->name) &&
          sax_map_bool(mapper, "visible", SAX_FIELD_ATTR, &view->visible) &&
          sax_map_float(mapper, "x", SAX_FIELD_ATTR, &view->x) &&

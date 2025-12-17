@@ -15,7 +15,9 @@ endif
 
 libsaxamaphone = library(
     'saxamaphone', 
-    files('./src/saxamaphone.c'),
+    files(
+        './src/saxamaphone.c',
+        './src/saxmapper.c'),
     include_directories: include_directories('./include/'),
     version: meson.project_version(),
     soversion: '1',
@@ -45,6 +47,7 @@ ex_xml_string = executable('example-xml-string',
 tests = executable('saxamaphone-tests',
     sources: [
         'src/saxamaphone.c',
+        'src/saxmapper.c',
         'test/arena.c', 
         'test/main.c',
         'test/suite/alloctests.c',
