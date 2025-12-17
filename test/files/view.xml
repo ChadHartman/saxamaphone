@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<view
+    name="root"
+    w="640"
+    h="480">
+    <view
+        name="menu"
+        x="10%"
+        y="10%"
+        w="80%"
+        h="80%">
+        <view name="button" visible="false" />
+    </view>
+</view>
