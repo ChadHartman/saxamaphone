@@ -35,7 +35,7 @@ static int ledger_item_cmp(const void *a, const void *b) {
 
 static void ledger_free(ledger_t *restrict ledger) {
 
-    const ledger_item_t *end = ledger->items + ledger->count;
+  const ledger_item_t *end = ledger->items + ledger->count;
 
   for (ledger_item_t *i = ledger->items; i != end; ++i) {
     if (i->size != 0) {
@@ -78,6 +78,7 @@ static void ledger_update(
       .address = (uintptr_t)address,
       .size = size,
   };
+  ledger->sorted = false;
 }
 
 static size_t arena_allocation_size(const void *restrict ptr) {
