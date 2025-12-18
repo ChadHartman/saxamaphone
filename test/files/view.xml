@@ -5,6 +5,14 @@
     h="480"
     hidden="false">
     <view
+        name="title"
+        x="10%"
+        y="10%"
+        w="80%"
+        h="80%"
+        text="Hello, world!">
+    </view>
+    <view
         name="menu"
         x="10%"
         y="10%"

@@ -16,6 +16,12 @@ typedef struct view_t {
 } view_t;
 
 static void view_dtor(arena_t *restrict arena, view_t *restrict view) {
+
+  for (size_t i = 0; i < view->child_count; ++i) {
+    view_dtor(arena, &view->children[i]);
+  }
+
+  arena_custom_alloc(arena, view->children, 0);
   arena_custom_alloc(arena, view->name, 0);
 }
 
@@ -39,7 +45,7 @@ const sax_field_t view_schema[] = {
     {.name = "y", .type = SAX_TYPE_FLOAT, .offset = offsetof(view_t, y)},
     {.name = "w", .type = SAX_TYPE_FLOAT, .offset = offsetof(view_t, w)},
     {.name = "h", .type = SAX_TYPE_FLOAT, .offset = offsetof(view_t, h)},
-    {.name = "children", .type = SAX_TYPE_ARRAY, .sub_schema = view_schema, .arr_append = view_append},
+    {.name = "view", .type = SAX_TYPE_ARRAY, .sub_schema = view_schema, .arr_append = view_append},
     {0}};
 
 static const sax_field_t doc_schema[] = {
@@ -66,6 +72,7 @@ TEST(map_struct) {
   ASSERT_FALSE(view.hidden);
   ASSERT_EQ(640, view.w);
   ASSERT_EQ(480, view.h);
+  ASSERT_EQ(2, view.child_count);
 
   view_dtor(arena, &view);
 

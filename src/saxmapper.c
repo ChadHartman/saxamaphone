@@ -156,7 +156,7 @@ static bool sax_mapper_decode(
       const sax_field_t *restrict field = sax_field(schema, tag);
       SAXAMAPHONE_LOG("Selected field \"%s\"", field == NULL ? "NULL" : field->name);
 
-      const sax_field_t *child_schema = field == NULL ? NULL : field->sub_schema;
+      const sax_field_t *restrict child_schema = field == NULL ? NULL : field->sub_schema;
       uint8_t *child_value = NULL;
 
       if (field != NULL && field->type == SAX_TYPE_ARRAY) {
