@@ -1,15 +1,70 @@
 #include <assert.h>
+#include <stdbool.h>
 #include <string.h> // memset
 
 #include "arena.h"
+
+typedef struct ledger_item_t {
+  uintptr_t address;
+  size_t size;
+} ledger_item_t;
+
+typedef struct ledger_t {
+  bool sorted;
+  ledger_item_t *items;
+  size_t count;
+  size_t capacity;
+} ledger_t;
 
 struct arena_t {
   uint8_t *bytes;
   size_t size;
   size_t offset;
 
+  ledger_t ledger;
+
   struct arena_t *upstream;
 };
+
+static int ledger_item_cmp(const void *a, const void *b) {
+  const ledger_item_t *restrict lhs = a;
+  const ledger_item_t *restrict rhs = b;
+  return lhs->address == rhs->address ? 0 : (lhs->address < rhs->address ? -1 : 1);
+}
+
+static void ledger_update(
+    ledger_t *restrict ledger,
+    void *restrict address,
+    size_t size) {
+
+  if (!ledger->sorted) {
+    qsort(ledger->items, ledger->count, sizeof(ledger_item_t), ledger_item_cmp);
+    ledger->sorted = true;
+  }
+
+  ledger_item_t *restrict found = bsearch(
+      &(ledger_item_t){.address = (uintptr_t)address},
+      ledger->items,
+      ledger->count,
+      sizeof(ledger_item_t),
+      ledger_item_cmp);
+
+  if (found) {
+    found->size = size;
+    return;
+  }
+
+  if (ledger->count == ledger->capacity) {
+    ledger->capacity = ledger->capacity == 0 ? 32 : ledger->capacity * 2;
+    ledger->items = realloc(ledger->items, ledger->capacity * sizeof(ledger_item_t));
+    assert(ledger->items);
+  }
+
+  ledger->items[ledger->count++] = (ledger_item_t){
+      .address = (uintptr_t)address,
+      .size = size,
+  };
+}
 
 static size_t arena_allocation_size(const void *restrict ptr) {
 
@@ -99,12 +154,17 @@ void arena_free(arena_t *restrict arena) {
 
 void *arena_custom_alloc(void *ctx, void *ptr, size_t size) {
 
+  arena_t *restrict arena = ctx;
+
   if (size == 0) {
+    ledger_update(&arena->ledger, ptr, size);
     return NULL;
   }
 
   if (ptr == NULL) {
-    return arena_alloc(ctx, size);
+    ptr = arena_alloc(ctx, size);
+    ledger_update(&arena->ledger, ptr, size);
+    return ptr;
   }
 
   const size_t block_size = arena_allocation_size(ptr);
@@ -112,7 +172,9 @@ void *arena_custom_alloc(void *ctx, void *ptr, size_t size) {
     return ptr;
   }
 
+  ledger_update(&arena->ledger, ptr, 0);
   void *new_ptr = arena_alloc(ctx, size);
+  ledger_update(&arena->ledger, new_ptr, size);
   memcpy(new_ptr, ptr, block_size);
   return new_ptr;
 }
