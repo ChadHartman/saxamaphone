@@ -8,6 +8,7 @@
 #endif
 
 typedef enum {
+  SAX_TYPE_NONE,
   SAX_TYPE_ARRAY,
   SAX_TYPE_BOOL,
   SAX_TYPE_FLOAT,
@@ -16,17 +17,27 @@ typedef enum {
   SAX_TYPE_STRUCT,
 } sax_field_type_t;
 
+/// @brief SAX Mapping field descriptor
 typedef struct sax_field_t {
+
+  /// @brief Field's name which correlates with an XML tag or Attribute
   const char *name;
+
+  /// @brief The C datatype to use
   sax_field_type_t type;
+
+  /// @brief The offset of the field in the provided struct; this is retrieved using @see offsetof
   size_t offset;
-  /// @param If type is TYPE_OBJECT, point to the schema for that sub-struct
+
+  /// @brief Sub schema to use with ARRAY and OBJECT types
   const struct sax_field_t *sub_schema;
+
 } sax_field_t;
 
 typedef struct sax_decode_ctx_t {
   void *(*alloc)(void *, void *, size_t);
   void *alloc_ctx;
+  const sax_field_t *field;
   void *value;
   const char *encoded;
 } sax_decode_ctx_t;

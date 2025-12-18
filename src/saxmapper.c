@@ -21,6 +21,7 @@
 
 static const sax_decoder_t sax_default_encoders[SAXAMAPHONE_FIELD_TYPE_MAX] = {
     NULL,
+    NULL,
     sax_decode_bool,
     sax_decode_float,
     NULL,
@@ -98,6 +99,7 @@ static bool sax_field_set_attr(
       .alloc = mapper->alloc,
       .alloc_ctx = mapper->alloc_ctx,
       .encoded = serialized,
+      .field = field,
       .value = value,
   };
 
@@ -111,7 +113,7 @@ static bool sax_field_set_attr(
   return true;
 }
 
-static bool sax_mapper_deserialize_attrs(
+static bool sax_mapper_decode_attrs(
     sax_mapper_t *restrict mapper,
     const sax_field_t *restrict schema,
     uint8_t *restrict value) {
@@ -131,7 +133,7 @@ static bool sax_mapper_deserialize_attrs(
   return true;
 }
 
-static bool sax_mapper_deserialize(
+static bool sax_mapper_decode(
     sax_mapper_t *restrict mapper,
     const sax_field_t *restrict schema,
     uint8_t *restrict value) {
@@ -157,8 +159,8 @@ static bool sax_mapper_deserialize(
       const sax_field_t *child_schema = field == NULL ? NULL : field->sub_schema;
       uint8_t *child_value = field == NULL ? NULL : (value == NULL ? NULL : value + field->offset);
 
-      const bool res = sax_mapper_deserialize_attrs(mapper, child_schema, child_value) &&
-                       sax_mapper_deserialize(mapper, child_schema, child_value);
+      const bool res = sax_mapper_decode_attrs(mapper, child_schema, child_value) &&
+                       sax_mapper_decode(mapper, child_schema, child_value);
 
       if (!res) {
         return false;
@@ -228,7 +230,7 @@ bool sax_decode(
     return false;
   }
 
-  bool res = sax_mapper_deserialize(&mapper, schema, value);
+  bool res = sax_mapper_decode(&mapper, schema, value);
   if (errmsg) {
     *errmsg = mapper.err;
   }
