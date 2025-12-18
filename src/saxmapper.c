@@ -65,8 +65,9 @@ static const sax_field_t *sax_field(
 }
 
 static bool sax_field_set_attr(
+    sax_mapper_t *restrict mapper,
     const sax_field_t *restrict field,
-    void *restrict value,
+    void *value,
     const char *restrict serialized) {
 
   switch (field->type) {
@@ -74,6 +75,18 @@ static bool sax_field_set_attr(
     *(float *)value = strtof(serialized, NULL) *
                       (sax_endswith(serialized, "%%") ? 0.01f : 1.0f);
     break;
+
+  case SAX_TYPE_STRING: {
+    const size_t len = strlen(serialized);
+    char **out = value;
+    *out = mapper->alloc(mapper->alloc_ctx, NULL, len + 1);
+    if (*out == NULL) {
+      SAXAMAPHONE_LOG("Failed to set \"%s\"; alloc returned NULL", serialized);
+      sax_mapper_error(mapper, "Failed to set \"%s\"; alloc returned NULL", serialized);
+      return false;
+    }
+    memcpy(*out, serialized, len + 1);
+  } break;
 
   default:
     SAXAMAPHONE_LOG("Skipped setting \"%s\" with \"%s\"", field->name, serialized);
@@ -97,7 +110,7 @@ static bool sax_mapper_deserialize_attrs(
     if (field == NULL) {
       continue;
     }
-    sax_field_set_attr(field, value + field->offset, i->value);
+    sax_field_set_attr(mapper, field, value + field->offset, i->value);
   }
 
   return true;

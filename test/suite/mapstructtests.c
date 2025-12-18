@@ -44,6 +44,7 @@ TEST(map_struct) {
     TEST_LOG("%s", errmsg);
   }
   ASSERT_NULL(errmsg);
+  ASSERT_STR_EQ("root", view.name);
   ASSERT_EQ(640, view.w);
   ASSERT_EQ(480, view.h);
 
