@@ -1,5 +1,6 @@
 #include <assert.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <string.h> // memset
 
 #include "arena.h"
@@ -30,6 +31,19 @@ static int ledger_item_cmp(const void *a, const void *b) {
   const ledger_item_t *restrict lhs = a;
   const ledger_item_t *restrict rhs = b;
   return lhs->address == rhs->address ? 0 : (lhs->address < rhs->address ? -1 : 1);
+}
+
+static void ledger_free(ledger_t *restrict ledger) {
+
+    const ledger_item_t *end = ledger->items + ledger->count;
+
+  for (ledger_item_t *i = ledger->items; i != end; ++i) {
+    if (i->size != 0) {
+      fprintf(stderr, "Leak found with address %p sized %zu\n", (void *)i->address, i->size);
+    }
+  }
+
+  free(ledger->items);
 }
 
 static void ledger_update(
@@ -149,6 +163,7 @@ void arena_free(arena_t *restrict arena) {
   }
 
   arena_free(arena->upstream);
+  ledger_free(&arena->ledger);
   free(arena->bytes);
 }
 
