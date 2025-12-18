@@ -12,6 +12,10 @@ typedef struct view_t {
 
 } view_t;
 
+static void view_dtor(arena_t *restrict arena, view_t *restrict view) {
+  arena_custom_alloc(arena, view->name, 0);
+}
+
 extern const sax_field_t view_schema[];
 
 const sax_field_t view_schema[] = {
@@ -47,6 +51,8 @@ TEST(map_struct) {
   ASSERT_STR_EQ("root", view.name);
   ASSERT_EQ(640, view.w);
   ASSERT_EQ(480, view.h);
+
+  view_dtor(arena, &view);
 
   sax_parser_free(parser);
 }
