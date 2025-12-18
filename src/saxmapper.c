@@ -1,5 +1,6 @@
 #include <stdarg.h> // va_list
 #include <stdio.h>  // vsnprintf
+#include <stdlib.h> // atof
 #include <string.h> // strcmp
 
 #include "saxmapper.h"
@@ -23,6 +24,8 @@ typedef struct sax_mapper_t {
   void *(*alloc)(void *, void *, size_t);
   char *err;
 } sax_mapper_t;
+
+bool sax_endswith(const char *restrict subject, const char *restrict suffix);
 
 static char *sax_mapper_error(
     sax_mapper_t *restrict mapper,
@@ -61,9 +64,22 @@ static const sax_field_t *sax_field(
   return NULL;
 }
 
-static bool sax_field_set_value(const sax_field_t *restrict field, void *restrict value) {
-  (void)field;
-  (void)value;
+static bool sax_field_set_attr(
+    const sax_field_t *restrict field,
+    void *restrict value,
+    const char *restrict serialized) {
+
+  switch (field->type) {
+  case SAX_TYPE_FLOAT:
+    *(float *)value = strtof(serialized, NULL) *
+                      (sax_endswith(serialized, "%%") ? 0.01f : 1.0f);
+    break;
+
+  default:
+    SAXAMAPHONE_LOG("Skipped setting \"%s\" with \"%s\"", field->name, serialized);
+    break;
+  }
+
   return true;
 }
 
@@ -81,7 +97,7 @@ static bool sax_mapper_deserialize_attrs(
     if (field == NULL) {
       continue;
     }
-    sax_field_set_value(field, value + field->offset);
+    sax_field_set_attr(field, value + field->offset, i->value);
   }
 
   return true;

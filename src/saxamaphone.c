@@ -320,7 +320,7 @@ SAX_TEST_API bool sax_startswith(const char *restrict subject, const char *restr
 /// @param subject the string to test
 /// @param suffix the suffix to match
 /// @return true if subject endswith the suffix
-SAX_TEST_API bool sax_endswith(const char *restrict subject, const char *restrict suffix) {
+bool sax_endswith(const char *restrict subject, const char *restrict suffix) {
 
   if (subject == NULL) {
     return suffix == NULL ? true : false;

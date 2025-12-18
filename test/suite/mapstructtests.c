@@ -44,6 +44,8 @@ TEST(map_struct) {
     TEST_LOG("%s", errmsg);
   }
   ASSERT_NULL(errmsg);
+  ASSERT_EQ(640, view.w);
+  ASSERT_EQ(480, view.h);
 
   sax_parser_free(parser);
 }
