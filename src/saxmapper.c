@@ -157,7 +157,13 @@ static bool sax_mapper_decode(
       SAXAMAPHONE_LOG("Selected field \"%s\"", field == NULL ? "NULL" : field->name);
 
       const sax_field_t *child_schema = field == NULL ? NULL : field->sub_schema;
-      uint8_t *child_value = field == NULL ? NULL : (value == NULL ? NULL : value + field->offset);
+      uint8_t *child_value = NULL;
+
+      if (field != NULL && field->type == SAX_TYPE_ARRAY) {
+        child_value = field->arr_append == NULL ? NULL : field->arr_append(mapper->alloc_ctx, mapper->alloc, value);
+      } else {
+        child_value = field == NULL ? NULL : (value == NULL ? NULL : value + field->offset);
+      }
 
       const bool res = sax_mapper_decode_attrs(mapper, child_schema, child_value) &&
                        sax_mapper_decode(mapper, child_schema, child_value);

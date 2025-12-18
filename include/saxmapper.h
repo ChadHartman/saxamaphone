@@ -32,6 +32,12 @@ typedef struct sax_field_t {
   /// @brief Sub schema to use with ARRAY and OBJECT types
   const struct sax_field_t *sub_schema;
 
+  /// @brief When type is @see SAX_TYPE_ARRAY, this method will be called for children by passing in the parent
+  /// @param alloc_ctx the allocator context to pass in as the first argument to the allocator
+  /// @param alloc the allocator function
+  /// @param parent the parent object which holds the array
+  void *(*arr_append)(void *, void *(*)(void *, void *, size_t), void *);
+
 } sax_field_t;
 
 typedef struct sax_decode_ctx_t {
