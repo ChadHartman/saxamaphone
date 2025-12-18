@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <stdarg.h> // va_list
 #include <stdio.h>  // vsnprintf
 #include <stdlib.h> // atof
@@ -20,7 +21,7 @@
 
 static const sax_decoder_t sax_default_encoders[SAXAMAPHONE_FIELD_TYPE_MAX] = {
     NULL,
-    NULL,
+    sax_decode_bool,
     sax_decode_float,
     NULL,
     sax_decode_string,
@@ -233,6 +234,24 @@ bool sax_decode(
   }
 
   return res;
+}
+
+bool sax_decode_bool(sax_decode_ctx_t *restrict ctx) {
+
+  bool *decoded = ctx->value;
+  const size_t len = strlen(ctx->encoded);
+  if (len < 5) {
+    *decoded = false;
+    return true;
+  }
+
+  *decoded = tolower(ctx->encoded[0]) == 't' &&
+             tolower(ctx->encoded[1]) == 'r' &&
+             tolower(ctx->encoded[2]) == 'u' &&
+             tolower(ctx->encoded[3]) == 'e' &&
+             ctx->encoded[4] == 0;
+
+  return true;
 }
 
 bool sax_decode_float(sax_decode_ctx_t *restrict ctx) {

@@ -44,6 +44,8 @@ bool sax_decode(
     const sax_map_opts_t *restrict opts,
     char **errmsg);
 
+bool sax_decode_bool(sax_decode_ctx_t *restrict ctx);
+
 bool sax_decode_float(sax_decode_ctx_t *restrict ctx);
 
 bool sax_decode_string(sax_decode_ctx_t *restrict ctx);
