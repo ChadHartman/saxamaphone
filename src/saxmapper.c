@@ -61,6 +61,32 @@ static const sax_field_t *sax_field(
   return NULL;
 }
 
+static bool sax_field_set_value(const sax_field_t *restrict field, void *restrict value) {
+  (void)field;
+  (void)value;
+  return true;
+}
+
+static bool sax_mapper_deserialize_attrs(
+    sax_mapper_t *restrict mapper,
+    const sax_field_t *restrict schema,
+    uint8_t *restrict value) {
+
+  if (schema == NULL || value == NULL) {
+    return true;
+  }
+
+  for (const sax_attr_t *i = sax_attrs(mapper->parser); i != NULL; i = i->next) {
+    const sax_field_t *restrict field = sax_field(schema, i->name);
+    if (field == NULL) {
+      continue;
+    }
+    sax_field_set_value(field, value + field->offset);
+  }
+
+  return true;
+}
+
 static bool sax_mapper_deserialize(
     sax_mapper_t *restrict mapper,
     const sax_field_t *restrict schema,
@@ -77,12 +103,20 @@ static bool sax_mapper_deserialize(
     }
 
     if (ev == SAX_EVENT_START_TAG) {
+
       const char *restrict tag = sax_tag(mapper->parser);
       SAXAMAPHONE_LOG("SAX_EVENT_START_TAG: \"%s\"", tag);
+
       const sax_field_t *restrict field = sax_field(schema, tag);
+      SAXAMAPHONE_LOG("Selected field \"%s\"", field == NULL ? "NULL" : field->name);
+
       const sax_field_t *child_schema = field == NULL ? NULL : field->sub_schema;
       uint8_t *child_value = field == NULL ? NULL : (value == NULL ? NULL : value + field->offset);
-      if (!sax_mapper_deserialize(mapper, child_schema, child_value)) {
+
+      const bool res = sax_mapper_deserialize_attrs(mapper, child_schema, child_value) &&
+                       sax_mapper_deserialize(mapper, child_schema, child_value);
+
+      if (!res) {
         return false;
       }
     }
