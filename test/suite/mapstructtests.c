@@ -74,6 +74,19 @@ TEST(map_struct) {
   ASSERT_EQ(480, view.h);
   ASSERT_EQ(2, view.child_count);
 
+  // Child 1
+  ASSERT_STR_EQ("title", view.name);
+  ASSERT_EQ(10, view.x * 100.0f);
+  ASSERT_EQ(10, view.y * 100.0f);
+  ASSERT_EQ(80, view.w * 100.0f);
+  ASSERT_EQ(80, view.h * 100.0f);
+  ASSERT_EQ(0, view.child_count);
+  // TODO: text
+
+  // Child 2
+
+  // GChild 1
+
   view_dtor(arena, &view);
 
   sax_parser_free(parser);
