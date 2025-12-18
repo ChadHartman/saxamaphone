@@ -4,7 +4,7 @@
 typedef struct view_t {
 
   char *name;
-  bool visible;
+  bool hidden;
 
   float x, y, w, h;
 
@@ -20,7 +20,7 @@ extern const sax_field_t view_schema[];
 
 const sax_field_t view_schema[] = {
     {.name = "name", .type = SAX_TYPE_STRING, .offset = offsetof(view_t, name)},
-    {.name = "visible", .type = SAX_TYPE_BOOL, .offset = offsetof(view_t, visible)},
+    {.name = "hidden", .type = SAX_TYPE_BOOL, .offset = offsetof(view_t, hidden)},
     {.name = "x", .type = SAX_TYPE_FLOAT, .offset = offsetof(view_t, x)},
     {.name = "y", .type = SAX_TYPE_FLOAT, .offset = offsetof(view_t, y)},
     {.name = "w", .type = SAX_TYPE_FLOAT, .offset = offsetof(view_t, w)},
@@ -49,7 +49,7 @@ TEST(map_struct) {
   }
   ASSERT_NULL(errmsg);
   ASSERT_STR_EQ("root", view.name);
-  ASSERT(view.visible);
+  ASSERT_FALSE(view.hidden);
   ASSERT_EQ(640, view.w);
   ASSERT_EQ(480, view.h);
 

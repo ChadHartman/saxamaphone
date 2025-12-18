@@ -2,13 +2,14 @@
 <view
     name="root"
     w="640"
-    h="480">
+    h="480"
+    hidden="false">
     <view
         name="menu"
         x="10%"
         y="10%"
         w="80%"
         h="80%">
-        <view name="button" visible="false" />
+        <view name="button" hidden="true" />
     </view>
 </view>
