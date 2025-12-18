@@ -18,11 +18,20 @@
 #define SAXAMAPHONE_LOG(...) ((void)0)
 #endif
 
+static const sax_decoder_t sax_default_encoders[SAXAMAPHONE_FIELD_TYPE_MAX] = {
+    NULL,
+    NULL,
+    sax_decode_float,
+    NULL,
+    sax_decode_string,
+    NULL};
+
 typedef struct sax_mapper_t {
   sax_parser_t *parser;
   void *alloc_ctx;
   void *(*alloc)(void *, void *, size_t);
   char *err;
+  sax_map_opts_t opts;
 } sax_mapper_t;
 
 bool sax_endswith(const char *restrict subject, const char *restrict suffix);
@@ -70,28 +79,33 @@ static bool sax_field_set_attr(
     void *value,
     const char *restrict serialized) {
 
-  switch (field->type) {
-  case SAX_TYPE_FLOAT:
-    *(float *)value = strtof(serialized, NULL) *
-                      (sax_endswith(serialized, "%%") ? 0.01f : 1.0f);
-    break;
+  sax_decoder_t decoder = mapper->opts.decoders[field->type] == NULL
+                              ? sax_default_encoders[field->type]
+                              : mapper->opts.decoders[field->type];
 
-  case SAX_TYPE_STRING: {
-    const size_t len = strlen(serialized);
-    char **out = value;
-    *out = mapper->alloc(mapper->alloc_ctx, NULL, len + 1);
-    if (*out == NULL) {
-      SAXAMAPHONE_LOG("Failed to set \"%s\"; alloc returned NULL", serialized);
-      sax_mapper_error(mapper, "Failed to set \"%s\"; alloc returned NULL", serialized);
-      return false;
-    }
-    memcpy(*out, serialized, len + 1);
-  } break;
+  if (decoder == NULL) {
+    SAXAMAPHONE_LOG("Skipped setting type %d \"%s\" with \"%s\", no encoder was found",
+                    field->type,
+                    field->name,
+                    serialized);
 
-  default:
-    SAXAMAPHONE_LOG("Skipped setting \"%s\" with \"%s\"", field->name, serialized);
-    break;
+    // TODO return false
+    return true;
   }
+
+  sax_decode_ctx_t ctx = {
+      .alloc = mapper->alloc,
+      .alloc_ctx = mapper->alloc_ctx,
+      .encoded = serialized,
+      .value = value,
+  };
+
+  if (decoder(&ctx)) {
+    return true;
+  }
+
+  sax_mapper_error(mapper, "Failed to set \"%s\" with \"%s\"", field->name, serialized);
+  return false;
 
   return true;
 }
@@ -173,10 +187,11 @@ void sax_alloc(
     void **alloc_ctx,
     void *(**alloc)(void *, void *, size_t));
 
-bool sax_deserialize(
+bool sax_decode(
     sax_parser_t *restrict parser,
     const sax_field_t *restrict schema,
     void *restrict value,
+    const sax_map_opts_t *restrict opts,
     char **errmsg) {
 
   void *alloc_ctx = NULL;
@@ -193,6 +208,7 @@ bool sax_deserialize(
       .alloc = alloc,
       .alloc_ctx = alloc_ctx,
       .parser = parser,
+      .opts = opts == 0 ? (sax_map_opts_t){0} : *opts,
   };
 
   if (schema == NULL) {
@@ -217,4 +233,27 @@ bool sax_deserialize(
   }
 
   return res;
+}
+
+bool sax_decode_float(sax_decode_ctx_t *restrict ctx) {
+
+  *(float *)ctx->value = strtof(ctx->encoded, NULL) *
+                         (sax_endswith(ctx->encoded, "%%") ? 0.01f : 1.0f);
+
+  return true;
+}
+
+bool sax_decode_string(sax_decode_ctx_t *restrict ctx) {
+
+  const size_t len = strlen(ctx->encoded);
+  char **out = ctx->value;
+  *out = ctx->alloc(ctx->alloc_ctx, NULL, len + 1);
+  if (*out == NULL) {
+    SAXAMAPHONE_LOG("Failed to set \"%s\"; alloc returned NULL", ctx->encoded);
+    return false;
+  }
+
+  memcpy(*out, ctx->encoded, len + 1);
+
+  return true;
 }

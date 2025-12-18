@@ -43,7 +43,7 @@ TEST(map_struct) {
   });
 
   char *errmsg = NULL;
-  ASSERT(sax_deserialize(parser, doc_schema, &view, &errmsg));
+  ASSERT(sax_decode(parser, doc_schema, &view, NULL, &errmsg));
   if (errmsg) {
     TEST_LOG("%s", errmsg);
   }
