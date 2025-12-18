@@ -248,7 +248,7 @@ bool sax_decode_bool(sax_decode_ctx_t *restrict ctx) {
 
   bool *decoded = ctx->value;
   const size_t len = strlen(ctx->encoded);
-  if (len < 5) {
+  if (len < 4) {
     *decoded = false;
     return true;
   }
@@ -264,9 +264,11 @@ bool sax_decode_bool(sax_decode_ctx_t *restrict ctx) {
 
 bool sax_decode_float(sax_decode_ctx_t *restrict ctx) {
 
-  *(float *)ctx->value = strtof(ctx->encoded, NULL) *
-                         (sax_endswith(ctx->encoded, "%%") ? 0.01f : 1.0f);
-
+  char *sfx = NULL;
+  const float raw = strtof(ctx->encoded, &sfx);
+  const float div = sfx != NULL && sfx[0] == '%' ? 100.0f : 1.0f;
+  const float res = raw / div;
+  *(float *)ctx->value = res;
   return true;
 }
 

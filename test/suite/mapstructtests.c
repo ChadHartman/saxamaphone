@@ -33,7 +33,9 @@ static void *view_append(void *alloc_ctx, void *(*alloc)(void *, void *, size_t)
     assert(parent->children);
   }
 
-  return &parent->children[parent->child_count++];
+  view_t *restrict child = &parent->children[parent->child_count++];
+  *child = (view_t){0};
+  return child;
 }
 
 extern const sax_field_t view_schema[];
@@ -75,17 +77,28 @@ TEST(map_struct) {
   ASSERT_EQ(2, view.child_count);
 
   // Child 1
-  ASSERT_STR_EQ("title", view.name);
-  ASSERT_EQ(10, view.x * 100.0f);
-  ASSERT_EQ(10, view.y * 100.0f);
-  ASSERT_EQ(80, view.w * 100.0f);
-  ASSERT_EQ(80, view.h * 100.0f);
-  ASSERT_EQ(0, view.child_count);
+  ASSERT_STR_EQ("title", view.children[0].name);
+  ASSERT_EQ(10, view.children[0].x * 100.0f);
+  ASSERT_EQ(10, view.children[0].y * 100.0f);
+  ASSERT_EQ(80, view.children[0].w * 100.0f);
+  ASSERT_EQ(80, view.children[0].h * 100.0f);
+  ASSERT_EQ(0, view.children[0].child_count);
+  ASSERT_FALSE(view.hidden);
   // TODO: text
 
   // Child 2
+  ASSERT_STR_EQ("menu", view.children[1].name);
+  ASSERT_EQ(10, view.children[1].x * 100.0f);
+  ASSERT_EQ(10, view.children[1].y * 100.0f);
+  ASSERT_EQ(80, view.children[1].w * 100.0f);
+  ASSERT_EQ(80, view.children[1].h * 100.0f);
+  ASSERT_EQ(1, view.children[1].child_count);
+  ASSERT_FALSE(view.hidden);
 
   // GChild 1
+  ASSERT_STR_EQ("button", view.children[1].children[0].name);
+  ASSERT_EQ(0, view.children[1].children[0].child_count);
+  ASSERT(view.children[1].children[0].hidden);
 
   view_dtor(arena, &view);
 
