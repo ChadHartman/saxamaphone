@@ -59,6 +59,13 @@
     ASSERT_FALSE(sax_decode_##type_pfx(&ctx, &res));         \
   }
 
+static void *null_allocator(void *ctx, void *ptr, size_t size) {
+  (void)ctx;
+  (void)ptr;
+  (void)size;
+  return NULL;
+}
+
 static sax_decode_ctx_t sax_decode_ctx_create(
     arena_t *restrict arena,
     const char *restrict encoded,
@@ -217,7 +224,28 @@ void test_sax_decode_int64(arena_t *restrict arena) {
 
 TEST_SAX_DECODE_UINT64(size)
 
-void test_sax_decode_string(arena_t *restrict arena) { (void)arena; }
+void test_sax_decode_string(arena_t *restrict arena) {
+
+  char *res;
+  sax_decode_ctx_t ctx;
+
+  ctx = sax_decode_ctx_create(arena, "", NULL);
+  ASSERT(sax_decode_string(&ctx, &res));
+  ASSERT_STR_EQ("", res);
+  arena_custom_alloc(arena, res, 0);
+
+  ctx = sax_decode_ctx_create(arena, "foo", NULL);
+  ASSERT(sax_decode_string(&ctx, &res));
+  ASSERT_STR_EQ("foo", res);
+  arena_custom_alloc(arena, res, 0);
+
+  ctx = (sax_decode_ctx_t){
+      .alloc = null_allocator,
+      .encoded = "foo",
+  };
+
+  ASSERT_FALSE(sax_decode_string(&ctx, &res));
+}
 
 TEST_SAX_DECODE_UINT(uint8, "256")
 TEST_SAX_DECODE_UINT(uint16, "65536")
