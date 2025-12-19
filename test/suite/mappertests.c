@@ -43,6 +43,22 @@
     ASSERT_FALSE(sax_decode_##type_pfx(&ctx, &res));         \
   }
 
+#define TEST_SAX_DECODE_UINT64(type_pfx)                     \
+  void test_sax_decode_##type_pfx(arena_t *restrict arena) { \
+    type_pfx##_t res;                                        \
+    sax_decode_ctx_t ctx;                                    \
+    ctx = sax_decode_ctx_create(arena, "", NULL);            \
+    ASSERT_FALSE(sax_decode_##type_pfx(&ctx, &res));         \
+    ctx = sax_decode_ctx_create(arena, "0", NULL);           \
+    ASSERT(sax_decode_##type_pfx(&ctx, &res));               \
+    ASSERT_EQ(0, res);                                       \
+    ctx = sax_decode_ctx_create(arena, "1", NULL);           \
+    ASSERT(sax_decode_##type_pfx(&ctx, &res));               \
+    ASSERT_EQ(1, res);                                       \
+    ctx = sax_decode_ctx_create(arena, "foo", NULL);         \
+    ASSERT_FALSE(sax_decode_##type_pfx(&ctx, &res));         \
+  }
+
 static sax_decode_ctx_t sax_decode_ctx_create(
     arena_t *restrict arena,
     const char *restrict encoded,
@@ -199,15 +215,14 @@ void test_sax_decode_int64(arena_t *restrict arena) {
   ASSERT_FALSE(sax_decode_int64(&ctx, &res));
 }
 
-void test_sax_decode_size(arena_t *restrict arena) { (void)arena; }
+TEST_SAX_DECODE_UINT64(size)
 
 void test_sax_decode_string(arena_t *restrict arena) { (void)arena; }
 
 TEST_SAX_DECODE_UINT(uint8, "256")
 TEST_SAX_DECODE_UINT(uint16, "65536")
 TEST_SAX_DECODE_UINT(uint32, "4294967296")
-
-void test_sax_decode_uint64(arena_t *restrict arena) { (void)arena; }
+TEST_SAX_DECODE_UINT64(uint64)
 
 TEST(mapper) {
   test_sax_decode_bool(arena);
