@@ -271,15 +271,31 @@ bool sax_decode_bool(const sax_decode_ctx_t *restrict ctx, void *out) {
   return true;
 }
 
-bool sax_decode_float(const sax_decode_ctx_t *restrict ctx, void *out) {
-
+bool sax_decode_double(const sax_decode_ctx_t *restrict ctx, void *out) {
   char *sfx = NULL;
-  const float raw = strtof(ctx->encoded, &sfx);
-  const float div = sfx != NULL && sfx[0] == '%' ? 100.0f : 1.0f;
-  const float res = raw / div;
+  double res = strtod(ctx->encoded, &sfx);
+  res = sfx != NULL && sfx[0] == '%' ? res / 100.0 : res;
+  *(double *)out = res;
+  return true;
+}
+
+bool sax_decode_float(const sax_decode_ctx_t *restrict ctx, void *out) {
+  char *sfx = NULL;
+  float res = strtod(ctx->encoded, &sfx);
+  res = sfx != NULL && sfx[0] == '%' ? res / 100.0f : res;
   *(float *)out = res;
   return true;
 }
+
+// bool sax_decode_int8(const sax_decode_ctx_t *restrict ctx, void *out);
+
+// bool sax_decode_int16(const sax_decode_ctx_t *restrict ctx, void *out);
+
+// bool sax_decode_int32(const sax_decode_ctx_t *restrict ctx, void *out);
+
+// bool sax_decode_int64(const sax_decode_ctx_t *restrict ctx, void *out);
+
+// bool sax_decode_size(const sax_decode_ctx_t *restrict ctx, void *out);
 
 bool sax_decode_string(const sax_decode_ctx_t *restrict ctx, void *out) {
 
@@ -295,3 +311,11 @@ bool sax_decode_string(const sax_decode_ctx_t *restrict ctx, void *out) {
 
   return true;
 }
+
+// bool sax_decode_uint8(const sax_decode_ctx_t *restrict ctx, void *out);
+
+// bool sax_decode_uint16(const sax_decode_ctx_t *restrict ctx, void *out);
+
+// bool sax_decode_uint32(const sax_decode_ctx_t *restrict ctx, void *out);
+
+// bool sax_decode_uint64(const sax_decode_ctx_t *restrict ctx, void *out);
