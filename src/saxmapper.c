@@ -23,9 +23,19 @@ static const sax_decoder_t sax_default_encoders[SAXAMAPHONE_FIELD_TYPE_MAX] = {
     NULL,
     NULL,
     sax_decode_bool,
+    sax_decode_double,
     sax_decode_float,
-    NULL,
+    sax_decode_int8,
+    sax_decode_int16,
+    sax_decode_int32,
+    sax_decode_int64,
+    sax_decode_size,
     sax_decode_string,
+    NULL,
+    sax_decode_uint8,
+    sax_decode_uint16,
+    sax_decode_uint32,
+    sax_decode_uint64,
     NULL};
 
 typedef struct sax_mapper_t {
@@ -100,10 +110,9 @@ static bool sax_field_set_attr(
       .alloc_ctx = mapper->alloc_ctx,
       .encoded = serialized,
       .field = field,
-      .value = value,
   };
 
-  if (decoder(&ctx)) {
+  if (decoder(&ctx, value)) {
     return true;
   }
 
@@ -160,7 +169,7 @@ static bool sax_mapper_decode(
       uint8_t *child_value = NULL;
 
       if (field != NULL && field->type == SAX_TYPE_ARRAY) {
-        child_value = field->arr_append == NULL ? NULL : field->arr_append(mapper->alloc_ctx, mapper->alloc, value);
+        child_value = field->getter == NULL ? NULL : field->getter(mapper->alloc_ctx, mapper->alloc, value);
       } else {
         child_value = field == NULL ? NULL : (value == NULL ? NULL : value + field->offset);
       }
@@ -244,9 +253,9 @@ bool sax_decode(
   return res;
 }
 
-bool sax_decode_bool(sax_decode_ctx_t *restrict ctx) {
+bool sax_decode_bool(const sax_decode_ctx_t *restrict ctx, void *out) {
 
-  bool *decoded = ctx->value;
+  bool *decoded = out;
   const size_t len = strlen(ctx->encoded);
   if (len < 4) {
     *decoded = false;
@@ -262,27 +271,27 @@ bool sax_decode_bool(sax_decode_ctx_t *restrict ctx) {
   return true;
 }
 
-bool sax_decode_float(sax_decode_ctx_t *restrict ctx) {
+bool sax_decode_float(const sax_decode_ctx_t *restrict ctx, void *out) {
 
   char *sfx = NULL;
   const float raw = strtof(ctx->encoded, &sfx);
   const float div = sfx != NULL && sfx[0] == '%' ? 100.0f : 1.0f;
   const float res = raw / div;
-  *(float *)ctx->value = res;
+  *(float *)out = res;
   return true;
 }
 
-bool sax_decode_string(sax_decode_ctx_t *restrict ctx) {
+bool sax_decode_string(const sax_decode_ctx_t *restrict ctx, void *out) {
 
   const size_t len = strlen(ctx->encoded);
-  char **out = ctx->value;
-  *out = ctx->alloc(ctx->alloc_ctx, NULL, len + 1);
-  if (*out == NULL) {
+  char **res = out;
+  *res = ctx->alloc(ctx->alloc_ctx, NULL, len + 1);
+  if (*res == NULL) {
     SAXAMAPHONE_LOG("Failed to set \"%s\"; alloc returned NULL", ctx->encoded);
     return false;
   }
 
-  memcpy(*out, ctx->encoded, len + 1);
+  memcpy(*res, ctx->encoded, len + 1);
 
   return true;
 }
