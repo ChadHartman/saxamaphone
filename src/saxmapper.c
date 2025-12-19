@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <errno.h>
 #include <stdarg.h> // va_list
 #include <stdio.h>  // vsnprintf
 #include <stdlib.h> // atof
@@ -274,20 +275,41 @@ bool sax_decode_bool(const sax_decode_ctx_t *restrict ctx, void *out) {
 bool sax_decode_double(const sax_decode_ctx_t *restrict ctx, void *out) {
   char *sfx = NULL;
   double res = strtod(ctx->encoded, &sfx);
+  if (ctx->encoded == sfx || errno == ERANGE) {
+    return false;
+  }
   res = sfx != NULL && sfx[0] == '%' ? res / 100.0 : res;
   *(double *)out = res;
   return true;
 }
 
 bool sax_decode_float(const sax_decode_ctx_t *restrict ctx, void *out) {
+
   char *sfx = NULL;
   float res = strtod(ctx->encoded, &sfx);
+  errno = 0;
+  if (ctx->encoded == sfx || errno == ERANGE) {
+    return false;
+  }
+
   res = sfx != NULL && sfx[0] == '%' ? res / 100.0f : res;
   *(float *)out = res;
   return true;
 }
 
-// bool sax_decode_int8(const sax_decode_ctx_t *restrict ctx, void *out);
+bool sax_decode_int8(const sax_decode_ctx_t *restrict ctx, void *out) {
+
+  char *sfx = NULL;
+  unsigned long val = strtoul(ctx->encoded, &sfx, 10);
+
+  errno = 0;
+  if (ctx->encoded == sfx || errno == ERANGE || val > UINT8_MAX) {
+    return false;
+  }
+
+  *(uint8_t *)out = (uint8_t)val;
+  return true;
+}
 
 // bool sax_decode_int16(const sax_decode_ctx_t *restrict ctx, void *out);
 
