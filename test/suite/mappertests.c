@@ -1,7 +1,43 @@
 #include <saxmapper.h>
 #include <test.h>
 
-void test_sax_decode_bool(arena_t *restrict arena) { (void)arena; }
+static sax_decode_ctx_t sax_decode_ctx_create(
+    arena_t *restrict arena,
+    const char *restrict encoded,
+    const sax_field_t *restrict field) {
+  return (sax_decode_ctx_t){
+      .alloc = arena_custom_alloc,
+      .alloc_ctx = arena,
+      .encoded = encoded,
+      .field = field,
+  };
+}
+
+void test_sax_decode_bool(arena_t *restrict arena) {
+
+  bool res = false;
+  sax_decode_ctx_t ctx;
+
+  ctx = sax_decode_ctx_create(arena, "true", NULL);
+  ASSERT(sax_decode_bool(&ctx, &res));
+  ASSERT(res);
+
+  ctx = sax_decode_ctx_create(arena, "True", NULL);
+  ASSERT(sax_decode_bool(&ctx, &res));
+  ASSERT(res);
+
+  ctx = sax_decode_ctx_create(arena, "tRue", NULL);
+  ASSERT(sax_decode_bool(&ctx, &res));
+  ASSERT(res);
+
+  ctx = sax_decode_ctx_create(arena, "truE", NULL);
+  ASSERT(sax_decode_bool(&ctx, &res));
+  ASSERT(res);
+
+  ctx = sax_decode_ctx_create(arena, "TRUE", NULL);
+  ASSERT(sax_decode_bool(&ctx, &res));
+  ASSERT(res);
+}
 
 void test_sax_decode_double(arena_t *restrict arena) { (void)arena; }
 
