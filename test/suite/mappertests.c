@@ -37,9 +37,54 @@ void test_sax_decode_bool(arena_t *restrict arena) {
   ctx = sax_decode_ctx_create(arena, "TRUE", NULL);
   ASSERT(sax_decode_bool(&ctx, &res));
   ASSERT(res);
+
+  ctx = sax_decode_ctx_create(arena, "trueish", NULL);
+  ASSERT(sax_decode_bool(&ctx, &res));
+  ASSERT_FALSE(res);
+
+  ctx = sax_decode_ctx_create(arena, "", NULL);
+  ASSERT(sax_decode_bool(&ctx, &res));
+  ASSERT_FALSE(res);
 }
 
-void test_sax_decode_double(arena_t *restrict arena) { (void)arena; }
+void test_sax_decode_double(arena_t *restrict arena) {
+
+  double res = false;
+  sax_decode_ctx_t ctx;
+
+  ctx = sax_decode_ctx_create(arena, "", NULL);
+  ASSERT_FALSE(sax_decode_double(&ctx, &res));
+
+  ctx = sax_decode_ctx_create(arena, "0", NULL);
+  ASSERT(sax_decode_double(&ctx, &res));
+  ASSERT_EQ(0, res);
+
+  ctx = sax_decode_ctx_create(arena, "-0", NULL);
+  ASSERT(sax_decode_double(&ctx, &res));
+  ASSERT_EQ(0, res);
+
+  ctx = sax_decode_ctx_create(arena, "1.5", NULL);
+  ASSERT(sax_decode_double(&ctx, &res));
+  ASSERT_EQ(15, res * 10.0);
+
+  ctx = sax_decode_ctx_create(arena, "-1.5", NULL);
+  ASSERT(sax_decode_double(&ctx, &res));
+  ASSERT_EQ(-15, res * 10.0);
+
+  ctx = sax_decode_ctx_create(arena, "50%%", NULL);
+  ASSERT(sax_decode_double(&ctx, &res));
+  ASSERT_EQ(50, res * 100.0);
+
+  ctx = sax_decode_ctx_create(arena, "-50%%", NULL);
+  ASSERT(sax_decode_double(&ctx, &res));
+  ASSERT_EQ(-50, res * 100.0);
+
+  ctx = sax_decode_ctx_create(arena, "%%", NULL);
+  ASSERT_FALSE(sax_decode_double(&ctx, &res));
+
+  ctx = sax_decode_ctx_create(arena, "foo", NULL);
+  ASSERT_FALSE(sax_decode_double(&ctx, &res));
+}
 
 void test_sax_decode_float(arena_t *restrict arena) { (void)arena; }
 
