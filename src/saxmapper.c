@@ -20,6 +20,30 @@
 #define SAXAMAPHONE_LOG(...) ((void)0)
 #endif
 
+#define SAX_DECODE_INT(type_pfx, max)                                           \
+  bool sax_decode_##type_pfx(const sax_decode_ctx_t *restrict ctx, void *out) { \
+    char *sfx = NULL;                                                           \
+    long long val = strtoll(ctx->encoded, &sfx, 10);                            \
+    errno = 0;                                                                  \
+    if (ctx->encoded == sfx || errno == ERANGE || val > max) {                  \
+      return false;                                                             \
+    }                                                                           \
+    *(type_pfx##_t *)out = (type_pfx##_t)val;                                   \
+    return true;                                                                \
+  }
+
+#define SAX_DECODE_UINT(type_pfx, max)                                          \
+  bool sax_decode_##type_pfx(const sax_decode_ctx_t *restrict ctx, void *out) { \
+    char *sfx = NULL;                                                           \
+    unsigned long val = strtoul(ctx->encoded, &sfx, 10);                        \
+    errno = 0;                                                                  \
+    if (ctx->encoded == sfx || errno == ERANGE || val > max) {                  \
+      return false;                                                             \
+    }                                                                           \
+    *(type_pfx##_t *)out = (type_pfx##_t)val;                                   \
+    return true;                                                                \
+  }
+
 static const sax_decoder_t sax_default_encoders[SAXAMAPHONE_FIELD_TYPE_MAX] = {
     NULL,
     NULL,
@@ -297,27 +321,11 @@ bool sax_decode_float(const sax_decode_ctx_t *restrict ctx, void *out) {
   return true;
 }
 
-bool sax_decode_int8(const sax_decode_ctx_t *restrict ctx, void *out) {
-
-  char *sfx = NULL;
-  unsigned long val = strtoul(ctx->encoded, &sfx, 10);
-
-  errno = 0;
-  if (ctx->encoded == sfx || errno == ERANGE || val > UINT8_MAX) {
-    return false;
-  }
-
-  *(uint8_t *)out = (uint8_t)val;
-  return true;
-}
-
-// bool sax_decode_int16(const sax_decode_ctx_t *restrict ctx, void *out);
-
-// bool sax_decode_int32(const sax_decode_ctx_t *restrict ctx, void *out);
-
-// bool sax_decode_int64(const sax_decode_ctx_t *restrict ctx, void *out);
-
-// bool sax_decode_size(const sax_decode_ctx_t *restrict ctx, void *out);
+SAX_DECODE_INT(int8, INT8_MAX)
+SAX_DECODE_INT(int16, INT16_MAX)
+SAX_DECODE_INT(int32, INT32_MAX)
+SAX_DECODE_INT(int64, INT64_MAX)
+SAX_DECODE_UINT(size, SIZE_MAX)
 
 bool sax_decode_string(const sax_decode_ctx_t *restrict ctx, void *out) {
 
@@ -334,10 +342,7 @@ bool sax_decode_string(const sax_decode_ctx_t *restrict ctx, void *out) {
   return true;
 }
 
-// bool sax_decode_uint8(const sax_decode_ctx_t *restrict ctx, void *out);
-
-// bool sax_decode_uint16(const sax_decode_ctx_t *restrict ctx, void *out);
-
-// bool sax_decode_uint32(const sax_decode_ctx_t *restrict ctx, void *out);
-
-// bool sax_decode_uint64(const sax_decode_ctx_t *restrict ctx, void *out);
+SAX_DECODE_UINT(uint8, UINT8_MAX)
+SAX_DECODE_UINT(uint16, UINT16_MAX)
+SAX_DECODE_UINT(uint32, UINT32_MAX)
+SAX_DECODE_UINT(uint64, UINT64_MAX)
