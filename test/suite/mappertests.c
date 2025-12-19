@@ -153,7 +153,33 @@ TEST_SAX_DECODE_INT(int8, "128")
 TEST_SAX_DECODE_INT(int16, "32768")
 TEST_SAX_DECODE_INT(int32, "2147483648")
 
-void test_sax_decode_int64(arena_t *restrict arena) { (void)arena; }
+void test_sax_decode_int64(arena_t *restrict arena) {
+
+  int64_t res;
+  sax_decode_ctx_t ctx;
+
+  ctx = sax_decode_ctx_create(arena, "", NULL);
+  ASSERT_FALSE(sax_decode_int64(&ctx, &res));
+
+  ctx = sax_decode_ctx_create(arena, "0", NULL);
+  ASSERT(sax_decode_int64(&ctx, &res));
+  ASSERT_EQ(0, res);
+
+  ctx = sax_decode_ctx_create(arena, "-0", NULL);
+  ASSERT(sax_decode_int64(&ctx, &res));
+  ASSERT_EQ(0, res);
+
+  ctx = sax_decode_ctx_create(arena, "1", NULL);
+  ASSERT(sax_decode_int64(&ctx, &res));
+  ASSERT_EQ(1, res);
+
+  ctx = sax_decode_ctx_create(arena, "-1", NULL);
+  ASSERT(sax_decode_int64(&ctx, &res));
+  ASSERT_EQ(-1, res);
+
+  ctx = sax_decode_ctx_create(arena, "foo", NULL);
+  ASSERT_FALSE(sax_decode_int64(&ctx, &res));
+}
 
 void test_sax_decode_size(arena_t *restrict arena) { (void)arena; }
 
