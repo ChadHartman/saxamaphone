@@ -1,6 +1,8 @@
 #include <saxmapper.h>
 #include <test.h>
 
+#define STRINGIFY(...) #__VA_ARGS__
+
 static sax_decode_ctx_t sax_decode_ctx_create(
     arena_t *restrict arena,
     const char *restrict encoded,
@@ -125,7 +127,36 @@ void test_sax_decode_float(arena_t *restrict arena) {
   ASSERT_FALSE(sax_decode_float(&ctx, &res));
 }
 
-void test_sax_decode_int8(arena_t *restrict arena) { (void)arena; }
+void test_sax_decode_int8(arena_t *restrict arena) {
+
+  int8_t res;
+  sax_decode_ctx_t ctx;
+
+  ctx = sax_decode_ctx_create(arena, "", NULL);
+  ASSERT_FALSE(sax_decode_int8(&ctx, &res));
+
+  ctx = sax_decode_ctx_create(arena, "0", NULL);
+  ASSERT(sax_decode_int8(&ctx, &res));
+  ASSERT_EQ(0, res);
+
+  ctx = sax_decode_ctx_create(arena, "-0", NULL);
+  ASSERT(sax_decode_int8(&ctx, &res));
+  ASSERT_EQ(0, res);
+
+  ctx = sax_decode_ctx_create(arena, "1", NULL);
+  ASSERT(sax_decode_int8(&ctx, &res));
+  ASSERT_EQ(1, res);
+
+  ctx = sax_decode_ctx_create(arena, "-1", NULL);
+  ASSERT(sax_decode_int8(&ctx, &res));
+  ASSERT_EQ(-1, res);
+
+  ctx = sax_decode_ctx_create(arena, "128", NULL);
+  ASSERT_FALSE(sax_decode_int8(&ctx, &res));
+
+  ctx = sax_decode_ctx_create(arena, "foo", NULL);
+  ASSERT_FALSE(sax_decode_int8(&ctx, &res));
+}
 
 void test_sax_decode_int16(arena_t *restrict arena) { (void)arena; }
 
