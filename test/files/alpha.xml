@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<alpha first="true" second="42" third="foo">
+    <beta first="false" second="52" third="bar" />
+    <gamma third="baz">
+        <gamma second="62" />
+        <gamma second="72" />
+        <gamma second="82" />
+    </gamma>
+    <delta second="92" />
+    <delta second="102" />
+    <delta second="112">
+        <epsilon>theta</epsilon>
+    </delta>
+</alpha>

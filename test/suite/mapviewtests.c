@@ -54,7 +54,7 @@ static const sax_field_t doc_schema[] = {
     {.name = "view", .type = SAX_TYPE_STRUCT, .sub_schema = view_schema},
     {0}};
 
-TEST(map_struct) {
+TEST(map_view) {
 
   view_t view = {0};
 
