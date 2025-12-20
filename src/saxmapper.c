@@ -121,13 +121,8 @@ static bool sax_field_set_attr(
                               : mapper->opts.decoders[field->type];
 
   if (decoder == NULL) {
-    SAXAMAPHONE_LOG("Skipped setting type %d \"%s\" with \"%s\", no encoder was found",
-                    field->type,
-                    field->name,
-                    serialized);
-
-    // TODO return false
-    return true;
+    sax_mapper_error(mapper, "No decoder set for attribute \"%s\" with value \"%s\"", field->name, serialized);
+    return false;
   }
 
   sax_decode_ctx_t ctx = {
@@ -143,8 +138,6 @@ static bool sax_field_set_attr(
 
   sax_mapper_error(mapper, "Failed to set \"%s\" with \"%s\"", field->name, serialized);
   return false;
-
-  return true;
 }
 
 static bool sax_mapper_decode_attrs(
