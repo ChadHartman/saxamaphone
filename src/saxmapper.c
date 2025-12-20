@@ -193,10 +193,10 @@ static bool sax_mapper_decode(
       const sax_field_t *restrict child_schema = field == NULL ? NULL : field->sub_schema;
       uint8_t *child_value = NULL;
 
-      if (field != NULL && field->type == SAX_TYPE_ARRAY) {
-        child_value = field->getter == NULL ? NULL : field->getter(mapper->alloc_ctx, mapper->alloc, value);
-      } else {
-        child_value = field == NULL ? NULL : (value == NULL ? NULL : value + field->offset);
+      if (value != NULL && field != NULL) {
+        child_value = field->getter == NULL
+                          ? value + field->offset
+                          : field->getter(mapper->alloc_ctx, mapper->alloc, value);
       }
 
       const bool res = sax_mapper_decode_attrs(mapper, child_schema, child_value) &&
