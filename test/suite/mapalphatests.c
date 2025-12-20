@@ -10,9 +10,13 @@ typedef struct delta_t {
 
 // extern const sax_field_t delta_schema[];
 
+static const sax_field_t epsilon_schema[] = {
+    {.name = "epsilon", .type = SAX_TYPE_STRING},
+    {0}};
+
 const sax_field_t delta_schema[] = {
     {.name = "second", .offset = offsetof(delta_t, second), .type = SAX_TYPE_UINT8},
-    {.name = "epsilon", .offset = offsetof(delta_t, epsilon), .type = SAX_TYPE_STRING},
+    {.name = "epsilon", .offset = offsetof(delta_t, epsilon), .schema = epsilon_schema},
     {0}};
 
 typedef struct beta_t {
