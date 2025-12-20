@@ -73,6 +73,11 @@ typedef struct sax_mapper_t {
 
 bool sax_endswith(const char *restrict subject, const char *restrict suffix);
 
+/// @brief Set the error message
+/// @param mapper instance
+/// @param fmt format to use
+/// @param args format args
+/// @return the created message
 static char *sax_mapper_error(
     sax_mapper_t *restrict mapper,
     const char *restrict fmt,
@@ -93,6 +98,10 @@ static char *sax_mapper_error(
   return mapper->err;
 }
 
+/// @brief Retrieve a field using the provided name
+/// @param schema list of fields to use
+/// @param name name of the field to find
+/// @return the found field or NULL if not found
 static const sax_field_t *sax_field(
     const sax_field_t *restrict schema,
     const char *restrict name) {
