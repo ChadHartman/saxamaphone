@@ -119,25 +119,36 @@ static const sax_field_t *sax_field(
   return NULL;
 }
 
-static bool sax_field_set_attr(
+/// @brief Decode a value using a field
+/// @param mapper instance
+/// @param field to use
+/// @param value to write
+/// @param encoded value to decode
+/// @return true if no errors occurred
+static bool sax_mapper_decode_w_field(
     sax_mapper_t *restrict mapper,
     const sax_field_t *restrict field,
     void *value,
-    const char *restrict serialized) {
+    const char *restrict encoded) {
+
+  if (field == NULL || value == NULL) {
+    // Just traversing unmapped fields
+    return true;
+  }
 
   sax_decoder_t decoder = mapper->opts.decoders[field->type] == NULL
                               ? sax_default_encoders[field->type]
                               : mapper->opts.decoders[field->type];
 
   if (decoder == NULL) {
-    sax_mapper_error(mapper, "No decoder set for attribute \"%s\" with value \"%s\"", field->name, serialized);
+    sax_mapper_error(mapper, "No decoder set for attribute \"%s\" with value \"%s\"", field->name, encoded);
     return false;
   }
 
   sax_decode_ctx_t ctx = {
       .alloc = mapper->alloc,
       .alloc_ctx = mapper->alloc_ctx,
-      .encoded = serialized,
+      .encoded = encoded,
       .field = field,
   };
 
@@ -145,7 +156,7 @@ static bool sax_field_set_attr(
     return true;
   }
 
-  sax_mapper_error(mapper, "Failed to set \"%s\" with \"%s\"", field->name, serialized);
+  sax_mapper_error(mapper, "Failed to set \"%s\" with \"%s\"", field->name, encoded);
   return false;
 }
 
@@ -163,7 +174,7 @@ static bool sax_mapper_decode_attrs(
     if (field == NULL) {
       continue;
     }
-    sax_field_set_attr(mapper, field, value + field->offset, i->value);
+    sax_mapper_decode_w_field(mapper, field, value + field->offset, i->value);
   }
 
   return true;
