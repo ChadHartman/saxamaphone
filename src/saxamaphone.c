@@ -283,7 +283,7 @@ static int_fast32_t sax_strlen(const char *restrict str) {
 /// @param lhs left-hand-side string to test
 /// @param rhs right-hand-side string to test
 /// @return true if lhs and rhs are NULL or strcmp(lhs, rhs) == 0
-SAX_TEST_API bool sax_str_eq(const char *restrict lhs, const char *restrict rhs) {
+bool sax_str_eq(const char *restrict lhs, const char *restrict rhs) {
 
   if (lhs == NULL || rhs == NULL) {
     return lhs == rhs;
