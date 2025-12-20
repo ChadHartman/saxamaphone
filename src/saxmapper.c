@@ -160,12 +160,18 @@ static bool sax_mapper_decode_w_field(
   return false;
 }
 
+/// @brief Traverse XML Attributes and decode their values
+/// @param mapper instance
+/// @param schema fields to use
+/// @param value parent object whose fields are to be set
+/// @return true if no error occurred
 static bool sax_mapper_decode_attrs(
     sax_mapper_t *restrict mapper,
     const sax_field_t *restrict schema,
     uint8_t *restrict value) {
 
   if (schema == NULL || value == NULL) {
+    // Just traversing unmapped XML
     return true;
   }
 
@@ -174,10 +180,12 @@ static bool sax_mapper_decode_attrs(
     if (field == NULL) {
       continue;
     }
-    sax_mapper_decode_w_field(mapper, field, value + field->offset, i->value);
+    if (!sax_mapper_decode_w_field(mapper, field, value + field->offset, i->value)) {
+      return false;
+    }
   }
 
-  return true;
+    return true;
 }
 
 static bool sax_mapper_decode(
