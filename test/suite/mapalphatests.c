@@ -110,6 +110,21 @@ TEST(map_alpha) {
   ASSERT_EQ(52, alpha.beta.second);
   ASSERT_STR_EQ("bar", alpha.beta.third);
 
+  const delta_t *restrict delta_first = alpha.delta;
+  ASSERT_NON_NULL(delta_first)
+  ASSERT_EQ(92, delta_first->second);
+  ASSERT_NULL(delta_first->epsilon);
+
+  const delta_t *restrict delta_second = delta_first->next;
+  ASSERT_NON_NULL(delta_second)
+  ASSERT_EQ(102, delta_second->second);
+  ASSERT_NULL(delta_second->epsilon);
+
+  const delta_t *restrict delta_third = delta_second->next;
+  ASSERT_NON_NULL(delta_third)
+  ASSERT_EQ(112, delta_third->second);
+  ASSERT_STR_EQ("theta", delta_third->epsilon);
+
   alpha_dtor(arena, &alpha);
 
   sax_parser_free(parser);
