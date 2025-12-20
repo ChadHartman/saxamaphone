@@ -106,6 +106,20 @@ static char *sax_strdup(
   return copy;
 }
 
+static uint8_t *sax_mapper_child_value(
+    sax_mapper_t *restrict mapper,
+    const sax_field_t *restrict field,
+    uint8_t *restrict parent) {
+
+  if (field == NULL || parent == NULL) {
+    return NULL;
+  }
+
+  return field->getter == NULL
+             ? parent + field->offset
+             : field->getter(mapper->alloc_ctx, mapper->alloc, parent);
+}
+
 /// @brief Set the error message
 /// @param mapper instance
 /// @param fmt format to use
@@ -246,19 +260,9 @@ static bool sax_mapper_decode(
     if (ev == SAX_EVENT_START_TAG) {
 
       const char *restrict child_tag = sax_tag(mapper->parser);
-      SAXAMAPHONE_LOG("SAX_EVENT_START_TAG: \"%s\"", child_tag);
-
       const sax_field_t *restrict field = sax_field(schema, child_tag);
-      SAXAMAPHONE_LOG("Selected field \"%s\"", field == NULL ? "NULL" : field->name);
-
       const sax_field_t *restrict child_schema = field == NULL ? NULL : field->sub_schema;
-      uint8_t *child_value = NULL;
-
-      if (value != NULL && field != NULL) {
-        child_value = field->getter == NULL
-                          ? value + field->offset
-                          : field->getter(mapper->alloc_ctx, mapper->alloc, value);
-      }
+      uint8_t *child_value = sax_mapper_child_value(mapper, field, value);
 
       // sax_tag points to an internal string; this copy will prevent the current state from being lost
       char *restrict child_tag_copy = sax_strdup(mapper->alloc_ctx, mapper->alloc, child_tag);
@@ -272,11 +276,15 @@ static bool sax_mapper_decode(
     }
 
     if (ev == SAX_EVENT_CONTENT) {
-      SAXAMAPHONE_LOG("SAX_EVENT_CONTENT: \"%s\"", sax_content(mapper->parser));
+      const char *restrict content = sax_content(mapper->parser);
+      const sax_field_t *restrict field = sax_field(schema, tag);
+      uint8_t *child_value = sax_mapper_child_value(mapper, field, value);
+      if (!sax_mapper_decode_w_field(mapper, field, child_value, content)) {
+        return false;
+      }
     }
 
     if (ev == SAX_EVENT_END_TAG) {
-      SAXAMAPHONE_LOG("SAX_EVENT_END_TAG: \"%s\"", sax_tag(mapper->parser));
       const char *restrict end_tag = sax_tag(mapper->parser);
       if (!sax_str_eq(end_tag, tag)) {
         sax_mapper_error(mapper, "Expected end tag \"%s\" but received \"%s\"", tag, end_tag);
