@@ -47,5 +47,14 @@ static void alpha_dtor(arena_t *restrict arena, alpha_t *restrict alpha) {
 
 TEST(map_alpha) {
   alpha_t alpha = {0};
+
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .alloc = arena_custom_alloc,
+      .alloc_ctx = arena,
+      .path = "../test/files/alpha.xml",
+  });
+
+  sax_parser_free(parser);
+
   alpha_dtor(arena, &alpha);
 }
