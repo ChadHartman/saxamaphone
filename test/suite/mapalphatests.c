@@ -94,11 +94,23 @@ TEST(map_alpha) {
       .path = "../test/files/alpha.xml",
   });
 
+  const sax_field_t doc_schema[] = {
+      {.name = "alpha", .sub_schema = alpha_schema},
+      {0}};
+
   char *err = NULL;
-  ASSERT(sax_decode(parser, alpha_schema, &alpha, NULL, &err));
+  ASSERT(sax_decode(parser, doc_schema, &alpha, NULL, &err));
   ASSERT_NULL(err);
 
-  sax_parser_free(parser);
+  ASSERT(alpha.first);
+  ASSERT_EQ(42, alpha.second);
+  ASSERT_STR_EQ("foo", alpha.third);
+
+  ASSERT_FALSE(alpha.beta.first);
+  ASSERT_EQ(52, alpha.beta.second);
+  ASSERT_STR_EQ("bar", alpha.beta.third);
 
   alpha_dtor(arena, &alpha);
+
+  sax_parser_free(parser);
 }
