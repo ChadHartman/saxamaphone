@@ -261,13 +261,13 @@ static bool sax_mapper_decode(
 
       const char *restrict child_tag = sax_tag(mapper->parser);
       const sax_field_t *restrict field = sax_field(schema, child_tag);
-      const sax_field_t *restrict child_schema = field == NULL ? NULL : field->sub_schema;
+      const sax_field_t *restrict child_schema = field == NULL ? NULL : field->schema;
       uint8_t *child_value = sax_mapper_child_value(mapper, field, value);
 
       // sax_tag points to an internal string; this copy will prevent the current state from being lost
       char *restrict child_tag_copy = sax_strdup(mapper->alloc_ctx, mapper->alloc, child_tag);
       const bool res = sax_mapper_decode_attrs(mapper, child_schema, child_value) &&
-                       sax_mapper_decode(mapper, child_tag, child_schema, child_value);
+                       sax_mapper_decode(mapper, child_tag_copy, child_schema, child_value);
       mapper->alloc(mapper->alloc_ctx, child_tag_copy, 0);
 
       if (!res) {

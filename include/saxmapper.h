@@ -39,7 +39,7 @@ typedef struct sax_field_t {
   size_t offset;
 
   /// @brief Sub schema to use with ARRAY and OBJECT types
-  const struct sax_field_t *sub_schema;
+  const struct sax_field_t *schema;
 
   /// @brief Alternative to the @see sax_field_t::offset field. This is called
   ///   first when non-null. This is also the mechanism to use when appending

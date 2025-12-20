@@ -8,7 +8,9 @@ typedef struct delta_t {
   struct delta_t *next;
 } delta_t;
 
-static const sax_field_t delta_schema[] = {
+// extern const sax_field_t delta_schema[];
+
+const sax_field_t delta_schema[] = {
     {.name = "second", .offset = offsetof(delta_t, second), .type = SAX_TYPE_UINT8},
     {.name = "epsilon", .offset = offsetof(delta_t, epsilon), .type = SAX_TYPE_STRING},
     {0}};
@@ -60,8 +62,8 @@ static const sax_field_t alpha_schema[] = {
     {.name = "first", .offset = offsetof(alpha_t, first), .type = SAX_TYPE_BOOL},
     {.name = "second", .offset = offsetof(alpha_t, second), .type = SAX_TYPE_UINT8},
     {.name = "third", .offset = offsetof(alpha_t, third), .type = SAX_TYPE_STRING},
-    {.name = "beta", .offset = offsetof(alpha_t, beta), .sub_schema = beta_schema},
-    {.name = "delta", .getter = alpha_delta, .sub_schema = delta_schema},
+    {.name = "beta", .offset = offsetof(alpha_t, beta), .schema = beta_schema},
+    {.name = "delta", .getter = alpha_delta, .schema = delta_schema},
     {0}};
 
 static void delta_free(arena_t *restrict arena, delta_t *restrict delta) {
@@ -95,11 +97,15 @@ TEST(map_alpha) {
   });
 
   const sax_field_t doc_schema[] = {
-      {.name = "alpha", .sub_schema = alpha_schema},
+      {.name = "alpha", .schema = alpha_schema},
       {0}};
 
   char *err = NULL;
-  ASSERT(sax_decode(parser, doc_schema, &alpha, NULL, &err));
+  const bool decode_success = sax_decode(parser, doc_schema, &alpha, NULL, &err);
+  if (err != NULL) {
+    fprintf(stderr, "ERROR: %s\n", err);
+  }
+  ASSERT(decode_success);
   ASSERT_NULL(err);
 
   ASSERT(alpha.first);
