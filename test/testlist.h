@@ -24,6 +24,7 @@ TEST(endswith);
 TEST(getter);
 TEST(long_to_code_pt);
 TEST(ltrim);
+TEST(map_alpha);
 TEST(map_view);
 TEST(mapper);
 TEST(obj_map);
@@ -55,6 +56,7 @@ const test_t tests[] = {
     TEST_REG(getter),
     TEST_REG(long_to_code_pt),
     TEST_REG(ltrim),
+    TEST_REG(map_alpha),
     TEST_REG(map_view),
     TEST_REG(mapper),
     TEST_REG(obj_map),
