@@ -250,7 +250,37 @@ TEST_SAX_DECODE_UINT(uint16, "65536")
 TEST_SAX_DECODE_UINT(uint32, "4294967296")
 TEST_SAX_DECODE_UINT64(uint64)
 
+static bool decode_int32_inverted(const sax_decode_ctx_t *restrict ctx, void *value) {
+  int conv = atoi(ctx->encoded);
+  *(int32_t *)value = -(int32_t)(conv);
+  return true;
+}
+
+static void test_sax_decode_custom(arena_t *restrict arena) {
+
+  int32_t res = 0;
+
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .alloc = arena_custom_alloc,
+      .alloc_ctx = arena,
+      .xml = "<foo>42</foo>",
+  });
+
+  const sax_field_t doc_schema[] = {
+      {.name = "foo", .type = SAX_TYPE_INT32},
+  };
+
+  sax_map_opts_t opts = {0};
+  opts.decoders[SAX_TYPE_INT32] = decode_int32_inverted;
+
+  ASSERT(sax_decode(parser, doc_schema, &res, &opts, NULL));
+  ASSERT_EQ(res, -42);
+
+  sax_parser_free(parser);
+}
+
 TEST(mapper) {
+  test_sax_decode_custom(arena);
   test_sax_decode_bool(arena);
   test_sax_decode_double(arena);
   test_sax_decode_float(arena);

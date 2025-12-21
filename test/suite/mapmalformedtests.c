@@ -1,7 +1,7 @@
 #include <saxmapper.h>
 #include <test.h>
 
-TEST(map_malformed) {
+static void test_mapper_set_error(arena_t *restrict arena) {
 
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
       .alloc = arena_custom_alloc,
@@ -17,4 +17,8 @@ TEST(map_malformed) {
   arena_custom_alloc(arena, err, 0);
 
   sax_parser_free(parser);
+}
+
+TEST(map_malformed) {
+  test_mapper_set_error(arena);
 }
