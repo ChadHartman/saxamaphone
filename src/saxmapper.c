@@ -85,26 +85,26 @@ bool sax_str_eq(const char *restrict lhs, const char *restrict rhs);
 /// @param alloc allocator function
 /// @param src string to copy
 /// @return copied string or NULL on allocation failure
-static char *sax_strdup(
-    void *restrict ctx,
-    void *(*alloc)(void *, void *, size_t),
-    const char *restrict src) {
+// static char *sax_strdup(
+//     void *restrict ctx,
+//     void *(*alloc)(void *, void *, size_t),
+//     const char *restrict src) {
 
-  const size_t len = src == NULL ? 0 : strlen(src);
-  char *restrict copy = alloc(ctx, NULL, len + 1);
-  if (copy == NULL) {
-    SAXAMAPHONE_LOG("Allocator returned NULL when duplicating string \"%s\"", src);
-    return NULL;
-  }
+//   const size_t len = src == NULL ? 0 : strlen(src);
+//   char *restrict copy = alloc(ctx, NULL, len + 1);
+//   if (copy == NULL) {
+//     SAXAMAPHONE_LOG("Allocator returned NULL when duplicating string \"%s\"", src);
+//     return NULL;
+//   }
 
-  if (src == NULL) {
-    copy[0] = 0;
-    return copy;
-  }
+//   if (src == NULL) {
+//     copy[0] = 0;
+//     return copy;
+//   }
 
-  memcpy(copy, src, len + 1);
-  return copy;
-}
+//   memcpy(copy, src, len + 1);
+//   return copy;
+// }
 
 static uint8_t *sax_mapper_child_value(
     sax_mapper_t *restrict mapper,
@@ -196,7 +196,6 @@ static bool sax_mapper_decode_w_field(
       .alloc = mapper->alloc,
       .alloc_ctx = mapper->alloc_ctx,
       .encoded = encoded,
-      .field = field,
   };
 
   if (decoder(&ctx, value)) {
@@ -236,15 +235,15 @@ static bool sax_mapper_decode_attrs(
 }
 
 /// @brief Decode an XML Element with a mapper
-/// @param mapper mapper
+/// @param mapper instance
 /// @param tag the tag of the element in the current scope
 /// @param schema to use
 /// @param value to decode
 /// @return true if no errors occurred
 static bool sax_mapper_decode(
     sax_mapper_t *restrict mapper,
-    const char *restrict tag,
     const sax_field_t *restrict schema,
+    sax_field_type_t type,
     uint8_t *restrict value) {
 
   sax_event_t ev = SAX_EVENT_ERROR;
@@ -262,13 +261,10 @@ static bool sax_mapper_decode(
       const char *restrict child_tag = sax_tag(mapper->parser);
       const sax_field_t *restrict field = sax_field(schema, child_tag);
       const sax_field_t *restrict child_schema = field == NULL ? NULL : field->schema;
+      const sax_field_type_t child_type = field == NULL ? SAX_TYPE_NONE : field->type;
       uint8_t *child_value = sax_mapper_child_value(mapper, field, value);
-
-      // sax_tag points to an internal string; this copy will prevent the current state from being lost
-      char *restrict child_tag_copy = sax_strdup(mapper->alloc_ctx, mapper->alloc, child_tag);
       const bool res = sax_mapper_decode_attrs(mapper, child_schema, child_value) &&
-                       sax_mapper_decode(mapper, child_tag_copy, child_schema, child_value);
-      mapper->alloc(mapper->alloc_ctx, child_tag_copy, 0);
+                       sax_mapper_decode(mapper, child_schema, child_type, child_value);
 
       if (!res) {
         return false;
@@ -277,20 +273,27 @@ static bool sax_mapper_decode(
 
     if (ev == SAX_EVENT_CONTENT) {
       const char *restrict content = sax_content(mapper->parser);
-      const sax_field_t *restrict field = sax_field(schema, tag);
-      uint8_t *child_value = sax_mapper_child_value(mapper, field, value);
-      if (!sax_mapper_decode_w_field(mapper, field, child_value, content)) {
+      sax_decoder_t decoder = mapper->opts.decoders[type] == NULL
+                                  ? sax_default_encoders[type]
+                                  : mapper->opts.decoders[type];
+      if (decoder == NULL) {
+        sax_mapper_error(mapper, "No decoder set for content \"%s\" of type %d", content, type);
+        return false;
+      }
+
+      sax_decode_ctx_t ctx = {
+          .alloc = mapper->alloc,
+          .alloc_ctx = mapper->alloc_ctx,
+          .encoded = content,
+      };
+
+      if (!decoder(&ctx, value)) {
+        sax_mapper_error(mapper, "Decoder for type %d with content \"%s\" returned false", type, content);
         return false;
       }
     }
 
     if (ev == SAX_EVENT_END_TAG) {
-      const char *restrict end_tag = sax_tag(mapper->parser);
-      if (!sax_str_eq(end_tag, tag)) {
-        sax_mapper_error(mapper, "Expected end tag \"%s\" but received \"%s\"", tag, end_tag);
-        return false;
-      }
-
       return true;
     }
   }
@@ -343,7 +346,7 @@ bool sax_decode(
     return false;
   }
 
-  bool res = sax_mapper_decode(&mapper, NULL, schema, value);
+  bool res = sax_mapper_decode(&mapper, schema, SAX_TYPE_NONE, value);
   if (errmsg) {
     *errmsg = mapper.err;
   }

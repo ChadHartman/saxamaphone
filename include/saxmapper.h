@@ -55,7 +55,6 @@ typedef struct sax_field_t {
 typedef struct sax_decode_ctx_t {
   void *(*alloc)(void *, void *, size_t);
   void *alloc_ctx;
-  const sax_field_t *field;
   const char *encoded;
 } sax_decode_ctx_t;
 

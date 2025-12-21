@@ -5,23 +5,23 @@
   void test_sax_decode_##type_pfx(arena_t *restrict arena) { \
     type_pfx##_t res;                                        \
     sax_decode_ctx_t ctx;                                    \
-    ctx = sax_decode_ctx_create(arena, "", NULL);            \
+    ctx = sax_decode_ctx_create(arena, "");                  \
     ASSERT_FALSE(sax_decode_##type_pfx(&ctx, &res));         \
-    ctx = sax_decode_ctx_create(arena, "0", NULL);           \
+    ctx = sax_decode_ctx_create(arena, "0");                 \
     ASSERT(sax_decode_##type_pfx(&ctx, &res));               \
     ASSERT_EQ(0, res);                                       \
-    ctx = sax_decode_ctx_create(arena, "-0", NULL);          \
+    ctx = sax_decode_ctx_create(arena, "-0");                \
     ASSERT(sax_decode_##type_pfx(&ctx, &res));               \
     ASSERT_EQ(0, res);                                       \
-    ctx = sax_decode_ctx_create(arena, "1", NULL);           \
+    ctx = sax_decode_ctx_create(arena, "1");                 \
     ASSERT(sax_decode_##type_pfx(&ctx, &res));               \
     ASSERT_EQ(1, res);                                       \
-    ctx = sax_decode_ctx_create(arena, "-1", NULL);          \
+    ctx = sax_decode_ctx_create(arena, "-1");                \
     ASSERT(sax_decode_##type_pfx(&ctx, &res));               \
     ASSERT_EQ(-1, res);                                      \
-    ctx = sax_decode_ctx_create(arena, overflow, NULL);      \
+    ctx = sax_decode_ctx_create(arena, overflow);            \
     ASSERT_FALSE(sax_decode_##type_pfx(&ctx, &res));         \
-    ctx = sax_decode_ctx_create(arena, "foo", NULL);         \
+    ctx = sax_decode_ctx_create(arena, "foo");               \
     ASSERT_FALSE(sax_decode_##type_pfx(&ctx, &res));         \
   }
 
@@ -29,17 +29,17 @@
   void test_sax_decode_##type_pfx(arena_t *restrict arena) { \
     type_pfx##_t res;                                        \
     sax_decode_ctx_t ctx;                                    \
-    ctx = sax_decode_ctx_create(arena, "", NULL);            \
+    ctx = sax_decode_ctx_create(arena, "");                  \
     ASSERT_FALSE(sax_decode_##type_pfx(&ctx, &res));         \
-    ctx = sax_decode_ctx_create(arena, "0", NULL);           \
+    ctx = sax_decode_ctx_create(arena, "0");                 \
     ASSERT(sax_decode_##type_pfx(&ctx, &res));               \
     ASSERT_EQ(0, res);                                       \
-    ctx = sax_decode_ctx_create(arena, "1", NULL);           \
+    ctx = sax_decode_ctx_create(arena, "1");                 \
     ASSERT(sax_decode_##type_pfx(&ctx, &res));               \
     ASSERT_EQ(1, res);                                       \
-    ctx = sax_decode_ctx_create(arena, overflow, NULL);      \
+    ctx = sax_decode_ctx_create(arena, overflow);            \
     ASSERT_FALSE(sax_decode_##type_pfx(&ctx, &res));         \
-    ctx = sax_decode_ctx_create(arena, "foo", NULL);         \
+    ctx = sax_decode_ctx_create(arena, "foo");               \
     ASSERT_FALSE(sax_decode_##type_pfx(&ctx, &res));         \
   }
 
@@ -47,15 +47,15 @@
   void test_sax_decode_##type_pfx(arena_t *restrict arena) { \
     type_pfx##_t res;                                        \
     sax_decode_ctx_t ctx;                                    \
-    ctx = sax_decode_ctx_create(arena, "", NULL);            \
+    ctx = sax_decode_ctx_create(arena, "");                  \
     ASSERT_FALSE(sax_decode_##type_pfx(&ctx, &res));         \
-    ctx = sax_decode_ctx_create(arena, "0", NULL);           \
+    ctx = sax_decode_ctx_create(arena, "0");                 \
     ASSERT(sax_decode_##type_pfx(&ctx, &res));               \
     ASSERT_EQ(0, res);                                       \
-    ctx = sax_decode_ctx_create(arena, "1", NULL);           \
+    ctx = sax_decode_ctx_create(arena, "1");                 \
     ASSERT(sax_decode_##type_pfx(&ctx, &res));               \
     ASSERT_EQ(1, res);                                       \
-    ctx = sax_decode_ctx_create(arena, "foo", NULL);         \
+    ctx = sax_decode_ctx_create(arena, "foo");               \
     ASSERT_FALSE(sax_decode_##type_pfx(&ctx, &res));         \
   }
 
@@ -68,13 +68,11 @@ static void *null_allocator(void *ctx, void *ptr, size_t size) {
 
 static sax_decode_ctx_t sax_decode_ctx_create(
     arena_t *restrict arena,
-    const char *restrict encoded,
-    const sax_field_t *restrict field) {
+    const char *restrict encoded) {
   return (sax_decode_ctx_t){
       .alloc = arena_custom_alloc,
       .alloc_ctx = arena,
       .encoded = encoded,
-      .field = field,
   };
 }
 
@@ -83,31 +81,31 @@ void test_sax_decode_bool(arena_t *restrict arena) {
   bool res = false;
   sax_decode_ctx_t ctx;
 
-  ctx = sax_decode_ctx_create(arena, "true", NULL);
+  ctx = sax_decode_ctx_create(arena, "true");
   ASSERT(sax_decode_bool(&ctx, &res));
   ASSERT(res);
 
-  ctx = sax_decode_ctx_create(arena, "True", NULL);
+  ctx = sax_decode_ctx_create(arena, "True");
   ASSERT(sax_decode_bool(&ctx, &res));
   ASSERT(res);
 
-  ctx = sax_decode_ctx_create(arena, "tRue", NULL);
+  ctx = sax_decode_ctx_create(arena, "tRue");
   ASSERT(sax_decode_bool(&ctx, &res));
   ASSERT(res);
 
-  ctx = sax_decode_ctx_create(arena, "truE", NULL);
+  ctx = sax_decode_ctx_create(arena, "truE");
   ASSERT(sax_decode_bool(&ctx, &res));
   ASSERT(res);
 
-  ctx = sax_decode_ctx_create(arena, "TRUE", NULL);
+  ctx = sax_decode_ctx_create(arena, "TRUE");
   ASSERT(sax_decode_bool(&ctx, &res));
   ASSERT(res);
 
-  ctx = sax_decode_ctx_create(arena, "trueish", NULL);
+  ctx = sax_decode_ctx_create(arena, "trueish");
   ASSERT(sax_decode_bool(&ctx, &res));
   ASSERT_FALSE(res);
 
-  ctx = sax_decode_ctx_create(arena, "", NULL);
+  ctx = sax_decode_ctx_create(arena, "");
   ASSERT(sax_decode_bool(&ctx, &res));
   ASSERT_FALSE(res);
 }
@@ -117,37 +115,37 @@ void test_sax_decode_double(arena_t *restrict arena) {
   double res = false;
   sax_decode_ctx_t ctx;
 
-  ctx = sax_decode_ctx_create(arena, "", NULL);
+  ctx = sax_decode_ctx_create(arena, "");
   ASSERT_FALSE(sax_decode_double(&ctx, &res));
 
-  ctx = sax_decode_ctx_create(arena, "0", NULL);
+  ctx = sax_decode_ctx_create(arena, "0");
   ASSERT(sax_decode_double(&ctx, &res));
   ASSERT_EQ(0, res);
 
-  ctx = sax_decode_ctx_create(arena, "-0", NULL);
+  ctx = sax_decode_ctx_create(arena, "-0");
   ASSERT(sax_decode_double(&ctx, &res));
   ASSERT_EQ(0, res);
 
-  ctx = sax_decode_ctx_create(arena, "1.5", NULL);
+  ctx = sax_decode_ctx_create(arena, "1.5");
   ASSERT(sax_decode_double(&ctx, &res));
   ASSERT_EQ(15, res * 10.0);
 
-  ctx = sax_decode_ctx_create(arena, "-1.5", NULL);
+  ctx = sax_decode_ctx_create(arena, "-1.5");
   ASSERT(sax_decode_double(&ctx, &res));
   ASSERT_EQ(-15, res * 10.0);
 
-  ctx = sax_decode_ctx_create(arena, "50%%", NULL);
+  ctx = sax_decode_ctx_create(arena, "50%%");
   ASSERT(sax_decode_double(&ctx, &res));
   ASSERT_EQ(50, res * 100.0);
 
-  ctx = sax_decode_ctx_create(arena, "-50%%", NULL);
+  ctx = sax_decode_ctx_create(arena, "-50%%");
   ASSERT(sax_decode_double(&ctx, &res));
   ASSERT_EQ(-50, res * 100.0);
 
-  ctx = sax_decode_ctx_create(arena, "%%", NULL);
+  ctx = sax_decode_ctx_create(arena, "%%");
   ASSERT_FALSE(sax_decode_double(&ctx, &res));
 
-  ctx = sax_decode_ctx_create(arena, "foo", NULL);
+  ctx = sax_decode_ctx_create(arena, "foo");
   ASSERT_FALSE(sax_decode_double(&ctx, &res));
 }
 
@@ -156,37 +154,37 @@ void test_sax_decode_float(arena_t *restrict arena) {
   float res = false;
   sax_decode_ctx_t ctx;
 
-  ctx = sax_decode_ctx_create(arena, "", NULL);
+  ctx = sax_decode_ctx_create(arena, "");
   ASSERT_FALSE(sax_decode_float(&ctx, &res));
 
-  ctx = sax_decode_ctx_create(arena, "0", NULL);
+  ctx = sax_decode_ctx_create(arena, "0");
   ASSERT(sax_decode_float(&ctx, &res));
   ASSERT_EQ(0, res);
 
-  ctx = sax_decode_ctx_create(arena, "-0", NULL);
+  ctx = sax_decode_ctx_create(arena, "-0");
   ASSERT(sax_decode_float(&ctx, &res));
   ASSERT_EQ(0, res);
 
-  ctx = sax_decode_ctx_create(arena, "1.5", NULL);
+  ctx = sax_decode_ctx_create(arena, "1.5");
   ASSERT(sax_decode_float(&ctx, &res));
   ASSERT_EQ(15, res * 10.0f);
 
-  ctx = sax_decode_ctx_create(arena, "-1.5", NULL);
+  ctx = sax_decode_ctx_create(arena, "-1.5");
   ASSERT(sax_decode_float(&ctx, &res));
   ASSERT_EQ(-15, res * 10.0f);
 
-  ctx = sax_decode_ctx_create(arena, "50%%", NULL);
+  ctx = sax_decode_ctx_create(arena, "50%%");
   ASSERT(sax_decode_float(&ctx, &res));
   ASSERT_EQ(50, res * 100.0f);
 
-  ctx = sax_decode_ctx_create(arena, "-50%%", NULL);
+  ctx = sax_decode_ctx_create(arena, "-50%%");
   ASSERT(sax_decode_float(&ctx, &res));
   ASSERT_EQ(-50, res * 100.0f);
 
-  ctx = sax_decode_ctx_create(arena, "%%", NULL);
+  ctx = sax_decode_ctx_create(arena, "%%");
   ASSERT_FALSE(sax_decode_float(&ctx, &res));
 
-  ctx = sax_decode_ctx_create(arena, "foo", NULL);
+  ctx = sax_decode_ctx_create(arena, "foo");
   ASSERT_FALSE(sax_decode_float(&ctx, &res));
 }
 
@@ -199,26 +197,26 @@ void test_sax_decode_int64(arena_t *restrict arena) {
   int64_t res;
   sax_decode_ctx_t ctx;
 
-  ctx = sax_decode_ctx_create(arena, "", NULL);
+  ctx = sax_decode_ctx_create(arena, "");
   ASSERT_FALSE(sax_decode_int64(&ctx, &res));
 
-  ctx = sax_decode_ctx_create(arena, "0", NULL);
+  ctx = sax_decode_ctx_create(arena, "0");
   ASSERT(sax_decode_int64(&ctx, &res));
   ASSERT_EQ(0, res);
 
-  ctx = sax_decode_ctx_create(arena, "-0", NULL);
+  ctx = sax_decode_ctx_create(arena, "-0");
   ASSERT(sax_decode_int64(&ctx, &res));
   ASSERT_EQ(0, res);
 
-  ctx = sax_decode_ctx_create(arena, "1", NULL);
+  ctx = sax_decode_ctx_create(arena, "1");
   ASSERT(sax_decode_int64(&ctx, &res));
   ASSERT_EQ(1, res);
 
-  ctx = sax_decode_ctx_create(arena, "-1", NULL);
+  ctx = sax_decode_ctx_create(arena, "-1");
   ASSERT(sax_decode_int64(&ctx, &res));
   ASSERT_EQ(-1, res);
 
-  ctx = sax_decode_ctx_create(arena, "foo", NULL);
+  ctx = sax_decode_ctx_create(arena, "foo");
   ASSERT_FALSE(sax_decode_int64(&ctx, &res));
 }
 
@@ -229,12 +227,12 @@ void test_sax_decode_string(arena_t *restrict arena) {
   char *res;
   sax_decode_ctx_t ctx;
 
-  ctx = sax_decode_ctx_create(arena, "", NULL);
+  ctx = sax_decode_ctx_create(arena, "");
   ASSERT(sax_decode_string(&ctx, &res));
   ASSERT_STR_EQ("", res);
   arena_custom_alloc(arena, res, 0);
 
-  ctx = sax_decode_ctx_create(arena, "foo", NULL);
+  ctx = sax_decode_ctx_create(arena, "foo");
   ASSERT(sax_decode_string(&ctx, &res));
   ASSERT_STR_EQ("foo", res);
   arena_custom_alloc(arena, res, 0);
