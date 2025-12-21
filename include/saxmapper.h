@@ -54,6 +54,8 @@ typedef struct sax_decode_ctx_t {
 typedef bool (*sax_decoder_t)(const sax_decode_ctx_t *restrict, void *);
 
 typedef struct sax_map_opts_t {
+  void *(*alloc)(void *, void *, size_t);
+  void *alloc_ctx;
   sax_decoder_t decoders[UINT8_MAX];
 } sax_map_opts_t;
 
@@ -63,6 +65,12 @@ bool sax_decode(
     void *restrict value,
     const sax_map_opts_t *restrict opts,
     char **errmsg);
+
+bool sax_encode(
+    const sax_field_t *restrict schema,
+    const void *restrict value,
+    const sax_map_opts_t *restrict opts,
+    char **out);
 
 bool sax_decode_bool(const sax_decode_ctx_t *restrict ctx, void *out);
 

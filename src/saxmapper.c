@@ -63,8 +63,6 @@ static const sax_decoder_t sax_default_encoders[UINT8_MAX] = {
 
 typedef struct sax_mapper_t {
   sax_parser_t *parser;
-  void *alloc_ctx;
-  void *(*alloc)(void *, void *, size_t);
   char *err;
   sax_map_opts_t opts;
 } sax_mapper_t;
@@ -87,7 +85,7 @@ static uint8_t *sax_mapper_child_value(
 
   return field->getter == NULL
              ? parent + field->offset
-             : field->getter(mapper->alloc_ctx, mapper->alloc, parent);
+             : field->getter(mapper->opts.alloc_ctx, mapper->opts.alloc, parent);
 }
 
 /// @brief Set the error message
@@ -104,7 +102,7 @@ static char *sax_mapper_error(
   va_start(args, fmt);
 
   const size_t len = vsnprintf(NULL, 0, fmt, args);
-  mapper->err = mapper->alloc(mapper->alloc_ctx, NULL, len + 1);
+  mapper->err = mapper->opts.alloc(mapper->opts.alloc_ctx, NULL, len + 1);
   if (mapper->err == NULL) {
     SAXAMAPHONE_LOG("Failed to set error; allocator returned NULL when requesting %zu bytes for format \"%s\"", len + 1, fmt);
     va_end(args);
@@ -163,8 +161,8 @@ static bool sax_mapper_decode_w_field(
   }
 
   sax_decode_ctx_t ctx = {
-      .alloc = mapper->alloc,
-      .alloc_ctx = mapper->alloc_ctx,
+      .alloc = mapper->opts.alloc,
+      .alloc_ctx = mapper->opts.alloc_ctx,
       .encoded = encoded,
   };
 
@@ -273,21 +271,20 @@ bool sax_decode(
     const sax_map_opts_t *restrict opts,
     char **errmsg) {
 
-  void *alloc_ctx = NULL;
-  void *(*alloc)(void *, void *, size_t) = NULL;
+  sax_map_opts_t config = opts == NULL ? (sax_map_opts_t){0} : *opts;
 
-  sax_alloc(parser, &alloc_ctx, &alloc);
+  if (config.alloc == NULL) {
+    sax_alloc(parser, &config.alloc_ctx, &config.alloc);
+  }
 
-  if (parser == NULL || alloc == NULL) {
+  if (parser == NULL || config.alloc == NULL) {
     SAXAMAPHONE_LOG("sax_deserialize failed; invalid parser");
     return false;
   }
 
   sax_mapper_t mapper = {
-      .alloc = alloc,
-      .alloc_ctx = alloc_ctx,
       .parser = parser,
-      .opts = opts == 0 ? (sax_map_opts_t){0} : *opts,
+      .opts = config,
   };
 
   if (schema == NULL) {
@@ -308,7 +305,7 @@ bool sax_decode(
 
   bool res = sax_mapper_decode(&mapper, schema, SAX_TYPE_NONE, value);
   if (errmsg == NULL) {
-    alloc(alloc_ctx, mapper.err, 0);
+    mapper.opts.alloc(mapper.opts.alloc_ctx, mapper.err, 0);
   } else {
     *errmsg = mapper.err;
   }
@@ -384,3 +381,16 @@ SAX_DECODE_UINT(uint8, UINT8_MAX)
 SAX_DECODE_UINT(uint16, UINT16_MAX)
 SAX_DECODE_UINT(uint32, UINT32_MAX)
 SAX_DECODE_UINT(uint64, UINT64_MAX)
+
+bool sax_encode(
+    const sax_field_t *restrict schema,
+    const void *restrict value,
+    const sax_map_opts_t *restrict opts,
+    char **out) {
+
+  (void)schema;
+  (void)value;
+  (void)opts;
+  (void)out;
+  return true;
+}
