@@ -65,6 +65,9 @@ typedef struct sax_mapper_t {
   sax_parser_t *parser;
   char *err;
   sax_map_opts_t opts;
+  char *out_buf;
+  size_t out_buf_size;
+  size_t out_buf_offset;
 } sax_mapper_t;
 
 bool sax_endswith(const char *restrict subject, const char *restrict suffix);
@@ -276,6 +279,22 @@ static bool sax_mapper_decode(
   return true;
 }
 
+static bool sax_mapper_encode(
+    sax_mapper_t *restrict mapper,
+    const sax_field_t *restrict schema,
+    const uint8_t *restrict value) {
+
+  for (const sax_field_t *i = schema; i->name != NULL; ++i) {
+
+    if (i->schema != NULL) {
+      sax_mapper_encode(mapper, i->schema, value + i->offset);
+      continue;
+    }
+  }
+
+  return true;
+}
+
 bool sax_decode(
     sax_parser_t *restrict parser,
     const sax_field_t *restrict schema,
@@ -408,8 +427,12 @@ bool sax_encode(
     mapper.opts.alloc = sax_sys_alloc;
   }
 
-  (void)schema;
-  (void)value;
-  (void)out;
-  return true;
+  // TODO: validate
+
+  const bool res = sax_mapper_encode(&mapper, schema, value);
+  if (res) {
+    *out = mapper.out_buf;
+  };
+
+  return res;
 }
