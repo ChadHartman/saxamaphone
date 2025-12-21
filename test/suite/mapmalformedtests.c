@@ -14,6 +14,7 @@ TEST(map_malformed) {
   char buf[128];
   ASSERT_FALSE(sax_decode(parser, &schema, buf, NULL, &err));
   ASSERT_STR_EQ("Unexpected termination at line 1 column 5", err);
+  arena_custom_alloc(arena, err, 0);
 
   sax_parser_free(parser);
 }
