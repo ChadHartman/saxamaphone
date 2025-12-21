@@ -74,6 +74,18 @@ void sax_alloc(
     void **alloc_ctx,
     void *(**alloc)(void *, void *, size_t));
 
+static void *sax_sys_alloc(void *ctx, void *ptr, size_t size) {
+
+  (void)ctx;
+
+  if (size == 0) {
+    free(ptr);
+    return NULL;
+  }
+
+  return ptr == NULL ? malloc(size) : realloc(ptr, size);
+}
+
 static uint8_t *sax_mapper_child_value(
     sax_mapper_t *restrict mapper,
     const sax_field_t *restrict field,
@@ -388,9 +400,16 @@ bool sax_encode(
     const sax_map_opts_t *restrict opts,
     char **out) {
 
+  sax_mapper_t mapper = {
+      .opts = opts == NULL ? (sax_map_opts_t){0} : *opts,
+  };
+
+  if (mapper.opts.alloc == NULL) {
+    mapper.opts.alloc = sax_sys_alloc;
+  }
+
   (void)schema;
   (void)value;
-  (void)opts;
   (void)out;
   return true;
 }
