@@ -307,7 +307,9 @@ bool sax_decode(
   }
 
   bool res = sax_mapper_decode(&mapper, schema, SAX_TYPE_NONE, value);
-  if (errmsg) {
+  if (errmsg == NULL) {
+    alloc(alloc_ctx, mapper.err, 0);
+  } else {
     *errmsg = mapper.err;
   }
 

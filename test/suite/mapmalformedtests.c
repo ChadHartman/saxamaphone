@@ -107,9 +107,25 @@ static void test_mapper_set_error(arena_t *restrict arena) {
   sax_parser_free(parser);
 }
 
+static void test_mapper_decode_malformed_no_error(arena_t *restrict arena) {
+
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .alloc = arena_custom_alloc,
+      .alloc_ctx = arena,
+      .xml = "<foo",
+  });
+
+  const sax_field_t schema = {0};
+  char buf[128];
+  ASSERT_FALSE(sax_decode(parser, &schema, buf, NULL, NULL));
+
+  sax_parser_free(parser);
+}
+
 TEST(map_malformed) {
   test_mapper_no_decoder(arena);
   test_mapper_decode_attr_returns_false(arena);
   test_mapper_decode_content_returns_false(arena);
   test_mapper_set_error(arena);
+  test_mapper_decode_malformed_no_error(arena);
 }

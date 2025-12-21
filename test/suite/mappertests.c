@@ -297,6 +297,46 @@ static void test_sax_decode_custom(arena_t *restrict arena) {
   sax_parser_free(parser);
 }
 
+static void test_sax_decode_null_parser(arena_t *restrict arena) {
+  (void)arena;
+  ASSERT_FALSE(sax_decode(NULL, NULL, NULL, NULL, NULL));
+}
+
+static void test_sax_decode_null_schema(arena_t *restrict arena) {
+
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .alloc = arena_custom_alloc,
+      .alloc_ctx = arena,
+      .xml = "<foo/>",
+  });
+
+  ASSERT_FALSE(sax_decode(parser, NULL, NULL, NULL, NULL));
+
+  char *err = NULL;
+  ASSERT_FALSE(sax_decode(parser, NULL, NULL, NULL, &err));
+  arena_custom_alloc(arena, err, 0);
+
+  sax_parser_free(parser);
+}
+
+static void test_sax_decode_null_value(arena_t *restrict arena) {
+
+  sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
+      .alloc = arena_custom_alloc,
+      .alloc_ctx = arena,
+      .xml = "<foo/>",
+  });
+
+  const sax_field_t schema = {0};
+  ASSERT_FALSE(sax_decode(parser, &schema, NULL, NULL, NULL));
+
+  char *err = NULL;
+  ASSERT_FALSE(sax_decode(parser, &schema, NULL, NULL, &err));
+  arena_custom_alloc(arena, err, 0);
+
+  sax_parser_free(parser);
+}
+
 TEST(mapper) {
   test_sax_decode_custom(arena);
   test_sax_decode_bool(arena);
@@ -312,4 +352,7 @@ TEST(mapper) {
   test_sax_decode_uint16(arena);
   test_sax_decode_uint32(arena);
   test_sax_decode_uint64(arena);
+  test_sax_decode_null_parser(arena);
+  test_sax_decode_null_schema(arena);
+  test_sax_decode_null_value(arena);
 }
