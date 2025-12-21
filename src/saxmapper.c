@@ -172,7 +172,7 @@ static bool sax_mapper_decode_w_field(
     return true;
   }
 
-  sax_mapper_error(mapper, "Failed to set \"%s\" with \"%s\"", field->name, encoded);
+  sax_mapper_error(mapper, "Failed to set \"%s\" with \"%s\"; decoder returned false", field->name, encoded);
   return false;
 }
 
