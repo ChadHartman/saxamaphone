@@ -245,22 +245,12 @@ static bool sax_mapper_decode(
 
     if (ev == SAX_EVENT_CONTENT) {
       const char *restrict content = sax_content(mapper->parser);
-      sax_decoder_t decoder = mapper->opts.decoders[type] == NULL
-                                  ? sax_default_encoders[type]
-                                  : mapper->opts.decoders[type];
-      if (decoder == NULL) {
-        sax_mapper_error(mapper, "No decoder set for content \"%s\" of type %d", content, type);
-        return false;
-      }
+      const sax_field_t *restrict lookup = sax_field(schema, SAX_CONTENT);
+      sax_field_t field = lookup == NULL
+                              ? (sax_field_t){.type = type}
+                              : *lookup;
 
-      sax_decode_ctx_t ctx = {
-          .alloc = mapper->alloc,
-          .alloc_ctx = mapper->alloc_ctx,
-          .encoded = content,
-      };
-
-      if (!decoder(&ctx, value)) {
-        sax_mapper_error(mapper, "Decoder for type %d with content \"%s\" returned false", type, content);
+      if (!sax_mapper_decode_w_field(mapper, &field, value + field.offset, content)) {
         return false;
       }
     }

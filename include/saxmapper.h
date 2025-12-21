@@ -7,6 +7,8 @@
 #define SAXAMAPHONE_FIELD_TYPE_MAX 32
 #endif
 
+#define SAX_CONTENT "@content"
+
 typedef enum {
   SAX_TYPE_NONE,
   SAX_TYPE_ARRAY,

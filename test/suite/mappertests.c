@@ -258,23 +258,41 @@ static bool decode_int32_inverted(const sax_decode_ctx_t *restrict ctx, void *va
 
 static void test_sax_decode_custom(arena_t *restrict arena) {
 
-  int32_t res = 0;
+  typedef struct foo_t {
+    int32_t alpha;
+    int32_t beta;
+  } foo_t;
+
+  foo_t foo = {0};
 
   sax_parser_t *restrict parser = sax_parser(&(sax_config_t){
       .alloc = arena_custom_alloc,
       .alloc_ctx = arena,
-      .xml = "<foo>42</foo>",
+      .xml = "<foo alpha=\"42\">52</foo>",
   });
 
+  const sax_field_t foo_schema[] = {
+      {.name = "alpha", .offset = offsetof(foo_t, alpha), .type = SAX_TYPE_INT32},
+      {.name = SAX_CONTENT, .offset = offsetof(foo_t, beta), .type = SAX_TYPE_INT32},
+      {0},
+  };
+
   const sax_field_t doc_schema[] = {
-      {.name = "foo", .type = SAX_TYPE_INT32},
+      {.name = "foo", .schema = foo_schema},
+      {0},
   };
 
   sax_map_opts_t opts = {0};
   opts.decoders[SAX_TYPE_INT32] = decode_int32_inverted;
 
-  ASSERT(sax_decode(parser, doc_schema, &res, &opts, NULL));
-  ASSERT_EQ(res, -42);
+  char *err = NULL;
+  const bool decode_success = sax_decode(parser, doc_schema, &foo, &opts, &err);
+  if (err) {
+    fprintf(stderr, "%s\n", err);
+  }
+  ASSERT(decode_success);
+  ASSERT_EQ(foo.alpha, -42);
+  ASSERT_EQ(foo.beta, -52);
 
   sax_parser_free(parser);
 }
