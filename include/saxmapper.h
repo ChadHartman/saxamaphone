@@ -3,30 +3,21 @@
 
 #include "saxamaphone.h"
 
-#ifndef SAXAMAPHONE_FIELD_TYPE_MAX
-#define SAXAMAPHONE_FIELD_TYPE_MAX 32
-#endif
-
 #define SAX_CONTENT "@content"
-
-typedef enum {
-  SAX_TYPE_NONE,
-  SAX_TYPE_ARRAY,
-  SAX_TYPE_BOOL,
-  SAX_TYPE_DOUBLE,
-  SAX_TYPE_FLOAT,
-  SAX_TYPE_INT8,
-  SAX_TYPE_INT16,
-  SAX_TYPE_INT32,
-  SAX_TYPE_INT64,
-  SAX_TYPE_SIZE,
-  SAX_TYPE_STRING,
-  SAX_TYPE_STRUCT,
-  SAX_TYPE_UINT8,
-  SAX_TYPE_UINT16,
-  SAX_TYPE_UINT32,
-  SAX_TYPE_UINT64,
-} sax_field_type_t;
+#define SAX_TYPE_NONE 0
+#define SAX_TYPE_BOOL 1
+#define SAX_TYPE_DOUBLE 2
+#define SAX_TYPE_FLOAT 3
+#define SAX_TYPE_INT8 4
+#define SAX_TYPE_INT16 5
+#define SAX_TYPE_INT32 6
+#define SAX_TYPE_INT64 7
+#define SAX_TYPE_SIZE 8
+#define SAX_TYPE_STRING 9
+#define SAX_TYPE_UINT8 10
+#define SAX_TYPE_UINT16 11
+#define SAX_TYPE_UINT32 12
+#define SAX_TYPE_UINT64 13
 
 /// @brief SAX Mapping field descriptor
 typedef struct sax_field_t {
@@ -35,7 +26,7 @@ typedef struct sax_field_t {
   const char *name;
 
   /// @brief The C datatype to use
-  sax_field_type_t type;
+  uint8_t type;
 
   /// @brief The offset of the field in the provided struct; this is retrieved using @see offsetof
   size_t offset;
@@ -63,7 +54,7 @@ typedef struct sax_decode_ctx_t {
 typedef bool (*sax_decoder_t)(const sax_decode_ctx_t *restrict, void *);
 
 typedef struct sax_map_opts_t {
-  sax_decoder_t decoders[SAXAMAPHONE_FIELD_TYPE_MAX];
+  sax_decoder_t decoders[UINT8_MAX];
 } sax_map_opts_t;
 
 bool sax_decode(

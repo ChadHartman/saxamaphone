@@ -47,11 +47,11 @@ const sax_field_t view_schema[] = {
     {.name = "y", .type = SAX_TYPE_FLOAT, .offset = offsetof(view_t, y)},
     {.name = "w", .type = SAX_TYPE_FLOAT, .offset = offsetof(view_t, w)},
     {.name = "h", .type = SAX_TYPE_FLOAT, .offset = offsetof(view_t, h)},
-    {.name = "view", .type = SAX_TYPE_ARRAY, .schema = view_schema, .getter = view_append},
+    {.name = "view", .schema = view_schema, .getter = view_append},
     {0}};
 
 static const sax_field_t doc_schema[] = {
-    {.name = "view", .type = SAX_TYPE_STRUCT, .schema = view_schema},
+    {.name = "view", .schema = view_schema},
     {0}};
 
 TEST(map_view) {

@@ -44,8 +44,7 @@
     return true;                                                                \
   }
 
-static const sax_decoder_t sax_default_encoders[SAXAMAPHONE_FIELD_TYPE_MAX] = {
-    NULL,
+static const sax_decoder_t sax_default_encoders[UINT8_MAX] = {
     NULL,
     sax_decode_bool,
     sax_decode_double,
@@ -56,7 +55,6 @@ static const sax_decoder_t sax_default_encoders[SAXAMAPHONE_FIELD_TYPE_MAX] = {
     sax_decode_int64,
     sax_decode_size,
     sax_decode_string,
-    NULL,
     sax_decode_uint8,
     sax_decode_uint16,
     sax_decode_uint32,
@@ -215,7 +213,7 @@ static bool sax_mapper_decode_attrs(
 static bool sax_mapper_decode(
     sax_mapper_t *restrict mapper,
     const sax_field_t *restrict schema,
-    sax_field_type_t type,
+    uint8_t type,
     uint8_t *restrict value) {
 
   sax_event_t ev = SAX_EVENT_ERROR;
@@ -233,7 +231,7 @@ static bool sax_mapper_decode(
       const char *restrict child_tag = sax_tag(mapper->parser);
       const sax_field_t *restrict field = sax_field(schema, child_tag);
       const sax_field_t *restrict child_schema = field == NULL ? NULL : field->schema;
-      const sax_field_type_t child_type = field == NULL ? SAX_TYPE_NONE : field->type;
+      const uint8_t child_type = field == NULL ? SAX_TYPE_NONE : field->type;
       uint8_t *child_value = sax_mapper_child_value(mapper, field, value);
       const bool res = sax_mapper_decode_attrs(mapper, child_schema, child_value) &&
                        sax_mapper_decode(mapper, child_schema, child_type, child_value);
