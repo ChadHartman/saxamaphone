@@ -78,34 +78,6 @@ void sax_alloc(
     void **alloc_ctx,
     void *(**alloc)(void *, void *, size_t));
 
-bool sax_str_eq(const char *restrict lhs, const char *restrict rhs);
-
-/// @brief Utility method which copies a string using the provided allocator
-/// @param ctx allocator context
-/// @param alloc allocator function
-/// @param src string to copy
-/// @return copied string or NULL on allocation failure
-// static char *sax_strdup(
-//     void *restrict ctx,
-//     void *(*alloc)(void *, void *, size_t),
-//     const char *restrict src) {
-
-//   const size_t len = src == NULL ? 0 : strlen(src);
-//   char *restrict copy = alloc(ctx, NULL, len + 1);
-//   if (copy == NULL) {
-//     SAXAMAPHONE_LOG("Allocator returned NULL when duplicating string \"%s\"", src);
-//     return NULL;
-//   }
-
-//   if (src == NULL) {
-//     copy[0] = 0;
-//     return copy;
-//   }
-
-//   memcpy(copy, src, len + 1);
-//   return copy;
-// }
-
 static uint8_t *sax_mapper_child_value(
     sax_mapper_t *restrict mapper,
     const sax_field_t *restrict field,
