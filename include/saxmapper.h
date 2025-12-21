@@ -53,10 +53,17 @@ typedef struct sax_decode_ctx_t {
 
 typedef bool (*sax_decoder_t)(const sax_decode_ctx_t *restrict, void *);
 
+typedef struct sax_encoder_ctx_t {
+  void (*appender)(const char *restrict);
+} sax_encoder_ctx_t;
+
+typedef bool (*sax_encoder_t)(const sax_encoder_ctx_t *restrict, void *);
+
 typedef struct sax_map_opts_t {
   void *(*alloc)(void *, void *, size_t);
   void *alloc_ctx;
-  sax_decoder_t decoders[UINT8_MAX];
+  sax_decoder_t decoders[64];
+  sax_encoder_t encoders[64];
 } sax_map_opts_t;
 
 bool sax_decode(

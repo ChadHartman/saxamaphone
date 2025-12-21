@@ -44,7 +44,7 @@
     return true;                                                                \
   }
 
-static const sax_decoder_t sax_default_encoders[UINT8_MAX] = {
+static const sax_decoder_t sax_default_encoders[64] = {
     NULL,
     sax_decode_bool,
     sax_decode_double,
