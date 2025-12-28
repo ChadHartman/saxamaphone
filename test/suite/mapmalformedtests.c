@@ -124,8 +124,8 @@ static void test_mapper_decode_malformed_no_error(arena_t *restrict arena) {
 
 TEST(map_malformed) {
   test_mapper_no_decoder(arena);
-  (void)test_mapper_decode_attr_returns_false;    // test_mapper_decode_attr_returns_false(arena);
-  (void)test_mapper_decode_content_returns_false; // test_mapper_decode_content_returns_false(arena);
-  (void)test_mapper_set_error;                    // test_mapper_set_error(arena);
-  (void)test_mapper_decode_malformed_no_error;    // test_mapper_decode_malformed_no_error(arena);
+  test_mapper_decode_attr_returns_false(arena);
+  test_mapper_decode_content_returns_false(arena);
+  test_mapper_set_error(arena);
+  test_mapper_decode_malformed_no_error(arena);
 }
