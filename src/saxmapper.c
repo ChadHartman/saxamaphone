@@ -9,6 +9,8 @@
 
 /// @brief Simple logger
 #ifdef SAXAMAPHONE_DEBUG
+#include <assert.h>
+
 #define SAXAMAPHONE_LOG(...)                      \
   printf("\x1b[36m"                               \
          "[SAXAMAPHONE] %s:%d "                   \
@@ -16,8 +18,10 @@
          (strrchr(__FILE__, '/') + 1), __LINE__); \
   printf(__VA_ARGS__);                            \
   printf("\n")
+#define SAXAMAPHONE_ASSERT(...) assert(__VA_ARGS__)
 #else
 #define SAXAMAPHONE_LOG(...) ((void)0)
+#define SAXAMAPHONE_ASSERT(...) ((void)0)
 #endif
 
 #define SAX_DECODE_INT(type_pfx, max)                                           \
@@ -165,6 +169,8 @@ static bool sax_mapper_decode_w_field(
     // Just traversing unmapped fields
     return true;
   }
+
+  SAXAMAPHONE_ASSERT(field->type < SAX_CODER_MAX);
 
   sax_decoder_t decoder = mapper->opts.decoders[field->type] == NULL
                               ? sax_default_decoders[field->type]

@@ -3,6 +3,10 @@
 
 #include "saxamaphone.h"
 
+#ifndef SAX_CODER_MAX
+#define SAX_CODER_MAX 64
+#endif
+
 #define SAX_CONTENT "@content"
 #define SAX_TYPE_NONE 0
 #define SAX_TYPE_BOOL 1
@@ -62,8 +66,8 @@ typedef bool (*sax_encoder_t)(const sax_encoder_ctx_t *restrict, void *);
 typedef struct sax_map_opts_t {
   void *(*alloc)(void *, void *, size_t);
   void *alloc_ctx;
-  sax_decoder_t decoders[64];
-  sax_encoder_t encoders[64];
+  sax_decoder_t decoders[SAX_CODER_MAX];
+  sax_encoder_t encoders[SAX_CODER_MAX];
 } sax_map_opts_t;
 
 bool sax_decode(
