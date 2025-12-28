@@ -44,7 +44,7 @@
     return true;                                                                \
   }
 
-static const sax_decoder_t sax_default_encoders[64] = {
+static const sax_decoder_t sax_default_decoders[64] = {
     NULL,
     sax_decode_bool,
     sax_decode_double,
@@ -167,7 +167,7 @@ static bool sax_mapper_decode_w_field(
   }
 
   sax_decoder_t decoder = mapper->opts.decoders[field->type] == NULL
-                              ? sax_default_encoders[field->type]
+                              ? sax_default_decoders[field->type]
                               : mapper->opts.decoders[field->type];
 
   if (decoder == NULL) {
