@@ -3,7 +3,7 @@ project('saxamaphone',
     default_options: ['c_std=c99'],
     version: '2.0.0')
 
-# meson setup -Db_coverage=true builddir
+# meson setup -Db_coverage=true -Db_sanitize=address builddir
 
 c_args = []
 

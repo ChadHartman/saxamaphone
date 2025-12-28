@@ -123,7 +123,7 @@ static char *sax_mapper_error(
     va_end(args);
     return NULL;
   }
-  vsprintf(mapper->err, fmt, args);
+  vsnprintf(mapper->err, len + 1, fmt, args);
   va_end(args);
   return mapper->err;
 }
