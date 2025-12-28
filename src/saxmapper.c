@@ -226,7 +226,6 @@ static bool sax_mapper_decode_attrs(
 static bool sax_mapper_decode(
     sax_mapper_t *restrict mapper,
     const sax_field_t *restrict schema,
-    uint8_t type,
     uint8_t *restrict value) {
 
   sax_event_t ev = SAX_EVENT_ERROR;
@@ -244,10 +243,9 @@ static bool sax_mapper_decode(
       const char *restrict child_tag = sax_tag(mapper->parser);
       const sax_field_t *restrict field = sax_field(schema, child_tag);
       const sax_field_t *restrict child_schema = field == NULL ? NULL : field->schema;
-      const uint8_t child_type = field == NULL ? SAX_TYPE_NONE : field->type;
       uint8_t *child_value = sax_mapper_child_value(mapper, field, value);
       const bool res = sax_mapper_decode_attrs(mapper, child_schema, child_value) &&
-                       sax_mapper_decode(mapper, child_schema, child_type, child_value);
+                       sax_mapper_decode(mapper, child_schema, child_value);
 
       if (!res) {
         return false;
@@ -256,12 +254,9 @@ static bool sax_mapper_decode(
 
     if (ev == SAX_EVENT_CONTENT) {
       const char *restrict content = sax_content(mapper->parser);
-      const sax_field_t *restrict lookup = sax_field(schema, SAX_CONTENT);
-      sax_field_t field = lookup == NULL
-                              ? (sax_field_t){.type = type}
-                              : *lookup;
-
-      if (!sax_mapper_decode_w_field(mapper, &field, value + field.offset, content)) {
+      const sax_field_t *restrict field = sax_field(schema, SAX_CONTENT);
+      uint8_t *restrict content_value = value + (field == NULL ? 0 : field->offset);
+      if (!sax_mapper_decode_w_field(mapper, field, content_value, content)) {
         return false;
       }
     }
@@ -334,7 +329,7 @@ bool sax_decode(
     return false;
   }
 
-  bool res = sax_mapper_decode(&mapper, schema, SAX_TYPE_NONE, value);
+  bool res = sax_mapper_decode(&mapper, schema, value);
   if (errmsg == NULL) {
     mapper.opts.alloc(mapper.opts.alloc_ctx, mapper.err, 0);
   } else {
