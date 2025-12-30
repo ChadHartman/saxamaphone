@@ -29,6 +29,7 @@ struct sax_stream_t {
 
 static const sax_stream_config_t sax_stream_default_config = {
     .alloc = sax_system_alloc,
+    .buf_size = 4096,
 };
 
 static bool sax_stream_append_string(
@@ -49,7 +50,7 @@ static bool sax_stream_append_string(
     return true;
   }
 
-  stream->buf_size = stream->buf_size == 0 ? 4096 : stream->buf_size * 2;
+  stream->buf_size = stream->buf_size == 0 ? stream->config.buf_size : stream->buf_size * 2;
   stream->buf = stream->config.alloc(stream->config.alloc_ctx, stream->buf, stream->buf_size);
   if (stream->buf == NULL) {
     return false;
@@ -62,7 +63,7 @@ sax_stream_t *sax_stream(const sax_stream_config_t *restrict config) {
 
   config = config == NULL ? &sax_stream_default_config : config;
   void *(*alloc)(void *, void *, size_t) = config->alloc == NULL ? sax_system_alloc : config->alloc;
-  
+
   sax_stream_t *restrict stream = alloc(config->alloc_ctx, NULL, sizeof(sax_stream_t));
   if (stream == NULL) {
     SAXAMAPHONE_LOG("Allocator returned NULL in creating sax_stream_t sized %zu", sizeof(sax_stream_t));
@@ -73,6 +74,7 @@ sax_stream_t *sax_stream(const sax_stream_config_t *restrict config) {
       .config = *config,
   };
   stream->config.alloc = alloc;
+  stream->config.buf_size = stream->config.buf_size == 0 ? 4096 : stream->config.buf_size;
 
   return stream;
 }

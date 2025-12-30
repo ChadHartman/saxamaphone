@@ -61,7 +61,7 @@
            (strrchr(__FILE__, '/') + 1),                                      \
            __LINE__,                                                          \
            passed ? COLOR_GREEN "PASSED" : COLOR_RED "FAILED");               \
-    printf(COLOR_CYAN "  ASSERT_ALIGNED(" #computed ")\n");                           \
+    printf(COLOR_CYAN "  ASSERT_ALIGNED(" #computed ")\n");                   \
     printf(COLOR_YELLOW "    %s\n\n" COLOR_RESET, passed ? "true" : "false"); \
     if (!passed) {                                                            \
       exit(EXIT_FAILURE);                                                     \
@@ -194,5 +194,7 @@
       exit(EXIT_FAILURE);                                                          \
     }                                                                              \
   }
+
+void *test_null_alloc(void *ctx, void *ptr, size_t size);
 
 #endif

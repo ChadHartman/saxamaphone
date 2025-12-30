@@ -18,6 +18,13 @@ static void print_test(const char *restrict header) {
   printf("+\n");
 }
 
+void *test_null_alloc(void *ctx, void *ptr, size_t size) {
+  (void)ctx;
+  (void)ptr;
+  (void)size;
+  return NULL;
+}
+
 // === main === //
 
 int main(int argc, char **args) {

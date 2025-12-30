@@ -10,6 +10,7 @@ typedef struct sax_stream_t sax_stream_t;
 typedef struct sax_stream_config_t {
   void *(*alloc)(void *, void *, size_t);
   void *alloc_ctx;
+  size_t buf_size;
   FILE *file;
 } sax_stream_config_t;
 
