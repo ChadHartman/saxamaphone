@@ -2,6 +2,7 @@
 #define SAXMAPPER_H
 
 #include "saxamaphone.h"
+#include "saxstream.h"
 
 #ifndef SAX_CODER_MAX
 #define SAX_CODER_MAX 64
@@ -108,5 +109,31 @@ bool sax_decode_uint16(const sax_decode_ctx_t *restrict ctx, void *out);
 bool sax_decode_uint32(const sax_decode_ctx_t *restrict ctx, void *out);
 
 bool sax_decode_uint64(const sax_decode_ctx_t *restrict ctx, void *out);
+
+bool sax_encode_bool(sax_stream_t *restrict stream, const void *value);
+
+bool sax_encode_double(sax_stream_t *restrict stream, const void *value);
+
+bool sax_encode_float(sax_stream_t *restrict stream, const void *value);
+
+bool sax_encode_int8(sax_stream_t *restrict stream, const void *value);
+
+bool sax_encode_int16(sax_stream_t *restrict stream, const void *value);
+
+bool sax_encode_int32(sax_stream_t *restrict stream, const void *value);
+
+bool sax_encode_int64(sax_stream_t *restrict stream, const void *value);
+
+bool sax_encode_size(sax_stream_t *restrict stream, const void *value);
+
+bool sax_encode_string(sax_stream_t *restrict stream, const void *value);
+
+bool sax_encode_uint8(sax_stream_t *restrict stream, const void *value);
+
+bool sax_encode_uint16(sax_stream_t *restrict stream, const void *value);
+
+bool sax_encode_uint32(sax_stream_t *restrict stream, const void *value);
+
+bool sax_encode_uint64(sax_stream_t *restrict stream, const void *value);
 
 #endif

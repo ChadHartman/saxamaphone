@@ -1,9 +1,10 @@
 #include <ctype.h>
 #include <errno.h>
-#include <stdarg.h> // va_list
-#include <stdio.h>  // vsnprintf
-#include <stdlib.h> // atof
-#include <string.h> // strcmp
+#include <inttypes.h> // PRI*
+#include <stdarg.h>   // va_list
+#include <stdio.h>    // vsnprintf
+#include <stdlib.h>   // atof
+#include <string.h>   // strcmp
 
 #include "saxmapper.h"
 
@@ -436,4 +437,57 @@ bool sax_encode(
   };
 
   return res;
+}
+
+bool sax_encode_bool(sax_stream_t *restrict stream, const void *ptr) {
+  const bool value = *(bool *)ptr;
+  return sax_stream_append(stream, value ? "true" : "false");
+}
+
+bool sax_encode_double(sax_stream_t *restrict stream, const void *value) {
+  return sax_stream_append(stream, "%f", value);
+}
+
+bool sax_encode_float(sax_stream_t *restrict stream, const void *value) {
+  return sax_stream_append(stream, "%f", value);
+}
+
+bool sax_encode_int8(sax_stream_t *restrict stream, const void *value) {
+  return sax_stream_append(stream, PRId8, value);
+}
+
+bool sax_encode_int16(sax_stream_t *restrict stream, const void *value) {
+  return sax_stream_append(stream, PRId16, value);
+}
+
+bool sax_encode_int32(sax_stream_t *restrict stream, const void *value) {
+  return sax_stream_append(stream, PRId32, value);
+}
+
+bool sax_encode_int64(sax_stream_t *restrict stream, const void *value) {
+  return sax_stream_append(stream, PRId64, value);
+}
+
+bool sax_encode_size(sax_stream_t *restrict stream, const void *value) {
+  return sax_stream_append(stream, "%zu", value);
+}
+
+bool sax_encode_string(sax_stream_t *restrict stream, const void *value) {
+  return sax_stream_append(stream, "%s", value);
+}
+
+bool sax_encode_uint8(sax_stream_t *restrict stream, const void *value) {
+  return sax_stream_append(stream, PRIu8, value);
+}
+
+bool sax_encode_uint16(sax_stream_t *restrict stream, const void *value) {
+  return sax_stream_append(stream, PRIu16, value);
+}
+
+bool sax_encode_uint32(sax_stream_t *restrict stream, const void *value) {
+  return sax_stream_append(stream, PRIu32, value);
+}
+
+bool sax_encode_uint64(sax_stream_t *restrict stream, const void *value) {
+  return sax_stream_append(stream, PRIu64, value);
 }
