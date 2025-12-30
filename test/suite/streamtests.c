@@ -8,6 +8,36 @@ static void test_stream_str(arena_t *restrict arena) {
       .alloc_ctx = arena,
   });
 
+  ASSERT_FALSE(sax_stream_append(NULL, NULL));
+  ASSERT_FALSE(sax_stream_append(stream, NULL));
+
+  const bool res = sax_stream_append(stream, "<hello>%s</hello>", "world!");
+  ASSERT(res);
+  ASSERT_NULL(sax_stream_str(NULL));
+  ASSERT_STR_EQ("<hello>world!</hello>", sax_stream_str(stream));
+
+  sax_stream_free(NULL);
+  sax_stream_free(stream);
+}
+
+static void test_stream_stdout(arena_t *restrict arena) {
+
+  sax_stream_t *restrict stream = sax_stream(&(sax_stream_config_t){
+      .alloc = arena_custom_alloc,
+      .alloc_ctx = arena,
+      .file = stdout,
+  });
+
+  const bool res = sax_stream_append(stream, "<hello>%s</hello>\n", "world!");
+  ASSERT(res);
+
+  sax_stream_free(stream);
+}
+
+static void test_stream_str_nullconf(void) {
+
+  sax_stream_t *restrict stream = sax_stream(NULL);
+
   const bool res = sax_stream_append(stream, "<hello>%s</hello>", "world!");
   ASSERT(res);
   ASSERT_STR_EQ("<hello>world!</hello>", sax_stream_str(stream));
@@ -16,5 +46,7 @@ static void test_stream_str(arena_t *restrict arena) {
 }
 
 TEST(stream) {
+  test_stream_stdout(arena);
   test_stream_str(arena);
+  test_stream_str_nullconf();
 }
