@@ -38,6 +38,7 @@ TEST(start_tag);
 TEST(start_tag_closed);
 TEST(start_tag_oom);
 TEST(str_eq);
+TEST(stream);
 TEST(trim);
 TEST(unescape);
 TEST(unescape10);
@@ -72,6 +73,7 @@ const test_t tests[] = {
     TEST_REG(start_tag_closed),
     TEST_REG(start_tag_oom),
     TEST_REG(str_eq),
+    TEST_REG(stream),
     TEST_REG(trim),
     TEST_REG(unescape),
     TEST_REG(unescape10),

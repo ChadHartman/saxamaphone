@@ -17,6 +17,8 @@ sax_stream_t *sax_stream(const sax_stream_config_t *restrict config);
 
 bool sax_stream_append(sax_stream_t *restrict stream, const char *restrict fmt, ...);
 
+const char *sax_stream_str(const sax_stream_t *restrict stream);
+
 void sax_stream_free(sax_stream_t *restrict stream);
 
 #endif

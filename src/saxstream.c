@@ -95,6 +95,10 @@ bool sax_stream_append(sax_stream_t *restrict stream, const char *restrict fmt, 
   return res;
 }
 
+const char *sax_stream_str(const sax_stream_t *restrict stream) {
+  return stream == NULL ? NULL : stream->buf;
+}
+
 void sax_stream_free(sax_stream_t *restrict stream) {
 
   if (stream == NULL) {
