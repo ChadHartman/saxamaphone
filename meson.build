@@ -42,8 +42,10 @@ ex_xml_string = executable('example-xml-string',
 
 tests = executable('saxamaphone-tests',
     sources: [
+        'src/saxalloc.c',
         'src/saxamaphone.c',
         'src/saxmapper.c',
+        'src/saxstream.c',
         'test/arena.c', 
         'test/main.c',
         'test/suite/alloctests.c',
