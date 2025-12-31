@@ -6,6 +6,7 @@
 #include <stdlib.h>   // atof
 #include <string.h>   // strcmp
 
+#include "saxalloc.h"
 #include "saxmapper.h"
 
 /// @brief Simple logger
@@ -81,18 +82,6 @@ void sax_alloc(
     sax_parser_t *restrict parser,
     void **alloc_ctx,
     void *(**alloc)(void *, void *, size_t));
-
-static void *sax_sys_alloc(void *ctx, void *ptr, size_t size) {
-
-  (void)ctx;
-
-  if (size == 0) {
-    free(ptr);
-    return NULL;
-  }
-
-  return ptr == NULL ? malloc(size) : realloc(ptr, size);
-}
 
 static uint8_t *sax_mapper_child_value(
     sax_mapper_t *restrict mapper,
@@ -426,7 +415,7 @@ bool sax_encode(
   };
 
   if (mapper.opts.alloc == NULL) {
-    mapper.opts.alloc = sax_sys_alloc;
+    mapper.opts.alloc = sax_system_alloc;
   }
 
   // TODO: validate
